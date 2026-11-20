@@ -1,0 +1,88 @@
+import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-10-28.acacia',
+});
+
+export async function POST(req: NextRequest) {
+  const payload = await req.text();
+  const signature = req.headers.get('stripe-signature');
+
+  if (!signature) {
+    return NextResponse.json({ error: 'Missing stripe-signature' }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      payload,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (err: any) {
+    console.error('Webhook signature verification failed:', err.message);
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
+
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const sponsorId = session.metadata?.sponsorId;
+
+        if (sponsorId) {
+          await supabaseAdmin
+            .from('sponsors')
+            .update({
+              status: 'active',
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: session.subscription as string,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', sponsorId);
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.subscription as string;
+
+        if (subscriptionId) {
+          await supabaseAdmin
+            .from('sponsors')
+            .update({
+              status: 'past_due',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_subscription_id', subscriptionId);
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+
+        await supabaseAdmin
+          .from('sponsors')
+          .update({
+            status: 'canceled',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', subscription.id);
+        break;
+      }
+
+      default:
+        break;
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (err: any) {
+    console.error('Webhook handler error:', err);
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
+  }
+}
