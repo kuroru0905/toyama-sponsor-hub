@@ -14,6 +14,7 @@ import {
   Music,
   Smartphone,
   X,
+  UserCircle,
 } from 'lucide-react';
 
 const supabase = createClient(
@@ -186,23 +187,30 @@ export default function SponsorHubPage() {
           <div className="flex items-center gap-2">
             <span className="inline-block h-3 w-3 rounded-full bg-teal-400 animate-pulse" />
             <span className="font-bold tracking-wider text-white">外山企画</span>
-            <span className="hidden sm:inline text-xs text-zinc-400 border-l border-zinc-700 pl-2">
+            <span className="hidden md:inline text-xs text-zinc-400 border-l border-zinc-700 pl-2">
               登別地域還元型エンタメ×ITプロジェクト
             </span>
           </div>
-          <nav className="flex items-center gap-6 text-sm">
-            <a href="#vision" className="text-zinc-400 hover:text-white transition">
+          <nav className="flex items-center gap-4 sm:gap-6 text-sm">
+            <a href="#vision" className="hidden sm:inline text-zinc-400 hover:text-white transition">
               ビジョン
             </a>
-            <a href="#plans" className="text-zinc-400 hover:text-white transition">
+            <a href="#plans" className="hidden sm:inline text-zinc-400 hover:text-white transition">
               スポンサー枠
             </a>
-            <a href="#supporters" className="text-zinc-400 hover:text-white transition">
+            <a href="#supporters" className="hidden sm:inline text-zinc-400 hover:text-white transition">
               サポーター一覧
             </a>
+            <Link
+              href="/mypage"
+              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition"
+            >
+              <UserCircle className="h-4 w-4 text-teal-400" />
+              マイページ
+            </Link>
             <a
               href="#plans"
-              className="rounded-full bg-teal-400 px-4 py-1.5 font-bold text-zinc-950 hover:bg-teal-300 transition"
+              className="rounded-full bg-teal-400 px-4 py-1.5 text-xs sm:text-sm font-bold text-zinc-950 hover:bg-teal-300 transition"
             >
               参画する
             </a>
@@ -426,6 +434,9 @@ export default function SponsorHubPage() {
         <div className="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© {new Date().getFullYear()} 外山企画 (Toyama Kikaku) - Noboribetsu, Hokkaido.</p>
           <div className="flex flex-wrap justify-center gap-6">
+            <Link href="/mypage" className="hover:text-zinc-300 underline">
+              マイページ・解約手続き
+            </Link>
             <Link href="/privacy" className="hover:text-zinc-300 underline">
               プライバシーポリシー
             </Link>
