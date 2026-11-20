@@ -425,7 +425,10 @@ export default function SponsorHubPage() {
       <footer className="border-t border-zinc-800 py-10 text-center text-xs text-zinc-500">
         <div className="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© {new Date().getFullYear()} 外山企画 (Toyama Kikaku) - Noboribetsu, Hokkaido.</p>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center gap-6">
+            <Link href="/privacy" className="hover:text-zinc-300 underline">
+              プライバシーポリシー
+            </Link>
             <Link href="/tokushoho" className="hover:text-zinc-300 underline">
               特定商取引法に基づく表記
             </Link>
