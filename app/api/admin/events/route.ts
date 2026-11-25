@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { HttpError } from '@/lib/sponsorCoupons';
 import { requireAdminEmail } from '@/lib/adminAuth';
-import { parseEventInput, errorJson } from '@/lib/adminValidation';
+import { parseEventInput, checkEventTimeline, errorJson } from '@/lib/adminValidation';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const [eventsRes, ordersRes, usesRes, appsRes] = await Promise.all([
       supabaseAdmin
         .from('live_events')
-        .select('id, title, venue, starts_at, price_jpy, capacity, description, is_published, recruit_performers, recruit_deadline, created_at')
+        .select('id, title, venue, starts_at, price_jpy, capacity, description, is_published, recruit_performers, recruit_deadline, presale_start, general_sale_start, created_at')
         .order('starts_at', { ascending: true }),
       supabaseAdmin.from('ticket_orders').select('event_id, status, amount_jpy').in('status', ['paid', 'used']),
       // 入場特典クーポンの利用（イベント別の店舗送客数）
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
     await requireAdminEmail(req);
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const input = parseEventInput(body, false);
+    checkEventTimeline(input);
 
     const { data, error } = await supabaseAdmin.from('live_events').insert(input).select('id').single();
     if (error || !data) throw new HttpError(500, `イベントの作成に失敗しました${error ? `（${error.message}）` : ''}`);

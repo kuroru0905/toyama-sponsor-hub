@@ -62,6 +62,7 @@ const PLANS = [
     description: 'イベント会場の熱気と観光客（外貨）を、ライブ入場者向けのLINEクーポンで実店舗へ送客します。',
     includes: 'ファンサポーター枠の特典もすべて利用できます',
     features: [
+      'ライブ入場者向けLINEクーポンの掲載（マイページから申請）',
       'SNS告知用PR画像・ショップカード素材の制作',
       '会場内スポンサー看板への店舗名掲載',
     ],
@@ -78,7 +79,7 @@ const PLANS = [
     description: '登別に「若者が主役となって楽しめる場」を創り続けるための、気軽に参加できるコミュニティ枠です。',
     includes: '',
     features: [
-      '主催イベントの優先購入券・限定エリア案内',
+      '主催イベントのスポンサー先行販売（優先購入）・限定エリア案内',
       'ステージパフォーマンス・DJ/バンド出演応募権',
       '公式サイト＆会場エンドロールへのサポーター名掲示',
       'サポーター限定LINEオープンチャット・先行情報',
@@ -91,6 +92,7 @@ export default function SponsorHubPage() {
   const [selectedPlan, setSelectedPlan] = useState<(typeof PLANS)[0] | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [availability, setAvailability] = useState<Record<string, { cap: number; remaining: number }>>({});
 
   const [applicantName, setApplicantName] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -113,6 +115,13 @@ export default function SponsorHubPage() {
       setSponsors(data as Sponsor[]);
     }
   };
+
+  useEffect(() => {
+    fetch('/api/availability', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => setAvailability(j.availability ?? {}))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchSponsors();
@@ -328,7 +337,16 @@ export default function SponsorHubPage() {
                         <Icon className="h-3.5 w-3.5" />
                         {plan.badge}
                       </span>
-                      <span className="text-xs font-bold text-zinc-400">{plan.target}</span>
+                      <span className="text-xs font-bold text-zinc-400 text-right">
+                        {plan.target}
+                        {availability[plan.id] && (
+                          <span className={`block ${availability[plan.id].remaining === 0 ? 'text-red-400' : 'text-teal-300'}`}>
+                            {availability[plan.id].remaining === 0
+                              ? '満枠'
+                              : `残り${availability[plan.id].remaining}${plan.id === 'corporate' ? '社' : '店'}`}
+                          </span>
+                        )}
+                      </span>
                     </div>
 
                     <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
@@ -362,13 +380,19 @@ export default function SponsorHubPage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => openModal(plan)}
-                    className={`w-full rounded-xl py-3.5 px-6 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer ${plan.btnColor}`}
-                  >
-                    この枠で申し込む
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  {availability[plan.id]?.remaining === 0 ? (
+                    <div className="w-full rounded-xl py-3.5 px-6 font-bold text-sm text-center border border-zinc-700 bg-zinc-800 text-zinc-400">
+                      満枠のため受付を停止中です
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => openModal(plan)}
+                      className={`w-full rounded-xl py-3.5 px-6 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer ${plan.btnColor}`}
+                    >
+                      この枠で申し込む
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               );
             })}

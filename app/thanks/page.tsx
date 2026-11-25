@@ -26,7 +26,7 @@ function ThanksContent() {
         {method === 'invoice' ? (
           <p className="text-sm text-zinc-300 leading-relaxed mb-8">
             ご登録いただいたメールアドレス宛に、Stripeより請求書（PDF）を自動送信いたしました。
-            サイト上のサポーター一覧への掲載が完了しております。
+            お支払い（発行日より14日以内）の確認後に、サポーター権利とサイト上のサポーター一覧への掲載が有効になります。
           </p>
         ) : (
           <p className="text-sm text-zinc-300 leading-relaxed mb-8">
@@ -38,7 +38,8 @@ function ThanksContent() {
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 mb-8 text-left">
           <p className="text-xs font-bold text-amber-400 mb-2">NEXT STEP（リターン受取・連絡窓口）</p>
           <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-            PR動画・画像の素材入稿や、優先購入券・LINEクーポン掲載のご案内は「外山企画 公式LINE」にて一元管理しております。以下より友だち追加をお願いいたします。
+            LINEクーポンの掲載申請・出演応募・LINE連携（スポンサー先行販売の購入に必要）はマイページから行えます。
+            PR動画・画像の素材入稿などのご連絡は「外山企画 公式LINE」で承りますので、友だち追加をお願いいたします。
           </p>
           <a
             href={lineUrl}
@@ -50,6 +51,13 @@ function ThanksContent() {
             公式LINEを友だち追加する
           </a>
         </div>
+
+        <Link
+          href="/mypage"
+          className="mb-4 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 py-3 px-4 text-sm font-bold text-white hover:bg-zinc-800 transition"
+        >
+          マイページへ
+        </Link>
 
         <Link
           href="/"

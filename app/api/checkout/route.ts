@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { TIER_CAPS } from '@/lib/tierCaps';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
@@ -32,6 +33,24 @@ export async function POST(req: NextRequest) {
     }
     if (!applicantName || !email) {
       return NextResponse.json({ error: '必須項目が入力されていません' }, { status: 400 });
+    }
+
+    const cap = TIER_CAPS[tier];
+    if (cap !== undefined) {
+      const { count, error: countError } = await supabaseAdmin
+        .from('sponsors')
+        .select('id', { count: 'exact', head: true })
+        .eq('tier', tier)
+        .eq('status', 'active');
+      if (countError) {
+        return NextResponse.json({ error: '募集状況の確認に失敗しました' }, { status: 500 });
+      }
+      if ((count ?? 0) >= cap) {
+        return NextResponse.json(
+          { error: `この枠は満枠（${cap}社/店）のため、現在お申し込みを受け付けていません` },
+          { status: 409 }
+        );
+      }
     }
 
     const finalDisplayName = displayName?.trim() ? displayName.trim() : applicantName.trim();
@@ -92,7 +111,8 @@ export async function POST(req: NextRequest) {
         .update({
           stripe_customer_id: customer.id,
           stripe_subscription_id: subscription.id,
-          status: 'active',
+          // 請求書払いは入金確認（Webhook invoice.paid）まで有効化しない
+          status: 'pending',
         })
         .eq('id', sponsor.id);
 

@@ -47,6 +47,28 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      // 請求書払い：入金が確認できたら有効化（カード払いの毎月の更新でも届く。未払い→支払い済みの復帰にも使う）
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.subscription as string | null;
+        const sponsorId = invoice.subscription_details?.metadata?.sponsorId;
+
+        const update = {
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        };
+        if (subscriptionId) {
+          await supabaseAdmin
+            .from('sponsors')
+            .update(update)
+            .eq('stripe_subscription_id', subscriptionId)
+            .neq('status', 'canceled');
+        } else if (sponsorId) {
+          await supabaseAdmin.from('sponsors').update(update).eq('id', sponsorId).neq('status', 'canceled');
+        }
+        break;
+      }
+
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const subscriptionId = invoice.subscription as string;

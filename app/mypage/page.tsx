@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import CouponManager from './CouponManager';
 import PerformerApplication from './PerformerApplication';
+import LineLink from './LineLink';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -445,6 +446,14 @@ export default function MyPage() {
                         <CouponManager
                           sponsorId={sponsor.id}
                           defaultShopName={sponsor.display_name}
+                          accessToken={session.access_token}
+                          isActive={sponsor.status === 'active'}
+                        />
+                      )}
+
+                      {sponsor.status !== 'canceled' && (
+                        <LineLink
+                          sponsorId={sponsor.id}
                           accessToken={session.access_token}
                           isActive={sponsor.status === 'active'}
                         />

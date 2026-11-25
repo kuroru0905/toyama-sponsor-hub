@@ -17,6 +17,8 @@ type AdminEvent = {
   is_published: boolean;
   recruit_performers: boolean;
   recruit_deadline: string | null;
+  presale_start: string | null;
+  general_sale_start: string | null;
   stats: EventStats;
 };
 
@@ -39,6 +41,8 @@ type EventForm = {
   is_published: boolean;
   recruit_performers: boolean;
   recruit_deadline: string; // datetime-local（日本時間）
+  presale_start: string; // datetime-local（日本時間）空欄＝先行販売なし
+  general_sale_start: string; // datetime-local（日本時間）空欄＝公開と同時に販売
 };
 
 const EMPTY: EventForm = {
@@ -52,6 +56,8 @@ const EMPTY: EventForm = {
   is_published: true,
   recruit_performers: false,
   recruit_deadline: '',
+  presale_start: '',
+  general_sale_start: '',
 };
 
 const JST_MS = 9 * 60 * 60 * 1000;
@@ -125,6 +131,14 @@ export default function AdminEventsPage() {
     if (!form) return;
     if (!form.starts_at) return setError('開演日時を入力してください');
     if (form.recruit_performers && !form.recruit_deadline) return setError('出演者募集の締切を入力してください');
+    if (form.recruit_performers && form.recruit_deadline > form.starts_at)
+      return setError('出演者募集の締切は、開演日時より前にしてください');
+    if (form.presale_start && !form.general_sale_start)
+      return setError('スポンサー先行販売を設定する場合は、一般販売の開始日時も入力してください');
+    if (form.presale_start && form.presale_start >= form.general_sale_start)
+      return setError('スポンサー先行販売の開始は、一般販売の開始より前にしてください');
+    if (form.general_sale_start && form.general_sale_start >= form.starts_at)
+      return setError('一般販売の開始は、開演日時より前にしてください');
     const payload = {
       title: form.title,
       venue: form.venue,
@@ -135,6 +149,8 @@ export default function AdminEventsPage() {
       is_published: form.is_published,
       recruit_performers: form.recruit_performers,
       recruit_deadline: form.recruit_performers ? localToIso(form.recruit_deadline) : null,
+      presale_start: localToIso(form.presale_start),
+      general_sale_start: localToIso(form.general_sale_start),
     };
     setSaving(true);
     try {
@@ -228,14 +244,6 @@ export default function AdminEventsPage() {
             <textarea className={`${inputClass} min-h-[90px]`} value={form.description} maxLength={2000} placeholder="出演者、開場時間、注意事項など" onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
 
-          <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
-            <input type="checkbox" className="mt-0.5" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} />
-            <span>
-              公開する
-              <span className="block text-xs text-zinc-400">LINEのチケット画面に表示され、購入できるようになります</span>
-            </span>
-          </label>
-
           <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-4 space-y-3">
             <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
               <input
@@ -248,7 +256,7 @@ export default function AdminEventsPage() {
                 <Mic2 className="inline h-4 w-4 text-amber-400 mr-1" />
                 出演者を募集する
                 <span className="block text-xs text-zinc-400">
-                  公開中なら、締切までスポンサーのマイページにこのイベントの出演応募欄が出ます
+                  チケットを公開する前からでも、締切までスポンサーのマイページにこのイベントの出演応募欄が出ます（締切は開演より前）
                 </span>
               </span>
             </label>
@@ -264,6 +272,32 @@ export default function AdminEventsPage() {
               </div>
             )}
           </div>
+
+          <div className="rounded-xl border border-teal-400/30 bg-teal-400/5 p-4 space-y-3">
+            <p className="text-sm font-bold text-white">チケット販売スケジュール</p>
+            <p className="text-xs text-zinc-400">
+              出演者募集 → スポンサー先行販売 → 一般販売 → 開演（販売終了）。先行販売は、マイページでLINE連携した有効なスポンサーだけが購入できます。
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>スポンサー先行販売の開始（任意）</label>
+                <input type="datetime-local" className={inputClass} value={form.presale_start} onChange={(e) => setForm({ ...form, presale_start: e.target.value })} />
+              </div>
+              <div>
+                <label className={labelClass}>一般販売の開始（任意）</label>
+                <input type="datetime-local" className={inputClass} value={form.general_sale_start} onChange={(e) => setForm({ ...form, general_sale_start: e.target.value })} />
+              </div>
+            </div>
+            <p className="text-xs text-zinc-500">入場ボタンは開演3時間前〜開演日の23:59まで使えます。</p>
+          </div>
+
+          <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
+            <input type="checkbox" className="mt-0.5" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} />
+            <span>
+              公開する
+              <span className="block text-xs text-zinc-400">LINEのチケット画面に表示されます。下の販売開始日時から購入できます（空欄なら公開と同時に一般販売）</span>
+            </span>
+          </label>
 
           {form.id && <p className="text-xs text-zinc-500">※ 価格の変更は、これから購入する人にだけ適用されます。</p>}
 
@@ -303,7 +337,7 @@ export default function AdminEventsPage() {
           {events.map((ev) => {
             const soldOut = ev.capacity !== null && ev.stats.sold >= ev.capacity;
             const recruitOpen =
-              ev.is_published && ev.recruit_performers && ev.recruit_deadline !== null && new Date(ev.recruit_deadline).getTime() > now;
+              ev.recruit_performers && ev.recruit_deadline !== null && new Date(ev.recruit_deadline).getTime() > now;
             return (
               <section key={ev.id} className={`rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-5 ${ev.is_published ? '' : 'opacity-75'}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
@@ -332,6 +366,8 @@ export default function AdminEventsPage() {
                 <p className="text-xs text-zinc-400 mb-3">
                   📍 {ev.venue} ／ {yen(ev.price_jpy)}
                   {ev.recruit_performers && ` ／ 出演応募の締切 ${fmt(ev.recruit_deadline)}`}
+                  {ev.presale_start && ` ／ 先行 ${fmt(ev.presale_start)}〜`}
+                  {ev.general_sale_start && ` ／ 一般 ${fmt(ev.general_sale_start)}〜`}
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
@@ -364,6 +400,8 @@ export default function AdminEventsPage() {
                         is_published: ev.is_published,
                         recruit_performers: ev.recruit_performers,
                         recruit_deadline: isoToLocal(ev.recruit_deadline),
+                        presale_start: isoToLocal(ev.presale_start),
+                        general_sale_start: isoToLocal(ev.general_sale_start),
                       });
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
