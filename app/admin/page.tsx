@@ -17,6 +17,7 @@ import {
   Search,
   RefreshCw,
 } from 'lucide-react';
+import ApplicationsPanel from './ApplicationsPanel';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -543,6 +544,8 @@ export default function AdminDashboardPage() {
                 })}
               </div>
             )}
+
+            <ApplicationsPanel accessToken={session.access_token} />
           </div>
         )}
       </div>
