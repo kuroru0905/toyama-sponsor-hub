@@ -344,8 +344,8 @@ export default function SponsorHubPage() {
                         )}
                       </div>
                       <p className="mt-5 flex items-baseline gap-1.5">
-                        <span className="num text-[48px] font-semibold leading-none tracking-tight">¥{plan.price}</span>
-                        <span className="text-[15px] text-ink-2">／月（税込）</span>
+                        <span className="num text-[40px] font-semibold leading-none tracking-tight sm:text-[48px]">¥{plan.price}</span>
+                        <span className="whitespace-nowrap text-[15px] text-ink-2">／月（税込）</span>
                       </p>
                       <p className="mt-5 text-[17px] leading-relaxed text-ink-2">{plan.lead}</p>
                     </div>
