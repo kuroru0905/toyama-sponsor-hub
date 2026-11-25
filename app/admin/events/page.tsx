@@ -96,9 +96,8 @@ const fmt = (iso: string | null) =>
     : '-';
 const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
-const inputClass =
-  'w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 sm:py-2.5 text-base sm:text-sm text-white focus:border-teal-400 focus:outline-none';
-const labelClass = 'block text-xs font-bold text-zinc-300 mb-1.5';
+const inputClass = 'field-input';
+const labelClass = 'block text-[15px] font-bold text-ink mb-2';
 
 export default function AdminEventsPage() {
   const { token } = useAdmin();
@@ -223,24 +222,24 @@ export default function AdminEventsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-white">イベント・チケット</h1>
-          <p className="text-xs text-zinc-400 mt-1">公開したイベントはLINEのチケット画面に表示され、購入できます。</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-ink">イベント・チケット</h1>
+          <p className="text-sm text-ink-2 mt-1">公開したイベントはLINEのチケット画面に表示され、購入できます。</p>
         </div>
         <button
           onClick={load}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink hover:bg-surface"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           再取得
         </button>
       </div>
 
-      {toast && <div className="mb-4 rounded-xl border border-teal-500/40 bg-teal-500/10 p-3 text-sm text-teal-200">{toast}</div>}
-      {error && <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
+      {toast && <div className="mb-4 rounded-ctl border border-brand-line bg-brand-soft p-3 text-sm text-brand">{toast}</div>}
+      {error && <div className="mb-4 rounded-ctl border border-danger-line bg-danger-soft p-3 text-sm text-danger">{error}</div>}
 
       {form ? (
-        <section className="mb-6 rounded-2xl border border-teal-500/40 bg-zinc-900 p-4 sm:p-6 space-y-4">
-          <h2 className="text-lg font-bold text-white">{form.id ? 'イベントを編集' : '新しいイベント'}</h2>
+        <section className="mb-6 rounded-panel border border-brand-line bg-paper p-4 sm:p-6 space-y-4">
+          <h2 className="text-lg font-bold text-ink">{form.id ? 'イベントを編集' : '新しいイベント'}</h2>
 
           <div>
             <label className={labelClass}>公演名 *</label>
@@ -269,8 +268,8 @@ export default function AdminEventsPage() {
             <textarea className={`${inputClass} min-h-[90px]`} value={form.description} maxLength={2000} placeholder="出演者、開場時間、注意事項など" onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
 
-          <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-4 space-y-3">
-            <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
+          <div className="rounded-ctl border border-warn-line bg-warn-soft p-4 space-y-3">
+            <label className="flex items-start gap-2.5 text-sm text-ink cursor-pointer">
               <input
                 type="checkbox"
                 className="mt-0.5"
@@ -278,9 +277,9 @@ export default function AdminEventsPage() {
                 onChange={(e) => setForm({ ...form, recruit_performers: e.target.checked })}
               />
               <span>
-                <Mic2 className="inline h-4 w-4 text-amber-400 mr-1" />
+                <Mic2 className="inline h-4 w-4 text-warn mr-1" />
                 出演者を募集する
-                <span className="block text-xs text-zinc-400">
+                <span className="block text-sm text-ink-2">
                   チケットを公開する前からでも、締切までスポンサーのマイページにこのイベントの出演応募欄が出ます（締切は開演より前）。保存すると5分以内に、有効なスポンサー全員へ募集開始のお知らせメール、公式LINEの友だち全員へLINEのお知らせが届きます（1イベント1回）
                 </span>
               </span>
@@ -301,7 +300,7 @@ export default function AdminEventsPage() {
                 <label className={labelClass}>募集する出演形態 *</label>
                 <div className="flex flex-wrap gap-x-5 gap-y-2">
                   {RECRUIT_ACT_OPTIONS.map((o) => (
-                    <label key={o.value} className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                    <label key={o.value} className="flex items-center gap-2 text-sm text-ink cursor-pointer">
                       <input
                         type="checkbox"
                         checked={form.recruit_act_types.indexOf(o.value) >= 0}
@@ -332,14 +331,14 @@ export default function AdminEventsPage() {
                   value={form.recruit_note}
                   onChange={(e) => setForm({ ...form, recruit_note: e.target.value })}
                 />
-                <p className="mt-1 text-xs text-zinc-500">お知らせのメール・LINEと、マイページの応募欄に表示されます。</p>
+                <p className="mt-1 text-sm text-ink-3">お知らせのメール・LINEと、マイページの応募欄に表示されます。</p>
               </div>
             )}
           </div>
 
-          <div className="rounded-xl border border-teal-400/30 bg-teal-400/5 p-4 space-y-3">
-            <p className="text-sm font-bold text-white">チケット販売スケジュール</p>
-            <p className="text-xs text-zinc-400">
+          <div className="rounded-ctl border border-brand-line bg-brand-soft p-4 space-y-3">
+            <p className="text-sm font-bold text-ink">チケット販売スケジュール</p>
+            <p className="text-sm text-ink-2">
               出演者募集 → スポンサー先行販売 → 一般販売 → 開演（販売終了）。先行販売は、マイページでLINE連携した有効なスポンサーだけが購入できます。公開中のイベントが買えるようになった時（先行販売があればその開始時）に、有効なスポンサー全員へお知らせメール、公式LINEの友だち全員へLINEのお知らせが届きます（1イベント1回）。
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -352,11 +351,11 @@ export default function AdminEventsPage() {
                 <input type="datetime-local" className={inputClass} value={form.general_sale_start} onChange={(e) => setForm({ ...form, general_sale_start: e.target.value })} />
               </div>
             </div>
-            <p className="text-xs text-zinc-500">入場ボタンは開演3時間前〜開演日の23:59まで使えます。</p>
+            <p className="text-sm text-ink-3">入場ボタンは開演3時間前〜開演日の23:59まで使えます。</p>
           </div>
 
-          <div className="rounded-xl border border-red-400/30 bg-red-400/5 p-4 space-y-3">
-            <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
+          <div className="rounded-ctl border border-danger-line bg-danger-soft p-4 space-y-3">
+            <label className="flex items-start gap-2.5 text-sm text-ink cursor-pointer">
               <input
                 type="checkbox"
                 className="mt-0.5"
@@ -365,7 +364,7 @@ export default function AdminEventsPage() {
               />
               <span>
                 当日のライブ配信をする（YouTube限定公開・スポンサー特典）
-                <span className="block text-xs text-zinc-400">
+                <span className="block text-sm text-ink-2">
                   有効なスポンサー（全枠）のマイページに配信リンクを表示します。開演1時間前になっても配信URLが空欄なら、管理者にアラートメールが届きます。
                 </span>
               </span>
@@ -385,26 +384,26 @@ export default function AdminEventsPage() {
             )}
           </div>
 
-          <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
+          <label className="flex items-start gap-2.5 text-sm text-ink cursor-pointer">
             <input type="checkbox" className="mt-0.5" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} />
             <span>
               公開する
-              <span className="block text-xs text-zinc-400">LINEのチケット画面に表示されます。下の販売開始日時から購入できます（空欄なら公開と同時に一般販売）</span>
+              <span className="block text-sm text-ink-2">LINEのチケット画面に表示されます。下の販売開始日時から購入できます（空欄なら公開と同時に一般販売）</span>
             </span>
           </label>
 
-          {form.id && <p className="text-xs text-zinc-500">※ 価格の変更は、これから購入する人にだけ適用されます。</p>}
+          {form.id && <p className="text-sm text-ink-3">※ 価格の変更は、これから購入する人にだけ適用されます。</p>}
 
           {error && (
-            <div role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+            <div role="alert" className="rounded-ctl border border-danger-line bg-danger-soft p-3 text-sm text-danger">
               {error}
             </div>
           )}
           <div className="flex flex-col-reverse sm:flex-row gap-2">
-            <button disabled={saving} onClick={() => setForm(null)} className="rounded-xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-300 hover:bg-zinc-800">
+            <button disabled={saving} onClick={() => setForm(null)} className="rounded-ctl border border-line-strong bg-paper px-5 py-3 text-sm font-bold text-ink hover:bg-surface">
               キャンセル
             </button>
-            <button disabled={saving} onClick={save} className="flex-1 sm:flex-none rounded-xl bg-teal-400 px-6 py-3 text-sm font-bold text-zinc-950 hover:bg-teal-300 disabled:opacity-50">
+            <button disabled={saving} onClick={save} className="flex-1 sm:flex-none rounded-ctl bg-brand px-6 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover disabled:opacity-50">
               {saving ? '保存中...' : '保存する'}
             </button>
           </div>
@@ -415,7 +414,7 @@ export default function AdminEventsPage() {
             setToast('');
             setForm({ ...EMPTY });
           }}
-          className="mb-6 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-teal-400 px-5 py-3 text-sm font-bold text-zinc-950 hover:bg-teal-300"
+          className="mb-6 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-ctl bg-brand px-5 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover"
         >
           <Plus className="h-4 w-4" />
           新しいイベントを作成
@@ -423,9 +422,9 @@ export default function AdminEventsPage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-zinc-400">読み込み中...</p>
+        <p className="text-sm text-ink-2">読み込み中...</p>
       ) : events.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-400">イベントはまだありません。</div>
+        <div className="rounded-panel border border-line bg-paper p-6 text-sm text-ink-2">イベントはまだありません。</div>
       ) : (
         <div className="space-y-4">
           {events.map((ev) => {
@@ -433,31 +432,31 @@ export default function AdminEventsPage() {
             const recruitOpen =
               ev.recruit_performers && ev.recruit_deadline !== null && new Date(ev.recruit_deadline).getTime() > now;
             return (
-              <section key={ev.id} className={`rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-5 ${ev.is_published ? '' : 'opacity-75'}`}>
+              <section key={ev.id} className={`rounded-panel border border-line bg-paper p-4 sm:p-5 ${ev.is_published ? '' : 'opacity-75'}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                  <span className="text-xs font-bold text-teal-300">{fmt(ev.starts_at)} 開演</span>
+                  <span className="text-sm font-bold text-brand">{fmt(ev.starts_at)} 開演</span>
                   <span className="flex flex-wrap gap-1.5">
-                    {soldOut && <span className="rounded-full border border-zinc-600 bg-zinc-800 px-2.5 py-0.5 text-[11px] font-bold text-zinc-300">完売</span>}
+                    {soldOut && <span className="rounded-full border border-line-strong bg-surface px-2.5 py-0.5 text-xs font-bold text-ink">完売</span>}
                     {ev.recruit_performers && (
                       <span
-                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
-                          recruitOpen ? 'border-amber-400/40 bg-amber-400/15 text-amber-300' : 'border-zinc-600 bg-zinc-800 text-zinc-400'
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                          recruitOpen ? 'border-warn-line bg-warn-soft text-warn' : 'border-line-strong bg-surface text-ink-2'
                         }`}
                       >
                         {recruitOpen ? '出演者募集中' : '出演者募集 終了'}
                       </span>
                     )}
                     <span
-                      className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
-                        ev.is_published ? 'border-teal-500/40 bg-teal-500/15 text-teal-300' : 'border-zinc-600 bg-zinc-800 text-zinc-400'
+                      className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                        ev.is_published ? 'border-brand-line bg-brand-soft text-brand' : 'border-line-strong bg-surface text-ink-2'
                       }`}
                     >
                       {ev.is_published ? '公開中' : '非公開'}
                     </span>
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-white">{ev.title}</h3>
-                <p className="text-xs text-zinc-400 mb-3">
+                <h3 className="text-lg font-bold text-ink">{ev.title}</h3>
+                <p className="text-sm text-ink-2 mb-3">
                   📍 {ev.venue} ／ {yen(ev.price_jpy)}
                   {ev.recruit_performers &&
                     ` ／ 出演応募の締切 ${fmt(ev.recruit_deadline)}（${(ev.recruit_act_types ?? [])
@@ -467,11 +466,11 @@ export default function AdminEventsPage() {
                   {ev.general_sale_start && ` ／ 一般 ${fmt(ev.general_sale_start)}〜`}
                   {' ／ '}
                   {!ev.stream_enabled ? (
-                    <span className="text-zinc-500">配信なし</span>
+                    <span className="text-ink-3">配信なし</span>
                   ) : ev.stream_url ? (
-                    <span className="text-teal-300">配信URL設定済み</span>
+                    <span className="text-brand">配信URL設定済み</span>
                   ) : (
-                    <span className="text-red-300 font-bold">配信URL未設定</span>
+                    <span className="text-danger font-bold">配信URL未設定</span>
                   )}
                 </p>
 
@@ -483,9 +482,9 @@ export default function AdminEventsPage() {
                     ['店舗送客', `${ev.stats.sent}件`],
                     ['出演応募', `${ev.stats.applications}件`],
                   ].map(([k, v]) => (
-                    <div key={k} className="rounded-xl bg-zinc-950 px-3 py-2">
-                      <div className="text-[11px] font-bold text-zinc-500">{k}</div>
-                      <div className="text-base font-bold text-white">{v}</div>
+                    <div key={k} className="rounded-ctl bg-paper px-3 py-2">
+                      <div className="text-xs font-bold text-ink-3">{k}</div>
+                      <div className="text-base font-bold text-ink">{v}</div>
                     </div>
                   ))}
                 </div>
@@ -514,7 +513,7 @@ export default function AdminEventsPage() {
                       });
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-bold text-white hover:bg-zinc-800"
+                    className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-bold text-ink hover:bg-surface"
                   >
                     編集
                   </button>
@@ -529,28 +528,28 @@ export default function AdminEventsPage() {
                           : `「${ev.title}」を公開して販売を始めますか？`
                       )
                     }
-                    className={`rounded-lg border px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-bold ${
-                      ev.is_published ? 'border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20' : 'border-zinc-700 bg-zinc-950 text-white hover:bg-zinc-800'
+                    className={`rounded-lg border px-4 py-2.5 text-sm font-bold ${
+                      ev.is_published ? 'border-danger-line bg-danger-soft text-danger hover:bg-danger-soft' : 'border-line-strong bg-paper text-ink hover:bg-surface'
                     }`}
                   >
                     {ev.is_published ? '非公開にする' : '公開する'}
                   </button>
                   <button
                     onClick={() => showOrders(ev)}
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 sm:py-2 text-sm sm:text-xs font-bold text-white hover:bg-zinc-800"
+                    className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-bold text-ink hover:bg-surface"
                   >
                     {ordersOf === ev.id ? '購入者を閉じる' : '購入者一覧'}
                   </button>
                 </div>
 
                 {ordersOf === ev.id && (
-                  <div className="mt-4 border-t border-zinc-800 pt-4 overflow-x-auto">
+                  <div className="mt-4 border-t border-line pt-4 overflow-x-auto">
                     {orders.length === 0 ? (
-                      <p className="text-xs text-zinc-500">まだ購入者はいません。</p>
+                      <p className="text-sm text-ink-3">まだ購入者はいません。</p>
                     ) : (
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="text-left text-xs text-zinc-500">
+                          <tr className="text-left text-sm text-ink-3">
                             <th className="py-1 pr-3">名前</th>
                             <th className="py-1 pr-3">購入</th>
                             <th className="py-1">入場</th>
@@ -558,10 +557,10 @@ export default function AdminEventsPage() {
                         </thead>
                         <tbody>
                           {orders.map((o) => (
-                            <tr key={o.id} className="border-t border-zinc-800">
-                              <td className="py-2 pr-3 text-white">{o.display_name ?? '（名前なし）'}</td>
-                              <td className="py-2 pr-3 text-zinc-300 whitespace-nowrap">{fmt(o.paid_at)}</td>
-                              <td className={`py-2 whitespace-nowrap font-bold ${o.status === 'used' ? 'text-teal-300' : 'text-zinc-500'}`}>
+                            <tr key={o.id} className="border-t border-line">
+                              <td className="py-2 pr-3 text-ink">{o.display_name ?? '（名前なし）'}</td>
+                              <td className="py-2 pr-3 text-ink whitespace-nowrap">{fmt(o.paid_at)}</td>
+                              <td className={`py-2 whitespace-nowrap font-bold ${o.status === 'used' ? 'text-brand' : 'text-ink-3'}`}>
                                 {o.status === 'used' ? fmt(o.used_at) : '未入場'}
                               </td>
                             </tr>

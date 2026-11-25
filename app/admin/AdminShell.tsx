@@ -4,7 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient, Session } from '@supabase/supabase-js';
-import { ArrowLeft, LogOut, ShieldAlert, Users, CalendarDays, Ticket, Mic2 } from 'lucide-react';
+import { Users, CalendarDays, Ticket, Mic2 } from 'lucide-react';
+import { Button, Field, Notice, Wordmark } from '@/components/ui';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -81,7 +82,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       options: { emailRedirectTo: redirectUrl },
     });
     setSendingMail(false);
-    if (error) setLoginError('ログインメールの送信に失敗しました。');
+    if (error) setLoginError('ログイン用のメールを送れませんでした。少し時間をおいてもう一度お試しください。');
     else setMailSent(true);
   };
 
@@ -91,105 +92,99 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   };
 
   const frame = (inner: React.ReactNode) => (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 py-8 sm:py-10 px-4">
-      <div className="mx-auto max-w-6xl">{inner}</div>
+    <div className="min-h-screen bg-surface">
+      <header className="border-b border-line bg-paper">
+        <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
+          <Link href="/" className="text-lg">
+            <Wordmark />
+          </Link>
+          <span className="ml-3 text-sm text-ink-2">管理画面</span>
+        </div>
+      </header>
+      <main className="mx-auto max-w-md px-4 py-12">{inner}</main>
     </div>
   );
 
   if (authLoading) {
-    return frame(<p className="text-center text-zinc-400 py-20">認証状態を確認中...</p>);
+    return frame(<p className="text-center text-ink-2">ログインの状態を確認しています…</p>);
   }
 
   if (!session) {
     return frame(
-      <div className="mx-auto max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8 shadow-2xl">
-        <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">TOYAMA KIKAKU ADMIN</span>
-        <h1 className="text-2xl font-extrabold text-white mt-1 mb-2">外山企画 管理画面</h1>
-        <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-          スポンサー・イベント／チケット・クーポン・出演応募をまとめて管理します。管理者のメールアドレスにログインリンクを送ります。
+      <div>
+        <h1 className="text-2xl font-bold">外山企画 管理画面</h1>
+        <p className="mt-3 leading-relaxed text-ink-2">
+          スポンサー、イベントとチケット、クーポン、出演応募をまとめて管理します。管理者のメールアドレスにログイン用のリンクを送ります。
         </p>
-        {mailSent ? (
-          <div className="rounded-2xl border border-teal-500/40 bg-teal-500/10 p-5 text-sm text-teal-200">
-            <strong>{loginEmail}</strong> 宛てにログインリンクを送りました。メールのリンクを開いてください。
-          </div>
-        ) : (
-          <form onSubmit={handleSendMagicLink} className="space-y-4">
-            {loginError && (
-              <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">{loginError}</div>
-            )}
-            <input
-              type="email"
-              required
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              placeholder="admin@example.com"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-base sm:text-sm text-white focus:border-teal-400 focus:outline-none"
-            />
-            <button
-              type="submit"
-              disabled={sendingMail}
-              className="w-full rounded-xl bg-teal-400 py-3 text-sm font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50"
-            >
-              {sendingMail ? '送信中...' : '管理者ログインリンクを送信'}
-            </button>
-          </form>
-        )}
+        <div className="mt-8 rounded-panel border border-line bg-paper p-5 sm:p-6">
+          {mailSent ? (
+            <p className="leading-relaxed">
+              <span className="font-bold">{loginEmail}</span> にログイン用のリンクを送りました。メールのリンクを開いてください。
+            </p>
+          ) : (
+            <form onSubmit={handleSendMagicLink} className="space-y-5">
+              <Field label="管理者のメールアドレス" htmlFor="adminEmail" error={loginError}>
+                <input
+                  id="adminEmail"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  inputMode="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="field-input"
+                />
+              </Field>
+              <Button type="submit" block disabled={sendingMail}>
+                {sendingMail ? '送っています…' : 'ログイン用のリンクを受け取る'}
+              </Button>
+            </form>
+          )}
+        </div>
       </div>
     );
   }
 
   if (adminState === 'checking') {
-    return frame(<p className="text-center text-zinc-400 py-20">管理者権限を確認中...</p>);
+    return frame(<p className="text-center text-ink-2">管理者かどうか確認しています…</p>);
   }
 
   if (adminState === 'forbidden') {
     return frame(
-      <div className="mx-auto max-w-lg rounded-3xl border border-red-500/40 bg-red-950/20 p-8 text-center">
-        <ShieldAlert className="h-10 w-10 text-red-400 mx-auto mb-3" />
-        <h1 className="text-xl font-extrabold text-white mb-2">アクセスが拒否されました</h1>
-        <p className="text-sm text-red-200 mb-2">{forbiddenMsg}</p>
-        <p className="text-xs text-zinc-400 mb-4">
-          現在のログインアカウント：<strong>{session.user.email}</strong>
+      <div>
+        <h1 className="text-2xl font-bold">このアカウントでは管理画面を使えません</h1>
+        <Notice tone="danger" className="mt-6" title={forbiddenMsg}>
+          ログイン中：{session.user.email}
           <br />
-          Vercelの環境変数 <code className="text-teal-300">ADMIN_EMAILS</code> にこのアドレスが設定されているか確認してください。
-        </p>
-        <button
-          onClick={handleLogout}
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800"
-        >
+          Vercel の環境変数 <code>ADMIN_EMAILS</code> にこのアドレスが入っているか確かめてください。
+        </Notice>
+        <Button variant="secondary" className="mt-6" onClick={handleLogout}>
           別のアカウントでログイン
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
     <AdminContext.Provider value={{ token: session.access_token, email: session.user.email ?? '' }}>
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
-        <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md">
+      <div className="min-h-screen bg-surface">
+        <header className="sticky top-0 z-40 border-b border-line bg-paper">
           <div className="mx-auto max-w-6xl px-4">
-            <div className="flex items-center justify-between gap-3 py-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <Link href="/" className="text-zinc-400 hover:text-white" title="公開トップページへ">
-                  <ArrowLeft className="h-5 w-5" />
+            <div className="flex h-14 items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <Link href="/" className="text-lg" title="公開ページへ">
+                  <Wordmark />
                 </Link>
-                <div className="min-w-0">
-                  <div className="text-[11px] font-bold text-teal-400 tracking-widest">TOYAMA KIKAKU ADMIN</div>
-                  <div className="text-sm font-bold text-white truncate">外山企画 管理画面</div>
-                </div>
+                <span className="text-sm text-ink-2">管理画面</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="hidden sm:inline text-xs text-zinc-500">{session.user.email}</span>
-                <button
-                  onClick={handleLogout}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">ログアウト</span>
-                </button>
+              <div className="flex items-center gap-3">
+                <span className="hidden text-sm text-ink-2 md:inline">{session.user.email}</span>
+                <Button variant="secondary" size="sm" onClick={handleLogout}>
+                  ログアウト
+                </Button>
               </div>
             </div>
-            <nav className="-mb-px flex gap-1 overflow-x-auto">
+            <nav aria-label="管理メニュー" className="-mb-px flex gap-1 overflow-x-auto">
               {ADMIN_TABS.map((tab) => {
                 const active = pathname === tab.href || pathname?.startsWith(`${tab.href}/`);
                 const Icon = tab.icon;
@@ -197,11 +192,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   <Link
                     key={tab.href}
                     href={tab.href}
-                    className={`shrink-0 inline-flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-bold transition ${
-                      active ? 'border-teal-400 text-white' : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                    aria-current={active ? 'page' : undefined}
+                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 border-b-[3px] px-3 text-[15px] font-bold ${
+                      active ? 'border-brand text-ink' : 'border-transparent text-ink-2 hover:text-ink'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon aria-hidden className="h-4 w-4" />
                     {tab.label}
                   </Link>
                 );
@@ -209,7 +205,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </nav>
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</main>
+        <main className="admin-ui mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</main>
       </div>
     </AdminContext.Provider>
   );

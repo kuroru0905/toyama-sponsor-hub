@@ -1,26 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
-import {
-  Building2,
-  Store,
-  Heart,
-  CheckCircle2,
-  ArrowRight,
-  Sparkles,
-  ShieldCheck,
-  Music,
-  Smartphone,
-  X,
-  UserCircle,
-} from 'lucide-react';
+import { Check, X } from 'lucide-react';
+import { Badge, Button, Field, Notice, Wordmark, buttonClass } from '@/components/ui';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 type TierType = 'corporate' | 'store' | 'fan';
 
@@ -31,63 +17,113 @@ interface Sponsor {
   created_at: string;
 }
 
-const PLANS = [
+type Plan = {
+  id: TierType;
+  name: string;
+  short: string;
+  price: string;
+  target: string;
+  unit: string;
+  lead: string;
+  includes: string;
+  features: string[];
+};
+
+const PLANS: Plan[] = [
   {
-    id: 'corporate' as TierType,
+    id: 'corporate',
     name: '企業プレミアム枠',
+    short: '企業',
     price: '10,000',
-    target: '6社限定',
-    badge: '採用・認知拡大',
-    icon: Building2,
-    accent: 'border-orange-500/60 bg-gradient-to-b from-orange-950/30 to-zinc-900',
-    btnColor: 'bg-orange-500 hover:bg-orange-400 text-zinc-950',
-    description: '地元企業の「カッコいい本気」を同世代目線で翻訳し、若者のスマホと会場へ直接届けます。',
-    includes: '店舗ローカル枠・ファンサポーター枠の特典もすべて利用できます',
+    target: '6社まで',
+    unit: '社',
+    lead: '地元企業の本気を、同世代の目線で若者のスマホと会場に届けます。採用や認知づくりに。',
+    includes: '店舗ローカル枠・ファンサポーター枠の特典もすべて含みます',
     features: [
       'イベント会場メインビジョンでのCM放映（マイページから相談）',
-      '企業PRショート動画の制作（採用活動へ二次利用可・マイページから相談）',
-      'Webサイト・会場パンフレットへの企業ロゴ/名称掲載',
+      '企業PRショート動画の制作（採用活動にも使えます・マイページから相談）',
+      'Webサイト・会場パンフレットへの企業ロゴ／名称の掲載',
     ],
   },
   {
-    id: 'store' as TierType,
+    id: 'store',
     name: '店舗ローカル枠',
+    short: '店舗',
     price: '3,000',
-    target: '20店限定',
-    badge: '集客・送客直結',
-    icon: Store,
-    accent: 'border-teal-500/60 bg-gradient-to-b from-teal-950/30 to-zinc-900',
-    btnColor: 'bg-teal-400 hover:bg-teal-300 text-zinc-950',
-    description: 'イベント会場の熱気と観光客（外貨）を、ライブ入場者向けのLINEクーポンで実店舗へ送客します。',
-    includes: 'ファンサポーター枠の特典もすべて利用できます',
-    features: [
-      'ライブ入場者向けLINEクーポンの掲載（マイページから申請）',
-      '会場メインビジョンでの店名掲載',
-    ],
+    target: '20店まで',
+    unit: '店',
+    lead: 'ライブに入場したお客さんのLINEに、お店のクーポンが届きます。終演後の一軒目に。',
+    includes: 'ファンサポーター枠の特典もすべて含みます',
+    features: ['ライブ入場者向けLINEクーポンの掲載（マイページから申請）', '会場メインビジョンでの店名掲載'],
   },
   {
-    id: 'fan' as TierType,
+    id: 'fan',
     name: 'ファンサポーター枠',
+    short: 'ファン',
     price: '300',
-    target: '200人目標',
-    badge: '気軽に応援',
-    icon: Heart,
-    accent: 'border-amber-400/60 bg-gradient-to-b from-amber-950/30 to-zinc-900',
-    btnColor: 'bg-amber-400 hover:bg-amber-300 text-zinc-950',
-    description: '登別に「若者が主役となって楽しめる場」を創り続けるための、気軽に参加できるコミュニティ枠です。',
+    target: '200人が目標',
+    unit: '人',
+    lead: '登別に、若い人が主役になれる場所をつくり続けるための応援枠です。',
     includes: '',
     features: [
-      '主催イベントのスポンサー先行販売（優先購入）・限定エリア案内',
-      '当日のライブ配信（YouTube限定公開リンクをマイページで案内）',
-      'ステージパフォーマンス・DJ/バンド出演応募権',
-      '公式サイト＆会場エンドロールへのサポーター名掲示',
+      'スポンサー先行販売でチケットを先に買える・限定エリアの案内',
+      '当日のライブ配信（YouTube限定公開のリンクをマイページでお知らせ）',
+      'バンド・DJ・パフォーマンスの出演応募',
+      '公式サイトと会場エンドロールにお名前を掲示',
     ],
   },
 ];
 
+const STEPS = [
+  { title: 'スポンサーが月額で支える', body: '地元の企業・お店・ファンが、それぞれ無理のない金額で毎月支えます。' },
+  { title: 'ライブを開く', body: '集まったお金で、若い人が主役のライブを登別で続けて開きます。' },
+  { title: '入場するとクーポンが届く', body: 'LINEで買ったチケットで入場すると、スポンサー店のクーポンが1枚使えるようになります。' },
+  { title: '終演後、お店へ', body: '入場の翌日まで使えるので、そのまま街のお店に人が流れます。' },
+];
+
+// ヒーローの見本チケット（このサービスの仕組みそのものを1枚で見せる）
+function SampleTicket() {
+  return (
+    <div
+      aria-label="見本：ライブの電子チケットと、入場特典のクーポン"
+      className="relative mx-auto w-full max-w-sm rounded-panel border border-line bg-paper shadow-[0_1px_0_var(--line),0_12px_32px_-12px_rgba(28,34,48,0.25)]"
+      style={{ ['--notch-bg' as string]: 'var(--surface)' }}
+    >
+      <div className="px-6 pt-6 pb-5">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-ink-2">電子チケット</span>
+          <Badge tone="ok">入場済み</Badge>
+        </div>
+        <p className="mt-3 text-2xl font-bold leading-snug">MMS ライブ</p>
+        <p className="text-sm text-ink-2">登別市民会館 大ホール</p>
+        <dl className="mt-4 grid grid-cols-3 gap-2">
+          <div>
+            <dt className="text-xs text-ink-3">日付</dt>
+            <dd className="num text-2xl font-semibold">6/20</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ink-3">開演</dt>
+            <dd className="num text-2xl font-semibold">18:00</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ink-3">料金</dt>
+            <dd className="num text-2xl font-semibold">¥2,000</dd>
+          </div>
+        </dl>
+      </div>
+      <div className="ticket-perf" />
+      <div className="rounded-b-panel bg-accent px-6 py-5 text-accent-ink">
+        <p className="text-sm font-bold">入場特典</p>
+        <p className="mt-1 text-lg font-bold leading-snug">スポンサー店のクーポンが1枚使えます</p>
+        <p className="mt-1 text-sm">例：居酒屋〇〇 焼き鳥1本サービス（翌日23:59まで）</p>
+      </div>
+    </div>
+  );
+}
+
 export default function SponsorHubPage() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
-  const [selectedPlan, setSelectedPlan] = useState<(typeof PLANS)[0] | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [availability, setAvailability] = useState<Record<string, { cap: number; remaining: number }>>({});
@@ -99,7 +135,10 @@ export default function SponsorHubPage() {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'invoice'>('card');
   const [industry, setIndustry] = useState('');
   const [address, setAddress] = useState('');
-  const [contactNote, setContactNote] = useState('');
+  const [contactNote] = useState('');
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
 
   const fetchSponsors = async () => {
     const { data, error } = await supabase
@@ -108,10 +147,7 @@ export default function SponsorHubPage() {
       .eq('status', 'active')
       .eq('is_public', true)
       .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setSponsors(data as Sponsor[]);
-    }
+    if (!error && data) setSponsors(data as Sponsor[]);
   };
 
   useEffect(() => {
@@ -123,24 +159,35 @@ export default function SponsorHubPage() {
 
   useEffect(() => {
     fetchSponsors();
-
     const channel = supabase
       .channel('realtime-sponsors')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'sponsors' },
-        () => {
-          fetchSponsors();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sponsors' }, () => {
+        fetchSponsors();
+      })
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
 
-  const openModal = (plan: (typeof PLANS)[0]) => {
+  // 申込フォームを開いている間：背景のスクロールを止め、Escで閉じ、最初の欄にフォーカス
+  useEffect(() => {
+    if (!selectedPlan) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const t = window.setTimeout(() => firstFieldRef.current?.focus(), 50);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !loading) setSelectedPlan(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.clearTimeout(t);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [selectedPlan, loading]);
+
+  const openModal = (plan: Plan) => {
     setSelectedPlan(plan);
     setPaymentMethod('card');
     setErrorMsg('');
@@ -149,10 +196,8 @@ export default function SponsorHubPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlan) return;
-
     setLoading(true);
     setErrorMsg('');
-
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -169,475 +214,385 @@ export default function SponsorHubPage() {
           contactNote,
         }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'エラーが発生しました');
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      if (!res.ok) throw new Error(data.error || 'お申し込みを完了できませんでした。時間をおいてもう一度お試しください');
+      if (data.url) window.location.href = data.url;
     } catch (err: any) {
       setErrorMsg(err.message);
       setLoading(false);
     }
   };
 
-  const corporateSponsors = sponsors.filter((s) => s.tier === 'corporate');
-  const storeSponsors = sponsors.filter((s) => s.tier === 'store');
-  const fanSponsors = sponsors.filter((s) => s.tier === 'fan');
+  const byTier = (t: TierType) => sponsors.filter((s) => s.tier === t);
+  const isBusiness = selectedPlan?.id === 'corporate' || selectedPlan?.id === 'store';
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-teal-400 selection:text-zinc-950">
-      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-3 w-3 rounded-full bg-teal-400 animate-pulse" />
-            <span className="font-bold tracking-wider text-white">外山企画</span>
-            <span className="hidden md:inline text-xs text-zinc-400 border-l border-zinc-700 pl-2">
-              登別地域還元型エンタメ×ITプロジェクト
-            </span>
-          </div>
-          <nav className="flex items-center gap-4 sm:gap-6 text-sm">
-            <a href="#vision" className="hidden sm:inline text-zinc-400 hover:text-white transition">
-              ビジョン
+    <div className="min-h-screen bg-paper text-ink">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-ctl focus:bg-paper focus:px-4 focus:py-2">
+        本文へ移動
+      </a>
+
+      <header className="sticky top-0 z-40 border-b border-line bg-paper">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+          <Link href="/" className="text-lg">
+            <Wordmark />
+          </Link>
+          <nav aria-label="ページ内" className="flex items-center gap-1 sm:gap-2">
+            <a href="#how" className="hidden rounded-ctl px-3 py-2 text-[15px] text-ink-2 hover:bg-surface hover:text-ink md:inline-block">
+              仕組み
             </a>
-            <a href="#plans" className="hidden sm:inline text-zinc-400 hover:text-white transition">
-              スポンサー枠
+            <a href="#plans" className="hidden rounded-ctl px-3 py-2 text-[15px] text-ink-2 hover:bg-surface hover:text-ink md:inline-block">
+              料金プラン
             </a>
-            <a href="#supporters" className="hidden sm:inline text-zinc-400 hover:text-white transition">
-              サポーター一覧
+            <a href="#supporters" className="hidden rounded-ctl px-3 py-2 text-[15px] text-ink-2 hover:bg-surface hover:text-ink md:inline-block">
+              サポーター
             </a>
-            <Link
-              href="/mypage"
-              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition"
-            >
-              <UserCircle className="h-4 w-4 text-teal-400" />
+            <Link href="/mypage" className={buttonClass('secondary', 'sm')}>
               マイページ
             </Link>
-            <a
-              href="#plans"
-              className="rounded-full bg-teal-400 px-4 py-1.5 text-xs sm:text-sm font-bold text-zinc-950 hover:bg-teal-300 transition"
-            >
-              参画する
-            </a>
           </nav>
         </div>
       </header>
 
-      <section className="relative overflow-hidden border-b border-zinc-800/80 py-20 sm:py-28">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,212,191,0.12),transparent_50%)]" />
-        <div className="mx-auto max-w-5xl px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold text-teal-300 mb-6">
-            <Sparkles className="h-3.5 w-3.5" />
-            音楽×ITで若者と地元企業を結ぶ「地域還元型」エコシステム
+      <main id="main">
+        {/* ヒーロー */}
+        <section className="border-b border-line bg-surface">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:py-20 lg:grid-cols-[1.1fr_1fr]">
+            <div>
+              <p className="text-[15px] font-bold text-brand">北海道登別市・音楽とまちのスポンサー制度</p>
+              <h1 className="mt-4 text-[1.75rem] font-bold leading-[1.4] sm:text-5xl sm:leading-[1.3]">
+                <span className="inline-block">ライブの入場券を、</span>
+                <span className="inline-block">登別のお店への</span>
+                <span className="inline-block">きっぷに。</span>
+              </h1>
+              <p className="mt-6 max-w-prose text-base leading-[1.9] text-ink-2 sm:text-lg">
+                地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開きます。
+                入場したお客さんのLINEには、スポンサー店のクーポンが届きます。ライブの熱気が、そのまま街のお店に流れる仕組みです。
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <a href="#plans" className={buttonClass('primary', 'md')}>
+                  料金プランを見る
+                </a>
+                <a href="#how" className={buttonClass('secondary', 'md')}>
+                  仕組みを見る
+                </a>
+              </div>
+              <p className="mt-6 text-sm text-ink-2">
+                現在のサポーター <span className="num text-xl font-semibold text-ink">{sponsors.length}</span> 組
+              </p>
+            </div>
+            <SampleTicket />
           </div>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6">
-            登別に、<span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-300 to-amber-300">楽しめる場</span>と
-            <br />
-            <span className="text-white">仕事が循環する仕組み</span>を創る。
-          </h1>
-          <p className="mx-auto max-w-2xl text-base sm:text-lg text-zinc-400 leading-relaxed mb-10">
-            大口1社に依存せず、地元企業・店舗・ファンの皆様が少しずつ支え合う「3層スポンサーモデル」。
-            イベントの熱気と観光客の外貨を、独自開発のLINE O2Oシステムで確実に地元の店舗・雇用へと還元します。
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="#plans"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-400 px-8 py-4 text-base font-bold text-zinc-950 hover:bg-teal-300 transition shadow-lg shadow-teal-500/20"
-            >
-              スポンサープランを見る
-              <ArrowRight className="h-5 w-5" />
-            </a>
-            <a
-              href="#supporters"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-8 py-4 text-base font-semibold text-zinc-200 hover:bg-zinc-800 transition"
-            >
-              現在のサポーター ({sponsors.length}組)
-            </a>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="vision" className="border-b border-zinc-800/80 py-16 bg-zinc-900/40">
-        <div className="mx-auto max-w-5xl px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400">
-                <Music className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">1. 音楽イベントで熱狂を創出</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                若者が主役となる音楽×PA演出空間を登別に創出。市外からの集客と地元学生の居場所を同時に生み出します。
-              </p>
-            </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
-                <Smartphone className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">2. LINE O2Oで店舗・企業へ送客</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                電子チケットと入場特典のLINEクーポンにより、イベント終了後の来場者を下町の飲食店・地元企業へ誘導します。
-              </p>
-            </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">3. 固定費ゼロの盤石な循環モデル</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                企画・音響・IT・動画制作をすべて内製化。サブスク収益はイベント運営と次世代育成へ透明性高く再投資されます。
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="plans" className="py-20">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl sm:text-4xl font-extrabold mb-3">
-              3層サブスク・スポンサー枠
-            </h2>
-            <p className="text-zinc-400 text-sm sm:text-base">
-              すべてのプランはいつでもマイページ・メールから解約可能。企業・店舗様は請求書払いにも対応しています。
+        {/* 仕組み（順番に意味があるので番号つき） */}
+        <section id="how" className="scroll-mt-20 border-b border-line">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+            <h2 className="text-2xl font-bold sm:text-3xl">お金と人の流れ</h2>
+            <p className="mt-3 max-w-prose text-ink-2">
+              企画・音響・IT・動画制作はすべて外山企画が自分たちで行うので、月額のお金はイベントの運営と次の世代づくりにそのまま回ります。
             </p>
-            <p className="mt-3 inline-block rounded-full border border-teal-500/40 bg-teal-500/10 px-4 py-1.5 text-xs sm:text-sm font-bold text-teal-300">
-              上位の枠は、下位の枠の特典もすべてご利用いただけます
+            <ol className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+              {STEPS.map((s, i) => (
+                <li key={s.title} className="border-t-2 border-ink pt-4">
+                  <span className="num text-3xl font-semibold text-ink-3">{i + 1}</span>
+                  <h3 className="mt-1 text-lg font-bold">{s.title}</h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* 料金プラン */}
+        <section id="plans" className="scroll-mt-20 border-b border-line bg-surface">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+            <h2 className="text-2xl font-bold sm:text-3xl">料金プラン</h2>
+            <p className="mt-3 max-w-prose text-ink-2">
+              どのプランもマイページからいつでも解約できます。企業・お店は請求書払いも選べます。上の枠は、下の枠の特典もすべて使えます。
             </p>
-          </div>
 
-          <div className="lg:hidden sticky top-[63px] z-30 -mx-4 mb-6 flex gap-2 overflow-x-auto bg-zinc-950/90 px-4 py-2 backdrop-blur-md">
-            {PLANS.map((plan) => (
-              <a
-                key={plan.id}
-                href={`#plan-${plan.id}`}
-                className="flex-1 shrink-0 text-center rounded-full border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-bold text-zinc-200"
-              >
-                {({ corporate: '企業', store: '店舗', fan: 'ファン' } as Record<string, string>)[plan.id]} ¥{plan.price}
-              </a>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {PLANS.map((plan) => {
-              const Icon = plan.icon;
-              return (
-                <div
-                  key={plan.id}
-                  id={`plan-${plan.id}`}
-                  className={`scroll-mt-32 flex flex-col justify-between rounded-3xl border p-5 sm:p-8 transition hover:-translate-y-1 ${plan.accent}`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-200">
-                        <Icon className="h-3.5 w-3.5" />
-                        {plan.badge}
-                      </span>
-                      <span className="text-xs font-bold text-zinc-400 text-right">
-                        {plan.target}
-                        {availability[plan.id] && (
-                          <span className={`block ${availability[plan.id].remaining === 0 ? 'text-red-400' : 'text-teal-300'}`}>
-                            {availability[plan.id].remaining === 0
-                              ? '満枠'
-                              : `残り${availability[plan.id].remaining}${plan.id === 'corporate' ? '社' : '店'}`}
-                          </span>
+            <div className="mt-10 grid gap-6 lg:grid-cols-3" style={{ ['--notch-bg' as string]: 'var(--surface)' }}>
+              {PLANS.map((plan) => {
+                const avail = availability[plan.id];
+                const full = avail?.remaining === 0;
+                return (
+                  <article
+                    key={plan.id}
+                    id={`plan-${plan.id}`}
+                    aria-labelledby={`plan-${plan.id}-name`}
+                    className="flex scroll-mt-24 flex-col rounded-panel border border-line bg-paper"
+                  >
+                    <div className="px-6 pt-6 pb-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 id={`plan-${plan.id}-name`} className="text-xl font-bold">
+                          {plan.name}
+                        </h3>
+                        {avail ? (
+                          full ? (
+                            <Badge tone="danger">満枠</Badge>
+                          ) : (
+                            <Badge tone="neutral">
+                              残り <span className="num mx-0.5 text-sm">{avail.remaining}</span>
+                              {plan.unit}
+                            </Badge>
+                          )
+                        ) : (
+                          <Badge tone="neutral">{plan.target}</Badge>
                         )}
-                      </span>
-                    </div>
-
-                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                    <div className="flex items-baseline gap-1 mb-4">
-                      <span className="text-4xl font-extrabold tracking-tight text-white">
-                        ¥{plan.price}
-                      </span>
-                      <span className="text-sm text-zinc-400">/ 月（税込）</span>
-                    </div>
-                    <p className="text-sm text-zinc-300 leading-relaxed mb-6">
-                      {plan.description}
-                    </p>
-
-                    <div className="border-t border-zinc-800 pt-6 mb-8">
-                      <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4">
-                        主なリターン・特典
+                      </div>
+                      <p className="mt-4 flex items-baseline gap-1">
+                        <span className="num text-5xl font-semibold tracking-tight">¥{plan.price}</span>
+                        <span className="text-sm text-ink-2">／月（税込）</span>
                       </p>
-                      {plan.includes && (
-                        <p className="mb-3 rounded-lg bg-zinc-800/70 px-3 py-2 text-xs font-bold text-teal-300">
-                          ＋ {plan.includes}
-                        </p>
-                      )}
-                      <ul className="space-y-3">
-                        {plan.features.map((feat, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5 text-sm text-zinc-200">
-                            <CheckCircle2 className="h-4 w-4 text-teal-400 shrink-0 mt-0.5" />
-                            <span>{feat}</span>
+                      <p className="mt-4 text-[15px] leading-relaxed text-ink-2">{plan.lead}</p>
+                    </div>
+
+                    <div className="ticket-perf" />
+
+                    <div className="flex flex-1 flex-col px-6 pt-5 pb-6">
+                      <h4 className="text-sm font-bold text-ink-2">特典</h4>
+                      {plan.includes && <p className="mt-2 text-sm font-bold text-brand">{plan.includes}</p>}
+                      <ul className="mt-3 space-y-3">
+                        {plan.features.map((f) => (
+                          <li key={f} className="flex items-start gap-2.5 text-[15px] leading-relaxed">
+                            <Check aria-hidden className="mt-1 h-4 w-4 shrink-0 text-ok" strokeWidth={3} />
+                            <span>{f}</span>
                           </li>
                         ))}
                       </ul>
+                      <div className="mt-auto pt-6">
+                        {full ? (
+                          <p className="rounded-ctl bg-surface px-4 py-3 text-center text-sm font-bold text-ink-2">
+                            満枠のため、受付を止めています
+                          </p>
+                        ) : (
+                          <Button block onClick={() => openModal(plan)}>
+                            {plan.short}枠で申し込む
+                          </Button>
+                        )}
+                      </div>
                     </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* サポーター一覧 */}
+        <section id="supporters" className="scroll-mt-20">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+            <h2 className="text-2xl font-bold sm:text-3xl">登別を一緒に支えている皆さん</h2>
+            <p className="mt-3 text-ink-2">お名前の掲載に同意いただいた方だけを載せています。</p>
+
+            <div className="mt-10 grid gap-10 lg:grid-cols-3">
+              {[
+                { tier: 'corporate' as TierType, title: '企業スポンサー', unit: '社', empty: '第1号の企業スポンサーを募集しています。' },
+                { tier: 'store' as TierType, title: '店舗スポンサー・クーポン加盟店', unit: '店', empty: '加盟店を募集しています。' },
+                { tier: 'fan' as TierType, title: 'ファンサポーター', unit: '名', empty: '月300円から、お名前が会場のエンドロールに載ります。' },
+              ].map((g) => {
+                const list = byTier(g.tier);
+                return (
+                  <div key={g.tier}>
+                    <h3 className="flex items-baseline justify-between border-b-2 border-ink pb-2 font-bold">
+                      {g.title}
+                      <span className="text-sm text-ink-2">
+                        <span className="num text-xl font-semibold text-ink">{list.length}</span> {g.unit}
+                      </span>
+                    </h3>
+                    {list.length === 0 ? (
+                      <p className="mt-4 text-[15px] text-ink-2">{g.empty}</p>
+                    ) : (
+                      <ul className="divide-y divide-line">
+                        {list.map((s) => (
+                          <li key={s.id} className="py-3 text-[15px] font-bold">
+                            {s.display_name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-
-                  {availability[plan.id]?.remaining === 0 ? (
-                    <div className="w-full rounded-xl py-3.5 px-6 font-bold text-sm text-center border border-zinc-700 bg-zinc-800 text-zinc-400">
-                      満枠のため受付を停止中です
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => openModal(plan)}
-                      className={`w-full rounded-xl py-3.5 px-6 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer ${plan.btnColor}`}
-                    >
-                      この枠で申し込む
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section id="supporters" className="border-t border-zinc-800/80 py-20 bg-zinc-900/30">
-        <div className="mx-auto max-w-5xl px-4">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-teal-400 uppercase tracking-widest mb-2">
-              <span className="h-2 w-2 rounded-full bg-teal-400 animate-ping" />
-              REALTIME SUPPORTERS
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold">
-              登別の未来を共に創るサポーターの皆様
-            </h2>
-          </div>
-
-          <div className="space-y-10">
-            <div>
-              <h3 className="text-sm font-bold text-orange-400 border-b border-zinc-800 pb-2 mb-4">
-                ■ 企業プレミアムスポンサー（{corporateSponsors.length}社）
-              </h3>
-              {corporateSponsors.length === 0 ? (
-                <p className="text-sm text-zinc-500">現在募集受付中です（第1号スポンサー募集中！）</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {corporateSponsors.map((s) => (
-                    <div
-                      key={s.id}
-                      className="rounded-xl border border-orange-500/30 bg-zinc-900 px-5 py-4 font-bold text-white shadow-sm"
-                    >
-                      {s.display_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-sm font-bold text-teal-400 border-b border-zinc-800 pb-2 mb-4">
-                ■ 店舗ローカルスポンサー・クーポン加盟店（{storeSponsors.length}店）
-              </h3>
-              {storeSponsors.length === 0 ? (
-                <p className="text-sm text-zinc-500">現在加盟店舗を募集受付中です</p>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {storeSponsors.map((s) => (
-                    <div
-                      key={s.id}
-                      className="rounded-xl border border-teal-500/30 bg-zinc-900 px-4 py-3 text-sm font-semibold text-zinc-100"
-                    >
-                      {s.display_name}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-sm font-bold text-amber-400 border-b border-zinc-800 pb-2 mb-4">
-                ■ 個人・ファンサポーター（{fanSponsors.length}名）
-              </h3>
-              {fanSponsors.length === 0 ? (
-                <p className="text-sm text-zinc-500">月300円から応援クレジットにお名前が掲載されます！</p>
-              ) : (
-                <div className="flex flex-wrap gap-2.5">
-                  {fanSponsors.map((s) => (
-                    <span
-                      key={s.id}
-                      className="rounded-full border border-amber-400/30 bg-zinc-900 px-4 py-1.5 text-xs font-medium text-amber-200"
-                    >
-                      {s.display_name}
-                    </span>
-                  ))}
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      <footer className="border-t border-zinc-800 py-10 text-center text-xs text-zinc-500">
-        <div className="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} 外山企画 (Toyama Kikaku) - Noboribetsu, Hokkaido.</p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/mypage" className="hover:text-zinc-300 underline">
-              マイページ・解約手続き
+      <footer className="border-t border-line bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <Wordmark />
+            <p className="mt-1 text-sm text-ink-2">北海道登別市</p>
+          </div>
+          <nav aria-label="フッター" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <Link href="/mypage" className="py-2 text-ink-2 underline underline-offset-4 hover:text-ink">
+              マイページ・解約
             </Link>
-            <Link href="/privacy" className="hover:text-zinc-300 underline">
+            <Link href="/privacy" className="py-2 text-ink-2 underline underline-offset-4 hover:text-ink">
               プライバシーポリシー
             </Link>
-            <Link href="/tokushoho" className="hover:text-zinc-300 underline">
+            <Link href="/tokushoho" className="py-2 text-ink-2 underline underline-offset-4 hover:text-ink">
               特定商取引法に基づく表記
             </Link>
-          </div>
+          </nav>
         </div>
       </footer>
 
+      {/* 申込フォーム（PCは中央のダイアログ、スマホは全画面） */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 p-0 sm:p-4 backdrop-blur-sm overflow-y-auto overscroll-contain">
-          <div className="relative w-full max-w-lg min-h-[100dvh] sm:min-h-0 rounded-none sm:rounded-3xl border-0 sm:border border-zinc-700 bg-zinc-900 px-5 pt-5 pb-10 sm:p-8 shadow-2xl sm:my-8">
-            <button
-              onClick={() => setSelectedPlan(null)}
-              className="absolute right-3 top-3 sm:right-5 sm:top-5 rounded-full p-3 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="mb-6">
-              <span className="text-xs font-bold text-teal-400">スポンサーお申し込み</span>
-              <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1 pr-10">
-                {selectedPlan.name}
-                <span className="block text-base sm:text-lg font-bold text-zinc-300">月額 ¥{selectedPlan.price}（税込）</span>
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-[rgba(28,34,48,0.55)] sm:items-center sm:p-6">
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="apply-title"
+            className="flex h-[100dvh] w-full flex-col bg-paper sm:h-auto sm:max-h-[90vh] sm:max-w-xl sm:rounded-panel"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
+              <div>
+                <p className="text-sm text-ink-2">スポンサーのお申し込み</p>
+                <h2 id="apply-title" className="text-xl font-bold">
+                  {selectedPlan.name}
+                  <span className="ml-2 text-base font-normal text-ink-2">
+                    月額 <span className="num text-lg font-semibold text-ink">¥{selectedPlan.price}</span>（税込）
+                  </span>
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => !loading && setSelectedPlan(null)}
+                aria-label="閉じる"
+                className="-mr-2 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-ctl text-ink-2 hover:bg-surface"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
 
-            {errorMsg && (
-              <div className="mb-4 rounded-xl border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-300">
-                {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-zinc-300 mb-1">
-                  {selectedPlan.id === 'fan' ? 'お名前（本名）' : '法人名・店舗名'} *
-                </label>
-                <input
-                  type="text"
+            <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+              <div className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 py-6 sm:px-6">
+                <Field
+                  label={selectedPlan.id === 'fan' ? 'お名前（本名）' : '法人名・店舗名'}
+                  htmlFor="applicantName"
                   required
-                  value={applicantName}
-                  onChange={(e) => setApplicantName(e.target.value)}
-                  placeholder={
-                    selectedPlan.id === 'fan' ? '例：登別 太郎' : '例：株式会社〇〇 / 居酒屋〇〇'
-                  }
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-zinc-300 mb-1">
-                  サイト・会場クレジット掲載名（ニックネーム可）
-                </label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="空欄の場合は上記のお名前が掲載されます"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                />
-                <label className="mt-2 flex items-center gap-2 text-xs text-zinc-400 cursor-pointer">
+                  hint={selectedPlan.id === 'fan' ? '記入例：登別 太郎' : '記入例：株式会社〇〇、居酒屋〇〇'}
+                >
                   <input
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="rounded border-zinc-700 bg-zinc-950 text-teal-400"
+                    ref={firstFieldRef}
+                    id="applicantName"
+                    type="text"
+                    required
+                    autoComplete={selectedPlan.id === 'fan' ? 'name' : 'organization'}
+                    value={applicantName}
+                    onChange={(e) => setApplicantName(e.target.value)}
+                    className="field-input"
                   />
-                  公式サイト・イベント会場に名前を掲載する
-                </label>
-              </div>
+                </Field>
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-300 mb-1">
-                  メールアドレス（領収書・ご案内送付先） *
-                </label>
-                <input
-                  type="email"
+                <Field
+                  label="サイト・会場に載せるお名前"
+                  htmlFor="displayName"
+                  optional
+                  hint="ニックネームでも大丈夫です。空欄なら上のお名前を載せます。"
+                >
+                  <input
+                    id="displayName"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="field-input"
+                  />
+                  <label className="mt-3 flex min-h-[44px] cursor-pointer items-center gap-3 text-[15px]">
+                    <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+                    公式サイトとイベント会場にお名前を載せる
+                  </label>
+                </Field>
+
+                <Field
+                  label="メールアドレス"
+                  htmlFor="email"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="info@example.com"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                />
+                  hint="領収書やご案内を送ります。マイページへのログインにも使います。"
+                >
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    inputMode="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="field-input"
+                  />
+                </Field>
+
+                {isBusiness && (
+                  <>
+                    <Field label="業種" htmlFor="industry" optional hint="記入例：飲食店、建設業">
+                      <input id="industry" type="text" value={industry} onChange={(e) => setIndustry(e.target.value)} className="field-input" />
+                    </Field>
+                    <Field label="お店・事業所のエリア" htmlFor="address" optional hint="記入例：登別市中央町、幌別町">
+                      <input id="address" type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="field-input" />
+                    </Field>
+
+                    <fieldset>
+                      <legend className="text-[15px] font-bold">お支払い方法</legend>
+                      <div className="mt-2 grid gap-3">
+                        {[
+                          { v: 'card' as const, t: 'クレジットカード', d: '毎月自動でお支払い。すぐに特典が使えます。' },
+                          { v: 'invoice' as const, t: '請求書払い', d: '請求書をメールでお送りします。お支払いの確認後に特典が使えます。' },
+                        ].map((o) => (
+                          <label
+                            key={o.v}
+                            className={`flex cursor-pointer items-start gap-3 rounded-ctl border px-4 py-3 ${
+                              paymentMethod === o.v ? 'border-brand bg-brand-soft' : 'border-line-strong bg-paper hover:bg-surface'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="paymentMethod"
+                              className="mt-1"
+                              checked={paymentMethod === o.v}
+                              onChange={() => setPaymentMethod(o.v)}
+                            />
+                            <span>
+                              <span className="block font-bold">{o.t}</span>
+                              <span className="block text-sm text-ink-2">{o.d}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </>
+                )}
               </div>
 
-              {(selectedPlan.id === 'corporate' || selectedPlan.id === 'store') && (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-zinc-300 mb-1">業種</label>
-                      <input
-                        type="text"
-                        value={industry}
-                        onChange={(e) => setIndustry(e.target.value)}
-                        placeholder="例：飲食店 / 建設業"
-                        className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-zinc-300 mb-1">
-                        店舗・事業所エリア
-                      </label>
-                      <input
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder="例：登別市中央町 / 幌別町"
-                        className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-zinc-300 mb-1">
-                      お支払い方法の選択
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('card')}
-                        className={`rounded-xl border py-3.5 sm:py-2.5 px-3 text-sm sm:text-xs font-bold transition ${
-                          paymentMethod === 'card'
-                            ? 'border-teal-400 bg-teal-400/10 text-teal-300'
-                            : 'border-zinc-700 bg-zinc-950 text-zinc-400'
-                        }`}
-                      >
-                        クレジットカード自動決済
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('invoice')}
-                        className={`rounded-xl border py-3.5 sm:py-2.5 px-3 text-sm sm:text-xs font-bold transition ${
-                          paymentMethod === 'invoice'
-                            ? 'border-teal-400 bg-teal-400/10 text-teal-300'
-                            : 'border-zinc-700 bg-zinc-950 text-zinc-400'
-                        }`}
-                      >
-                        請求書払い（メール自動発行）
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-xl bg-teal-400 py-3.5 font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50 mt-4 cursor-pointer"
-              >
-                {loading
-                  ? '決済画面へ移動中...'
-                  : paymentMethod === 'invoice'
-                  ? '請求書を発行して申し込む'
-                  : 'Stripe決済画面へ進む'}
-              </button>
+              <div className="border-t border-line px-5 py-4 sm:px-6">
+                {errorMsg && (
+                  <Notice tone="danger" className="mb-3">
+                    {errorMsg}
+                  </Notice>
+                )}
+                <Button type="submit" block disabled={loading}>
+                  {loading
+                    ? '手続きの画面へ移動しています…'
+                    : paymentMethod === 'invoice' && isBusiness
+                      ? '請求書を発行して申し込む'
+                      : 'カード決済の画面へ進む'}
+                </Button>
+                <p className="mt-2 text-center text-xs text-ink-2">
+                  お申し込みの前に
+                  <Link href="/tokushoho" className="mx-1 underline underline-offset-2" target="_blank">
+                    特定商取引法に基づく表記
+                  </Link>
+                  と
+                  <Link href="/privacy" className="mx-1 underline underline-offset-2" target="_blank">
+                    プライバシーポリシー
+                  </Link>
+                  をご確認ください。
+                </p>
+              </div>
             </form>
           </div>
         </div>

@@ -3,26 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { createClient, Session } from '@supabase/supabase-js';
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  Mail,
-  CheckCircle2,
-  CreditCard,
-  Save,
-  LogOut,
-  ExternalLink,
-  ShieldCheck,
-} from 'lucide-react';
 import CouponManager from './CouponManager';
 import PerformerApplication from './PerformerApplication';
 import LineLink from './LineLink';
 import LiveStreams from './LiveStreams';
 import CorporateInquiry from './CorporateInquiry';
+import { Badge, Button, Field, Notice, Section, Wordmark, buttonClass } from '@/components/ui';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 interface SponsorAsset {
   industry: string;
@@ -43,18 +31,20 @@ interface SponsorRecord {
   sponsor_assets?: SponsorAsset[];
 }
 
-const TIER_LABELS: Record<string, string> = {
-  corporate: '企業プレミアム枠（月額 ¥10,000）',
-  store: '店舗ローカル枠（月額 ¥3,000）',
-  fan: 'ファンサポーター枠（月額 ¥300）',
+const TIER: Record<string, { name: string; price: string }> = {
+  corporate: { name: '企業プレミアム枠', price: '10,000' },
+  store: { name: '店舗ローカル枠', price: '3,000' },
+  fan: { name: 'ファンサポーター枠', price: '300' },
 };
 
-const STATUS_BADGES: Record<string, { label: string; color: string }> = {
-  active: { label: '契約中（有効）', color: 'bg-teal-500/20 text-teal-300 border-teal-500/40' },
-  pending: { label: '決済待ち', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
-  past_due: { label: 'お支払い確認中', color: 'bg-red-500/20 text-red-300 border-red-500/40' },
-  canceled: { label: '解約済み', color: 'bg-zinc-700/40 text-zinc-400 border-zinc-600' },
+const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'danger' | 'neutral' }> = {
+  active: { label: '契約中', tone: 'ok' },
+  pending: { label: 'お支払い待ち', tone: 'warn' },
+  past_due: { label: 'お支払いが確認できていません', tone: 'danger' },
+  canceled: { label: '解約済み', tone: 'neutral' },
 };
+
+type EditForm = { displayName: string; isPublic: boolean; industry: string; address: string };
 
 export default function MyPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -66,57 +56,57 @@ export default function MyPage() {
   const [loginError, setLoginError] = useState('');
 
   const [sponsors, setSponsors] = useState<SponsorRecord[]>([]);
+  const [currentId, setCurrentId] = useState<string | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [portalLoadingId, setPortalLoadingId] = useState<string | null>(null);
-  const [toastMsg, setToastMsg] = useState('');
-
-  const [editForms, setEditForms] = useState<
-    Record<string, { displayName: string; isPublic: boolean; industry: string; address: string }>
-  >({});
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ tone: 'ok' | 'danger'; text: string } | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState('');
+  const [editForms, setEditForms] = useState<Record<string, EditForm>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setAuthLoading(false);
     });
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setAuthLoading(false);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (session?.access_token) {
-      fetchMySponsors(session.access_token);
-    }
+    if (session?.access_token) fetchMySponsors(session.access_token);
   }, [session]);
 
   const fetchMySponsors = async (token: string) => {
     setDataLoading(true);
     try {
-      const res = await fetch('/api/mypage', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch('/api/mypage', { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok && data.sponsors) {
-        setSponsors(data.sponsors);
-        const initialForms: typeof editForms = {};
-        data.sponsors.forEach((s: SponsorRecord) => {
+        const list = data.sponsors as SponsorRecord[];
+        setSponsors(list);
+        const forms: Record<string, EditForm> = {};
+        list.forEach((s) => {
           const asset = s.sponsor_assets?.[0];
-          initialForms[s.id] = {
+          forms[s.id] = {
             displayName: s.display_name,
             isPublic: s.is_public,
             industry: asset?.industry || '',
             address: asset?.address || '',
           };
         });
-        setEditForms(initialForms);
+        setEditForms(forms);
+        // 有効な契約を優先して表示
+        setCurrentId((prev) => {
+          if (prev && list.some((s) => s.id === prev)) return prev;
+          const active = list.find((s) => s.status === 'active');
+          return (active ?? list[0])?.id ?? null;
+        });
       }
     } finally {
       setDataLoading(false);
@@ -127,40 +117,26 @@ export default function MyPage() {
     e.preventDefault();
     setSendingMail(true);
     setLoginError('');
-
-    const redirectUrl =
-      typeof window !== 'undefined' ? `${window.location.origin}/mypage` : undefined;
-
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/mypage` : undefined;
     const { error } = await supabase.auth.signInWithOtp({
       email: loginEmail.trim(),
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
+      options: { emailRedirectTo: redirectUrl },
     });
-
     setSendingMail(false);
-    if (error) {
-      setLoginError('メールの送信に失敗しました。時間をおいて再度お試しください。');
-    } else {
-      setMailSent(true);
-    }
+    if (error) setLoginError('メールを送れませんでした。メールアドレスを確かめて、少し時間をおいてからもう一度お試しください。');
+    else setMailSent(true);
   };
 
   const handleSaveProfile = async (sponsorId: string) => {
     if (!session?.access_token) return;
     const form = editForms[sponsorId];
     if (!form) return;
-
-    setSavingId(sponsorId);
-    setToastMsg('');
-
+    setSaving(true);
+    setSaveMsg(null);
     try {
       const res = await fetch('/api/mypage', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({
           sponsorId,
           displayName: form.displayName,
@@ -169,343 +145,365 @@ export default function MyPage() {
           address: form.address,
         }),
       });
-
       if (res.ok) {
-        setToastMsg('掲載情報を更新しました！トップページにも即時反映されます。');
+        setSaveMsg({ tone: 'ok', text: '掲載情報を保存しました。トップページにもすぐ反映されます。' });
         fetchMySponsors(session.access_token);
       } else {
-        const d = await res.json();
-        alert(d.error || '更新に失敗しました');
+        const d = await res.json().catch(() => ({}));
+        setSaveMsg({ tone: 'danger', text: d.error || '保存できませんでした。時間をおいてもう一度お試しください。' });
       }
     } finally {
-      setSavingId(null);
+      setSaving(false);
     }
   };
 
   const handleOpenPortal = async (sponsorId: string) => {
     if (!session?.access_token) return;
-    setPortalLoadingId(sponsorId);
-
+    setPortalLoading(true);
+    setPortalError('');
     try {
       const res = await fetch('/api/portal', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sponsorId }),
       });
-
       const data = await res.json();
       if (res.ok && data.url) {
         window.location.href = data.url;
-      } else {
-        alert(data.error || 'ポータル画面を開けませんでした');
-        setPortalLoadingId(null);
+        return;
       }
+      setPortalError(data.error || 'お支払いの管理画面を開けませんでした。');
     } catch {
-      alert('通信エラーが発生しました');
-      setPortalLoadingId(null);
+      setPortalError('通信できませんでした。電波の良いところでもう一度お試しください。');
     }
+    setPortalLoading(false);
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setSponsors([]);
+    setCurrentId(null);
   };
+
+  const header = (
+    <header className="sticky top-0 z-30 border-b border-line bg-paper">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+        <Link href="/" className="text-lg">
+          <Wordmark />
+        </Link>
+        {session && (
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-ink-2 sm:inline">{session.user.email}</span>
+            <Button variant="secondary" size="sm" onClick={handleLogout}>
+              ログアウト
+            </Button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-400 flex items-center justify-center">
-        読み込み中...
+      <div className="min-h-screen bg-surface">
+        {header}
+        <p className="px-4 py-16 text-center text-ink-2">読み込んでいます…</p>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 py-12 px-4">
-      <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-teal-400 hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            トップページへ戻る
-          </Link>
+  // ===== ログイン前 =====
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-surface">
+        {header}
+        <main className="mx-auto max-w-md px-4 py-12 sm:py-16">
+          <h1 className="text-2xl font-bold">スポンサーのマイページ</h1>
+          <p className="mt-3 leading-relaxed text-ink-2">
+            パスワードはいりません。お申し込みのときのメールアドレスに、ログイン用のリンクをお送りします。
+          </p>
 
-          {session && (
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs text-zinc-300 hover:bg-zinc-800"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              ログアウト
-            </button>
-          )}
-        </div>
-
-        {!session ? (
-          <div className="mx-auto max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 p-8 shadow-2xl">
-            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-400/10 text-teal-400">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-white mb-2">
-              スポンサー・マイページ
-            </h1>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-              パスワードは不要です。お申し込み時に登録したメールアドレスを入力すると、ワンクリックでログインできる専用リンク（マジックリンク）をお送りします。
-            </p>
-
+          <div className="mt-8 rounded-panel border border-line bg-paper p-5 sm:p-6">
             {mailSent ? (
-              <div className="rounded-2xl border border-teal-500/40 bg-teal-500/10 p-5 text-sm text-teal-200">
-                <div className="flex items-center gap-2 font-bold text-teal-300 mb-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  ログイン用メールを送信しました！
-                </div>
-                <p className="text-xs leading-relaxed text-zinc-300">
-                  <strong>{loginEmail}</strong> 宛に届いたメール内の「ログインリンク」をクリックすると、自動的にマイページが開きます。
+              <div>
+                <h2 className="text-lg font-bold">メールを送りました</h2>
+                <p className="mt-2 leading-relaxed text-ink-2">
+                  <span className="font-bold text-ink">{loginEmail}</span> に届いたメールの「ログイン」リンクを開くと、このページに戻ってきます。
                 </p>
+                <p className="mt-3 text-sm text-ink-2">届かないときは、迷惑メールのフォルダも確認してください。</p>
+                <Button variant="ghost" className="mt-4 -ml-2" onClick={() => setMailSent(false)}>
+                  別のメールアドレスで送り直す
+                </Button>
               </div>
             ) : (
-              <form onSubmit={handleSendMagicLink} className="space-y-4">
-                {loginError && (
-                  <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">
-                    {loginError}
-                  </div>
-                )}
-                <div>
-                  <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-                    ご登録メールアドレス
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-zinc-500" />
-                    <input
-                      type="email"
-                      required
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="info@example.com"
-                      className="w-full rounded-xl border border-zinc-700 bg-zinc-950 pl-10 pr-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={sendingMail}
-                  className="w-full rounded-xl bg-teal-400 py-3 text-sm font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50"
-                >
-                  {sendingMail ? '送信中...' : 'ログインリンクをメールで受け取る'}
-                </button>
+              <form onSubmit={handleSendMagicLink} className="space-y-5">
+                <Field label="ご登録のメールアドレス" htmlFor="loginEmail" error={loginError}>
+                  <input
+                    id="loginEmail"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    inputMode="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    aria-invalid={loginError ? true : undefined}
+                    className="field-input"
+                  />
+                </Field>
+                <Button type="submit" block disabled={sendingMail}>
+                  {sendingMail ? '送っています…' : 'ログイン用のリンクを受け取る'}
+                </Button>
               </form>
             )}
           </div>
-        ) : (
-          <div>
-            <div className="mb-8">
-              <span className="text-xs font-bold text-teal-400">LOGGED IN AS</span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
-                ご契約・掲載情報マイページ
-              </h1>
-              <p className="text-xs text-zinc-400 mt-1">{session.user.email}</p>
-            </div>
 
-            {toastMsg && (
-              <div className="mb-6 rounded-xl border border-teal-500/40 bg-teal-500/10 p-4 text-sm text-teal-200 flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-teal-400 shrink-0" />
-                {toastMsg}
-              </div>
-            )}
+          <p className="mt-8 text-sm text-ink-2">
+            まだスポンサーではない方は
+            <Link href="/#plans" className="mx-1 text-brand underline underline-offset-4">
+              料金プラン
+            </Link>
+            をご覧ください。
+          </p>
+        </main>
+      </div>
+    );
+  }
 
-            {dataLoading ? (
-              <p className="text-sm text-zinc-400">契約情報を読み込んでいます...</p>
-            ) : sponsors.length === 0 ? (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center">
-                <p className="text-sm text-zinc-300 mb-4">
-                  このメールアドレスに紐づくスポンサー契約が見つかりませんでした。
-                </p>
-                <Link
-                  href="/#plans"
-                  className="inline-block rounded-xl bg-teal-400 px-6 py-2.5 text-sm font-bold text-zinc-950"
-                >
-                  スポンサー枠を見る
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {sponsors.map((sponsor) => {
-                  const badge = STATUS_BADGES[sponsor.status] || {
-                    label: sponsor.status,
-                    color: 'bg-zinc-800 text-zinc-300 border-zinc-700',
-                  };
-                  const form = editForms[sponsor.id] || {
-                    displayName: sponsor.display_name,
-                    isPublic: sponsor.is_public,
-                    industry: '',
-                    address: '',
-                  };
+  const sponsor = sponsors.find((s) => s.id === currentId) ?? null;
 
-                  return (
-                    <div
-                      key={sponsor.id}
-                      className="rounded-3xl border border-zinc-800 bg-zinc-900 p-4 sm:p-8 shadow-xl"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-5 mb-6">
-                        <div>
-                          <span className="text-xs text-zinc-400">ご契約プラン</span>
-                          <h2 className="text-lg sm:text-xl font-bold text-white">
-                            {TIER_LABELS[sponsor.tier] || sponsor.tier}
-                          </h2>
-                        </div>
-                        <span
-                          className={`rounded-full border px-3 py-1 text-xs font-bold ${badge.color}`}
-                        >
-                          {badge.label}
-                        </span>
-                      </div>
+  // ===== ログイン後 =====
+  return (
+    <div className="min-h-screen bg-surface">
+      {header}
 
-                      <div className="space-y-4 mb-8">
-                        <div>
-                          <label className="block text-xs font-bold text-zinc-300 mb-1">
-                            サイト・会場クレジット掲載名
-                          </label>
-                          <input
-                            type="text"
-                            value={form.displayName}
-                            onChange={(e) =>
-                              setEditForms({
-                                ...editForms,
-                                [sponsor.id]: { ...form, displayName: e.target.value },
-                              })
-                            }
-                            className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                          />
-                        </div>
+      <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:pt-10">
+        <h1 className="text-2xl font-bold sm:text-3xl">マイページ</h1>
 
-                        {(sponsor.tier === 'corporate' || sponsor.tier === 'store') && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-bold text-zinc-300 mb-1">
-                                業種
-                              </label>
-                              <input
-                                type="text"
-                                value={form.industry}
-                                onChange={(e) =>
-                                  setEditForms({
-                                    ...editForms,
-                                    [sponsor.id]: { ...form, industry: e.target.value },
-                                  })
-                                }
-                                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-bold text-zinc-300 mb-1">
-                                店舗・事業所エリア
-                              </label>
-                              <input
-                                type="text"
-                                value={form.address}
-                                onChange={(e) =>
-                                  setEditForms({
-                                    ...editForms,
-                                    [sponsor.id]: { ...form, address: e.target.value },
-                                  })
-                                }
-                                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none"
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        <label className="flex items-center gap-2.5 text-sm sm:text-xs text-zinc-300 cursor-pointer pt-1">
-                          <input
-                            type="checkbox"
-                            checked={form.isPublic}
-                            onChange={(e) =>
-                              setEditForms({
-                                ...editForms,
-                                [sponsor.id]: { ...form, isPublic: e.target.checked },
-                              })
-                            }
-                            className="rounded border-zinc-700 bg-zinc-950 text-teal-400"
-                          />
-                          公式サイトのサポーター一覧に名前を公開する
-                        </label>
-
-                        <button
-                          onClick={() => handleSaveProfile(sponsor.id)}
-                          disabled={savingId === sponsor.id}
-                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-400 px-5 py-3 sm:py-2.5 text-sm sm:text-xs font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50"
-                        >
-                          <Save className="h-4 w-4" />
-                          {savingId === sponsor.id ? '保存中...' : '掲載情報を保存する'}
-                        </button>
-                      </div>
-
-                      {(sponsor.tier === 'corporate' || sponsor.tier === 'store') && (
-                        <CouponManager
-                          sponsorId={sponsor.id}
-                          defaultShopName={sponsor.display_name}
-                          accessToken={session.access_token}
-                          isActive={sponsor.status === 'active'}
-                        />
-                      )}
-
-                      {sponsor.status !== 'canceled' && (
-                        <LineLink
-                          sponsorId={sponsor.id}
-                          accessToken={session.access_token}
-                          isActive={sponsor.status === 'active'}
-                        />
-                      )}
-
-                      {sponsor.status === 'active' && (
-                        <LiveStreams sponsorId={sponsor.id} accessToken={session.access_token} />
-                      )}
-
-                      {sponsor.status === 'active' && sponsor.tier === 'corporate' && (
-                        <CorporateInquiry
-                          sponsorId={sponsor.id}
-                          accessToken={session.access_token}
-                          defaultName={sponsor.applicant_name}
-                        />
-                      )}
-
-                      <PerformerApplication
-                        sponsorId={sponsor.id}
-                        accessToken={session.access_token}
-                        defaultName={sponsor.applicant_name}
-                        loginEmail={session.user.email ?? ''}
-                      />
-
-                      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-2 text-sm font-bold text-white mb-1">
-                            <CreditCard className="h-4 w-4 text-amber-400" />
-                            お支払い方法・領収書・解約手続き
-                          </div>
-                          <p className="text-xs text-zinc-400 leading-relaxed">
-                            Stripeの専用管理画面から、クレジットカードの変更・請求書/領収書のダウンロード・サブスクリプションの即時解約が可能です。
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleOpenPortal(sponsor.id)}
-                          disabled={portalLoadingId === sponsor.id || !sponsor.stripe_customer_id}
-                          className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 sm:py-2.5 text-sm sm:text-xs font-bold text-white hover:bg-zinc-800 transition disabled:opacity-40"
-                        >
-                          {portalLoadingId === sponsor.id ? '移動中...' : '契約・決済を管理'}
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+        {dataLoading && sponsors.length === 0 ? (
+          <p className="mt-8 text-ink-2">ご契約の情報を読み込んでいます…</p>
+        ) : sponsors.length === 0 ? (
+          <div className="mt-8 max-w-prose">
+            <Notice tone="info" title="このメールアドレスのご契約が見つかりませんでした">
+              お申し込みのときに使ったメールアドレスでログインしているか確かめてください。新しく申し込む場合は料金プランからどうぞ。
+            </Notice>
+            <Link href="/#plans" className={`${buttonClass('primary', 'md')} mt-6`}>
+              料金プランを見る
+            </Link>
           </div>
+        ) : (
+          sponsor && (
+            <SponsorView
+              key={sponsor.id}
+              sponsor={sponsor}
+              sponsors={sponsors}
+              onSwitch={setCurrentId}
+              session={session}
+              form={
+                editForms[sponsor.id] || {
+                  displayName: sponsor.display_name,
+                  isPublic: sponsor.is_public,
+                  industry: '',
+                  address: '',
+                }
+              }
+              setForm={(f) => setEditForms({ ...editForms, [sponsor.id]: f })}
+              saving={saving}
+              saveMsg={saveMsg}
+              onSave={() => handleSaveProfile(sponsor.id)}
+              portalLoading={portalLoading}
+              portalError={portalError}
+              onOpenPortal={() => handleOpenPortal(sponsor.id)}
+            />
+          )
         )}
+      </main>
+    </div>
+  );
+}
+
+function SponsorView({
+  sponsor,
+  sponsors,
+  onSwitch,
+  session,
+  form,
+  setForm,
+  saving,
+  saveMsg,
+  onSave,
+  portalLoading,
+  portalError,
+  onOpenPortal,
+}: {
+  sponsor: SponsorRecord;
+  sponsors: SponsorRecord[];
+  onSwitch: (id: string) => void;
+  session: Session;
+  form: EditForm;
+  setForm: (f: EditForm) => void;
+  saving: boolean;
+  saveMsg: { tone: 'ok' | 'danger'; text: string } | null;
+  onSave: () => void;
+  portalLoading: boolean;
+  portalError: string;
+  onOpenPortal: () => void;
+}) {
+  const tier = TIER[sponsor.tier] ?? { name: sponsor.tier, price: '' };
+  const status = STATUS[sponsor.status] ?? { label: sponsor.status, tone: 'neutral' as const };
+  const isBusiness = sponsor.tier === 'corporate' || sponsor.tier === 'store';
+  const isActive = sponsor.status === 'active';
+
+  // このページの目次（表示される項目だけ）
+  const nav = [
+    { id: 'profile', label: '掲載情報' },
+    sponsor.status !== 'canceled' ? { id: 'line', label: 'LINE連携' } : null,
+    isActive ? { id: 'stream', label: 'ライブ配信' } : null,
+    isBusiness ? { id: 'coupons', label: 'クーポン' } : null,
+    { id: 'perform', label: '出演応募' },
+    isActive && sponsor.tier === 'corporate' ? { id: 'inquiry', label: 'CM・動画の相談' } : null,
+    { id: 'billing', label: 'お支払い・解約' },
+  ].filter((x): x is { id: string; label: string } => x !== null);
+
+  return (
+    <div className="mt-6">
+      {/* 契約が複数あるときの切り替え */}
+      {sponsors.length > 1 && (
+        <div role="tablist" aria-label="ご契約の切り替え" className="mb-6 flex flex-wrap gap-2">
+          {sponsors.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              role="tab"
+              aria-selected={s.id === sponsor.id}
+              onClick={() => onSwitch(s.id)}
+              className={`min-h-[44px] rounded-ctl border px-4 text-[15px] font-bold ${
+                s.id === sponsor.id ? 'border-brand bg-brand text-brand-ink' : 'border-line-strong bg-paper text-ink hover:bg-surface'
+              }`}
+            >
+              {s.display_name}（{TIER[s.tier]?.name ?? s.tier}）
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 契約のあらまし */}
+      <div className="rounded-panel border border-line bg-paper px-5 py-5 sm:px-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-xl font-bold">{sponsor.display_name}</h2>
+          <Badge tone={status.tone}>{status.label}</Badge>
+        </div>
+        <p className="mt-1 text-ink-2">
+          {tier.name}　月額 <span className="num text-lg font-semibold text-ink">¥{tier.price}</span>（税込）
+        </p>
+        {sponsor.status === 'pending' && (
+          <Notice tone="warn" className="mt-4" title="お支払いの確認後に、特典が使えるようになります">
+            {sponsor.payment_method === 'invoice'
+              ? 'メールでお送りした請求書のお支払いをお願いします。LINE連携は先に済ませておけます。'
+              : 'カード決済が完了していません。もう一度お申し込みの手続きをお願いします。'}
+          </Notice>
+        )}
+        {sponsor.status === 'past_due' && (
+          <Notice tone="danger" className="mt-4" title="お支払いが確認できていません">
+            「お支払い・解約」から、カード情報の更新をお願いします。
+          </Notice>
+        )}
+      </div>
+
+      {/* スマホ：目次を横スクロールで */}
+      <nav aria-label="このページの項目" className="sticky top-16 z-20 -mx-4 mt-6 overflow-x-auto border-b border-line bg-surface px-4 py-2 lg:hidden">
+        <ul className="flex gap-2">
+          {nav.map((n) => (
+            <li key={n.id} className="shrink-0">
+              <a href={`#${n.id}`} className="inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-paper px-4 text-sm font-bold">
+                {n.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="mt-6 lg:mt-10 lg:grid lg:grid-cols-[13rem_1fr] lg:gap-12">
+        {/* PC：左に目次 */}
+        <nav aria-label="このページの項目" className="hidden lg:block">
+          <ul className="sticky top-24 space-y-1 border-l-2 border-line">
+            {nav.map((n) => (
+              <li key={n.id}>
+                <a href={`#${n.id}`} className="-ml-[2px] block border-l-2 border-transparent py-2 pl-4 text-[15px] text-ink-2 hover:border-ink hover:text-ink">
+                  {n.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="min-w-0 space-y-12">
+          <Section id="profile" title="掲載情報" description="サイトのサポーター一覧と、会場のクレジットに載る内容です。" className="border-t-0 pt-0">
+            <div className="max-w-prose space-y-6">
+              <Field label="サイト・会場に載せるお名前" htmlFor="displayName">
+                <input
+                  id="displayName"
+                  type="text"
+                  value={form.displayName}
+                  onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+                  className="field-input"
+                />
+              </Field>
+              {isBusiness && (
+                <>
+                  <Field label="業種" htmlFor="industry" optional hint="記入例：飲食店、建設業">
+                    <input id="industry" type="text" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} className="field-input" />
+                  </Field>
+                  <Field label="お店・事業所のエリア" htmlFor="address" optional hint="記入例：登別市中央町、幌別町">
+                    <input id="address" type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="field-input" />
+                  </Field>
+                </>
+              )}
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-[15px]">
+                <input type="checkbox" checked={form.isPublic} onChange={(e) => setForm({ ...form, isPublic: e.target.checked })} />
+                公式サイトのサポーター一覧にお名前を載せる
+              </label>
+              {saveMsg && <Notice tone={saveMsg.tone}>{saveMsg.text}</Notice>}
+              <Button onClick={onSave} disabled={saving} className="w-full sm:w-auto">
+                {saving ? '保存しています…' : '掲載情報を保存'}
+              </Button>
+            </div>
+          </Section>
+
+          {sponsor.status !== 'canceled' && <LineLink sponsorId={sponsor.id} accessToken={session.access_token} isActive={isActive} />}
+
+          {isActive && <LiveStreams sponsorId={sponsor.id} accessToken={session.access_token} />}
+
+          {isBusiness && (
+            <CouponManager
+              sponsorId={sponsor.id}
+              defaultShopName={sponsor.display_name}
+              accessToken={session.access_token}
+              isActive={isActive}
+            />
+          )}
+
+          <PerformerApplication
+            sponsorId={sponsor.id}
+            accessToken={session.access_token}
+            defaultName={sponsor.applicant_name}
+            loginEmail={session.user.email ?? ''}
+          />
+
+          {isActive && sponsor.tier === 'corporate' && (
+            <CorporateInquiry sponsorId={sponsor.id} accessToken={session.access_token} defaultName={sponsor.applicant_name} />
+          )}
+
+          <Section
+            id="billing"
+            title="お支払い・解約"
+            description="カードの変更、請求書・領収書のダウンロード、解約は、決済会社Stripeの管理画面で行います。"
+          >
+            {portalError && <Notice tone="danger" className="mb-4">{portalError}</Notice>}
+            <Button variant="secondary" onClick={onOpenPortal} disabled={portalLoading || !sponsor.stripe_customer_id} className="w-full sm:w-auto">
+              {portalLoading ? '管理画面を開いています…' : 'お支払いの管理画面を開く'}
+            </Button>
+          </Section>
+        </div>
       </div>
     </div>
   );
