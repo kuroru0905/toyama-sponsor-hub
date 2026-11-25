@@ -91,7 +91,7 @@ function SampleTicket() {
       className="mx-auto w-full max-w-[400px] rounded-card bg-paper shadow-[0_30px_60px_-20px_rgba(0,0,0,0.25)]"
       style={{ ['--notch-bg' as string]: 'var(--surface)' }}
     >
-      <div className="px-7 pt-7 pb-6">
+      <div className="metal-surface metal-silver rounded-t-card px-7 pt-7 pb-6">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium text-ink-2">電子チケット</span>
           <Badge tone="ok">入場済み</Badge>
@@ -112,10 +112,10 @@ function SampleTicket() {
         </dl>
       </div>
       <div className="ticket-perf" />
-      <div className="rounded-b-card bg-brand px-7 py-6 text-white">
-        <p className="text-[13px] font-medium opacity-80">入場特典</p>
+      <div className="metal-surface metal-cobalt rounded-b-card px-7 py-6">
+        <p className="metal-sub text-[13px] font-medium">入場特典</p>
         <p className="mt-1 text-[19px] font-semibold leading-snug">お店のクーポンが各店で使えます</p>
-        <p className="mt-1 text-[14px] opacity-80">例：居酒屋〇〇の焼き鳥1本サービス。はしごOK・翌日23:59まで。</p>
+        <p className="metal-sub mt-1 text-[14px]">例：居酒屋〇〇の焼き鳥1本サービス。はしごOK・翌日23:59まで。</p>
       </div>
     </Tilt>
   );
