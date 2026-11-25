@@ -454,6 +454,7 @@ export default function MyPage() {
                         sponsorId={sponsor.id}
                         accessToken={session.access_token}
                         defaultName={sponsor.applicant_name}
+                        loginEmail={session.user.email ?? ''}
                       />
 
                       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

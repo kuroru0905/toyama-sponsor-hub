@@ -48,8 +48,8 @@ interface FormState {
   actName: string;
   representativeName: string;
   memberCount: string;
-  memberNames: string;
-  confirmed: boolean;
+  // グループの2人目以降（代表者はログイン中の本人）
+  others: { name: string; email: string; guardian: boolean }[];
   eventId: string;
   genre: string;
   links: string;
@@ -61,8 +61,7 @@ const EMPTY: FormState = {
   actName: '',
   representativeName: '',
   memberCount: '1',
-  memberNames: '',
-  confirmed: false,
+  others: [],
   eventId: '',
   genre: '',
   links: '',
@@ -93,9 +92,10 @@ interface Props {
   sponsorId: string;
   accessToken: string;
   defaultName: string;
+  loginEmail: string;
 }
 
-export default function PerformerApplication({ sponsorId, accessToken, defaultName }: Props) {
+export default function PerformerApplication({ sponsorId, accessToken, defaultName, loginEmail }: Props) {
   const [isActive, setIsActive] = useState(false);
   const [events, setEvents] = useState<EventOption[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -135,9 +135,12 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
     e.preventDefault();
     setError('');
     setMessage('');
-    if (isGroup && !form.confirmed) {
-      setError(GROUP_RULE);
-      return;
+    if (isGroup) {
+      const blank = form.others.findIndex((m) => !m.name.trim() || !m.email.trim());
+      if (blank !== -1) {
+        setError(`${blank + 2}人目の名前とスポンサー登録メールアドレスを入力してください`);
+        return;
+      }
     }
     setSending(true);
     try {
@@ -150,8 +153,10 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
           actName: form.actName,
           representativeName: form.representativeName,
           memberCount,
-          memberNames: isGroup ? form.memberNames : '',
-          allMembersSponsorConfirmed: isGroup ? form.confirmed : false,
+          // 1人目は代表者（ログイン中の本人）。メールはサーバー側でログイン中のアドレスに置き換える
+          members: isGroup
+            ? [{ name: form.representativeName, email: loginEmail, guardian: false }, ...form.others]
+            : [],
           eventId: form.eventId || null,
           genre: form.genre,
           links: form.links,
@@ -297,7 +302,12 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                     className={inputClass}
                     value={form.memberCount}
                     required
-                    onChange={(e) => setForm({ ...form, memberCount: e.target.value })}
+                    onChange={(e) => {
+                      const n = Math.min(30, Math.max(1, Number(e.target.value) || 1));
+                      const others = form.others.slice(0, n - 1);
+                      while (others.length < n - 1) others.push({ name: '', email: '', guardian: false });
+                      setForm({ ...form, memberCount: e.target.value, others });
+                    }}
                   />
                 </div>
               </div>
@@ -305,26 +315,57 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
               {isGroup && (
                 <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 space-y-3">
                   <p className="text-xs text-amber-200 leading-relaxed font-bold">{GROUP_RULE}</p>
-                  <div>
-                    <label className={labelClass}>メンバー全員の名前（代表者を含む）</label>
-                    <textarea
-                      className={`${inputClass} min-h-[80px]`}
-                      value={form.memberNames}
-                      maxLength={500}
-                      required
-                      placeholder="例：山田太郎（Vo）、佐藤花子（Gt）…"
-                      onChange={(e) => setForm({ ...form, memberNames: e.target.value })}
-                    />
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    メンバー全員の名前と、スポンサー登録しているメールアドレスを入力してください。応募時に、全員が契約中のスポンサーかをシステムで確認します。
+                  </p>
+                  <div className="rounded-lg border border-zinc-700 bg-zinc-950 p-3">
+                    <div className="text-xs font-bold text-zinc-400">1人目（代表者・あなた）</div>
+                    <div className="text-sm text-white">{form.representativeName || '（代表者名を入力してください）'}</div>
+                    <div className="text-xs text-zinc-400 break-all">{loginEmail}</div>
                   </div>
-                  <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.confirmed}
-                      onChange={(e) => setForm({ ...form, confirmed: e.target.checked })}
-                      className="mt-1 h-5 w-5 shrink-0 rounded border-zinc-600 bg-zinc-950 text-teal-400"
-                    />
-                    メンバー全員（未成年のメンバーはその保護者）がスポンサーとして契約中であることを確認しました
-                  </label>
+                  {form.others.map((m, i) => (
+                    <div key={i} className="rounded-lg border border-zinc-700 bg-zinc-950 p-3 space-y-2">
+                      <div className="text-xs font-bold text-zinc-400">{i + 2}人目</div>
+                      <input
+                        className={inputClass}
+                        value={m.name}
+                        maxLength={40}
+                        required
+                        placeholder="名前（例：佐藤花子・Gt）"
+                        onChange={(e) => {
+                          const others = form.others.slice();
+                          others[i] = { ...m, name: e.target.value };
+                          setForm({ ...form, others });
+                        }}
+                      />
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="off"
+                        className={inputClass}
+                        value={m.email}
+                        required
+                        placeholder="スポンサー登録メールアドレス"
+                        onChange={(e) => {
+                          const others = form.others.slice();
+                          others[i] = { ...m, email: e.target.value };
+                          setForm({ ...form, others });
+                        }}
+                      />
+                      <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={m.guardian}
+                          onChange={(e) => {
+                            const others = form.others.slice();
+                            others[i] = { ...m, guardian: e.target.checked };
+                            setForm({ ...form, others });
+                          }}
+                        />
+                        未成年のため、保護者のスポンサー登録アドレスを入力
+                      </label>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -390,7 +431,7 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                 </button>
                 <button
                   type="submit"
-                  disabled={sending || !form.eventId || (isGroup && !form.confirmed)}
+                  disabled={sending || !form.eventId}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold text-zinc-950 hover:bg-amber-300 transition disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />

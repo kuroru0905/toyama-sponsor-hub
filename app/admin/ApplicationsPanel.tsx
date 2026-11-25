@@ -28,6 +28,7 @@ interface Application {
   member_count: number;
   member_names: string;
   all_members_sponsor_confirmed: boolean;
+  members: { name: string; email: string; guardian?: boolean; verified?: boolean }[] | null;
   genre: string;
   links: string;
   message: string;
@@ -193,11 +194,29 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                       {a.member_count > 1 && (
                         <>
                           <dt className="text-xs font-bold text-zinc-400">メンバー</dt>
-                          <dd className="whitespace-pre-wrap">{a.member_names}</dd>
-                          <dt className="text-xs font-bold text-zinc-400">全員スポンサー</dt>
                           <dd>
-                            {a.all_members_sponsor_confirmed ? '応募者が確認済みと回答' : '未確認'}
-                            <span className="block text-xs text-zinc-500">※ 実際の契約状況はスポンサー一覧で確認してください</span>
+                            {a.members && a.members.length > 0 ? (
+                              <ul className="space-y-1">
+                                {a.members.map((m, i) => (
+                                  <li key={i} className="text-sm">
+                                    <span className={m.verified ? 'text-teal-300' : 'text-red-300'}>{m.verified ? '✓' : '✗'}</span>{' '}
+                                    {m.name}
+                                    <span className="text-xs text-zinc-400">
+                                      （{m.email}
+                                      {m.guardian ? '・保護者' : ''}）
+                                    </span>
+                                  </li>
+                                ))}
+                                <li className="text-xs text-zinc-500">✓ = 応募時に契約中のスポンサーとしてシステムで確認済み</li>
+                              </ul>
+                            ) : (
+                              <span className="whitespace-pre-wrap">
+                                {a.member_names}
+                                <span className="block text-xs text-zinc-500">
+                                  ※ メール確認の導入前の応募です（{a.all_members_sponsor_confirmed ? '応募者が確認済みと回答' : '未確認'}）
+                                </span>
+                              </span>
+                            )}
                           </dd>
                         </>
                       )}

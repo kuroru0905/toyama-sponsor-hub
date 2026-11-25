@@ -100,7 +100,6 @@ export async function POST(req: NextRequest) {
 
     const actName = str(body, 'actName', '出演名義', 60, true);
     const representativeName = str(body, 'representativeName', '代表者名', 60, true);
-    const memberNames = str(body, 'memberNames', 'メンバーの名前', 500, false);
     const genre = str(body, 'genre', 'ジャンル', 60, false);
     const links = str(body, 'links', '音源・動画・SNSのURL', 500, false);
     const message = str(body, 'message', 'PR・意気込み', 1000, false);
@@ -109,11 +108,56 @@ export async function POST(req: NextRequest) {
     if (!Number.isInteger(memberCount) || memberCount < 1 || memberCount > 30) {
       throw new HttpError(400, '人数は1〜30人で入力してください');
     }
-    const confirmed = body.allMembersSponsorConfirmed === true;
+    // グループはメンバー全員のスポンサー登録メールを確認する（1人目は代表者＝ログイン中の本人）
+    let members: { name: string; email: string; guardian: boolean; verified: boolean }[] = [];
     if (memberCount > 1) {
-      if (!memberNames) throw new HttpError(400, 'グループの場合はメンバー全員の名前を入力してください');
-      if (!confirmed) throw new HttpError(400, GROUP_RULE);
+      const raw = Array.isArray(body.members) ? (body.members as unknown[]) : [];
+      if (raw.length !== memberCount) {
+        throw new HttpError(400, 'メンバー全員の名前とメールアドレスを入力してください');
+      }
+      const seen: Record<string, boolean> = {};
+      members = raw.map((m, i) => {
+        const item = (m ?? {}) as Record<string, unknown>;
+        const name = typeof item.name === 'string' ? item.name.trim() : '';
+        const mail = i === 0 ? email.toLowerCase() : typeof item.email === 'string' ? item.email.trim().toLowerCase() : '';
+        // 未成年メンバーが保護者のアドレスを使う場合（きょうだいで同じ保護者もありうる）
+        const guardian = i > 0 && item.guardian === true;
+        if (!name) throw new HttpError(400, `${i + 1}人目の名前を入力してください`);
+        if (name.length > 40) throw new HttpError(400, `${i + 1}人目の名前は40文字以内で入力してください`);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) throw new HttpError(400, `${i + 1}人目（${name}）のメールアドレスの形式が正しくありません`);
+        // 同じアドレスの重複は「保護者のアドレス」の行だけ認める
+        if (seen[mail] && !guardian) {
+          throw new HttpError(400, `${i + 1}人目（${name}）のメールアドレスが、ほかのメンバーと重複しています（保護者のアドレスの場合はチェックを入れてください）`);
+        }
+        seen[mail] = true;
+        return { name, email: mail, guardian, verified: false };
+      });
+
+      // 契約中（active）のスポンサーのメールアドレスと照合（枠は問わない）
+      const { data: actives, error: activeError } = await supabaseAdmin
+        .from('sponsors')
+        .select('email')
+        .eq('status', 'active');
+      if (activeError) throw new HttpError(500, 'スポンサー契約の確認に失敗しました');
+      const activeSet: Record<string, boolean> = {};
+      (actives ?? []).forEach((a) => {
+        if (a.email) activeSet[String(a.email).trim().toLowerCase()] = true;
+      });
+
+      const ng: string[] = [];
+      members = members.map((m) => {
+        const ok = !!activeSet[m.email];
+        if (!ok) ng.push(`${m.name}（${m.email}）`);
+        return { ...m, verified: ok };
+      });
+      if (ng.length > 0) {
+        throw new HttpError(
+          400,
+          `次のメンバーは、契約中のスポンサーとして確認できませんでした：${ng.join('、')}。スポンサー登録したメールアドレス（未成年の方は保護者の登録アドレス）を入力するか、先にスポンサー登録をお願いします。`
+        );
+      }
     }
+    const memberNames = members.map((m) => m.name).join('、');
 
     // 出演するイベント（必須）：募集中であること
     if (!body.eventId) throw new HttpError(400, '出演するイベントを選んでください');
@@ -158,7 +202,8 @@ export async function POST(req: NextRequest) {
         representative_name: representativeName,
         member_count: memberCount,
         member_names: memberNames,
-        all_members_sponsor_confirmed: memberCount > 1 ? confirmed : false,
+        members,
+        all_members_sponsor_confirmed: memberCount > 1,
         event_id: eventId,
         genre,
         links,
@@ -180,8 +225,9 @@ export async function POST(req: NextRequest) {
       event_title: eventTitle,
     });
 
-    // 外山企画へ通知
-    await sendMail({
+    // 外山企画への通知と、応募者への受付確認を同時に送る
+    await Promise.all([
+      sendMail({
       to: adminEmails(),
       subject: `【出演応募】${actName}（${ACT_TYPES[actType]}）`,
       text: [
@@ -189,17 +235,17 @@ export async function POST(req: NextRequest) {
         '',
         `契約名：${sponsor.display_name}`,
         `応募者メール：${email}`,
-        ...(memberCount > 1 ? ['メンバー全員（または保護者）のスポンサー契約：応募者が確認済みと回答'] : []),
+        ...(memberCount > 1
+          ? ['メンバー全員のスポンサー契約：システムで確認済み', ...members.map((m) => `・${m.name}（${m.email}${m.guardian ? '・保護者' : ''}）`)]
+          : []),
         '',
         ...lines,
         '',
         '管理画面で選考状況を更新してください：',
         SPONSOR_ADMIN_URL,
       ].join('\n'),
-    });
-
-    // 応募者へ受付確認
-    await sendMail({
+      }),
+      sendMail({
       to: email,
       subject: `【受付完了】出演応募を受け付けました（${actName}）`,
       text: [
@@ -217,7 +263,8 @@ export async function POST(req: NextRequest) {
         '',
         '外山企画 スポンサー事務局',
       ].join('\n'),
-    });
+      }),
+    ]);
 
     return NextResponse.json({ id: data.id });
   } catch (err) {
