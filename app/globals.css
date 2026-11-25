@@ -2,18 +2,140 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== スマホ対応 ===== */
-@media (max-width: 639px) {
-  /* iPhoneは16px未満の入力欄をタップすると画面を拡大してしまうため、スマホでは16pxにそろえる */
-  input:not([type='checkbox']):not([type='radio']),
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-  /* チェックボックスを押しやすい大きさに */
-  input[type='checkbox'] {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex-shrink: 0;
+/* ===== デザイントークン =====
+   ブランドカラーが決まったら --brand / --accent まわりだけを差し替える */
+:root {
+  --ink: #1c2230; /* 本文（墨） */
+  --ink-2: #4a5263; /* 補足文 */
+  --ink-3: #6b7383; /* さらに弱い文字（白地でAA） */
+  --line: #dde1e7;
+  --line-strong: #b9c0cb;
+  --paper: #ffffff;
+  --surface: #f4f5f7;
+
+  --brand: #22378c; /* 藍：主ボタン・リンク */
+  --brand-hover: #1a2b70;
+  --brand-soft: #eef1fb;
+  --brand-ink: #ffffff;
+  --brand-line: #c4cdee;
+
+  --accent: #f2b705; /* 硫黄の黄：チケットの半券・強調の面（文字色には使わない） */
+  --accent-soft: #fff6d6;
+  --accent-ink: #3b2c00;
+
+  --ok: #1e7b4f;
+  --ok-soft: #e8f5ee;
+  --ok-line: #a9d6be;
+  --warn: #8a5a00;
+  --warn-soft: #fff4dc;
+  --warn-line: #ecc979;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --danger-line: #f0b3ad;
+
+  --focus: #22378c;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+  line-height: 1.7;
+  font-feature-settings: 'palt' 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* キーボード操作のときだけ、はっきり見えるフォーカス枠 */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* 入力欄の共通スタイル（16pxにしてiPhoneの拡大を防ぐ／高さ48px） */
+.field-input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 10px 14px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.field-input:hover {
+  border-color: var(--ink-3);
+}
+.field-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft), 0 0 0 1px var(--brand);
+}
+.field-input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+textarea.field-input {
+  min-height: 120px;
+}
+select.field-input {
+  appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%234a5263' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+/* チェックボックス・ラジオを押しやすく */
+input[type='checkbox'],
+input[type='radio'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  accent-color: var(--brand);
+}
+
+/* チケットのミシン目（半券の切り取り線）。左右に半円の切り欠き */
+.ticket-perf {
+  position: relative;
+  border-top: 2px dashed var(--line-strong);
+}
+.ticket-perf::before,
+.ticket-perf::after {
+  content: '';
+  position: absolute;
+  top: -11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--notch-bg, var(--surface));
+  border: 1px solid var(--line);
+}
+.ticket-perf::before {
+  left: -11px;
+  clip-path: inset(0 0 0 50%);
+}
+.ticket-perf::after {
+  right: -11px;
+  clip-path: inset(0 50% 0 0);
+}
+
+.num {
+  font-family: var(--font-num), var(--font-body), sans-serif;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
