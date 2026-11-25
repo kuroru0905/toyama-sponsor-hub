@@ -308,19 +308,19 @@ input[type='radio'] {
    Apple Store のように、面は白のまま、色は小さな部分（枠名のラベル・色の丸）にだけ使う */
 .metal-gold {
   --metal-ink: #2b1f05;
-  --metal-base: linear-gradient(135deg, #efdca0 0%, #cfa850 42%, #f3e3ac 62%, #bf9442 100%);
+  --metal-base: linear-gradient(135deg, #f6dc8f 0%, #d6a945 40%, #fdeab0 58%, #c9973a 100%);
 }
 .metal-silver {
   --metal-ink: #1d1d1f;
-  --metal-base: linear-gradient(135deg, #f4f5f7 0%, #c9cdd3 42%, #f7f8fa 62%, #b9bec6 100%);
+  --metal-base: linear-gradient(135deg, #f7f8fa 0%, #c6ccd6 40%, #ffffff 58%, #b6bdc8 100%);
 }
 .metal-bronze {
   --metal-ink: #2a1406;
-  --metal-base: linear-gradient(135deg, #f2c9a0 0%, #cd925e 42%, #f4d2b0 62%, #c08655 100%);
+  --metal-base: linear-gradient(135deg, #f5cba1 0%, #d18f58 40%, #fbdcbd 58%, #c4814c 100%);
 }
 .metal-cobalt {
   --metal-ink: #ffffff;
-  --metal-base: linear-gradient(135deg, #3d72ff 0%, #1a4fd6 45%, #3a6cf2 62%, #1640b8 100%);
+  --metal-base: linear-gradient(135deg, #3a6ef2 0%, #1a4fd6 45%, #3567ea 62%, #1640b8 100%);
 }
 /* 枠名のラベル：金属の色で囲む（components 層に置き、文字の大きさはユーティリティで上書きできる） */
 @layer components {
@@ -338,27 +338,73 @@ input[type='radio'] {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 }
-/* 料金プランのチケットの上半分：なだらかな金属の面（筋の模様・動く光はつけない） */
+/* チケットの金属の面（料金プランの上半分・見本チケット）
+   なめらかな色の変化＋中央の明るい帯＋カーソル・指に合わせてゆっくり流れる光。細い筋の模様はつけない */
 .metal-surface {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   color: var(--metal-ink);
   background-image: var(--metal-soft);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
 }
-.metal-surface .text-ink-2 {
+.metal-surface::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.42) 50%, transparent 64%);
+  background-size: 260% 100%;
+  background-position: calc(100% - var(--gx, 35%)) 0;
+  transition: background-position 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.metal-surface > * {
+  position: relative;
+  z-index: 1;
+}
+.metal-surface .text-ink-2,
+.metal-surface .metal-sub {
   color: var(--metal-sub);
 }
 .metal-gold {
   --metal-sub: #5a4316;
-  --metal-soft: linear-gradient(160deg, #f8ecc4 0%, #ecd696 48%, #dcbd6f 100%);
+  --metal-soft: linear-gradient(135deg, #f9e7a8 0%, #e6c164 30%, #fff4cf 52%, #dcb150 74%, #f2d68c 100%);
 }
 .metal-silver {
-  --metal-sub: #4a4a4f;
-  --metal-soft: linear-gradient(160deg, #f9fafb 0%, #e6e8ec 48%, #d2d6dc 100%);
+  --metal-sub: #44464c;
+  --metal-soft: linear-gradient(135deg, #f6f7f9 0%, #d3d8e0 30%, #ffffff 52%, #c7cdd7 74%, #e9ecf1 100%);
 }
 .metal-bronze {
   --metal-sub: #5a3518;
-  --metal-soft: linear-gradient(160deg, #f8e2cc 0%, #ecc39c 48%, #dca87a 100%);
+  --metal-soft: linear-gradient(135deg, #f8d9b9 0%, #dea06b 30%, #fde6cf 52%, #d4955f 74%, #efc196 100%);
 }
+.metal-cobalt {
+  --metal-sub: rgba(255, 255, 255, 0.88);
+  --metal-soft: linear-gradient(135deg, #2c62ec 0%, #1745c4 30%, #3a6ef2 52%, #1540b5 74%, #2457e0 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .metal-surface::after {
+    transition: none;
+  }
+}
+
+/* ロゴ：ローマ字のワードマーク */
+.wordmark {
+  font-family: var(--font-latin), -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.wordmark-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand-glow), var(--brand) 60%);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
 /* 色の丸（Apple Store のカラーの丸と同じ大きさ感） */
 .metal-dot {
   display: inline-block;
