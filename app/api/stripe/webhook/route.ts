@@ -6,6 +6,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
 });
 
+// 請求書のサブスクIDとメタデータ。新しいAPIバージョン（2025-03-31以降）では
+// invoice.parent.subscription_details に移ったので、新旧どちらの形でも読む
+function invoiceSubscription(invoice: Stripe.Invoice): { subscriptionId: string | null; sponsorId: string | null } {
+  const inv = invoice as any;
+  const details = inv.parent?.subscription_details ?? inv.subscription_details ?? null;
+  const sub = inv.subscription ?? details?.subscription ?? null;
+  const subscriptionId = typeof sub === 'string' ? sub : sub?.id ?? null;
+  const sponsorId = details?.metadata?.sponsorId ?? null;
+  return { subscriptionId, sponsorId };
+}
+
 export async function POST(req: NextRequest) {
   const payload = await req.text();
   const signature = req.headers.get('stripe-signature');
@@ -50,8 +61,7 @@ export async function POST(req: NextRequest) {
       // 請求書払い：入金が確認できたら有効化（カード払いの毎月の更新でも届く。未払い→支払い済みの復帰にも使う）
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string | null;
-        const sponsorId = invoice.subscription_details?.metadata?.sponsorId;
+        const { subscriptionId, sponsorId } = invoiceSubscription(invoice);
 
         const update = {
           status: 'active',
@@ -71,7 +81,7 @@ export async function POST(req: NextRequest) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string;
+        const { subscriptionId } = invoiceSubscription(invoice);
 
         if (subscriptionId) {
           await supabaseAdmin
