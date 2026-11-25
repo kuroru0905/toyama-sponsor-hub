@@ -125,7 +125,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
           <Mic2 className="h-5 w-5 text-warn" />
           <h2 className="text-lg sm:text-xl font-bold text-ink">出演応募</h2>
           {openCount > 0 && (
-            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold text-brand-ink">未対応 {openCount}</span>
+            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold text-accent-ink">未対応 {openCount}</span>
           )}
         </div>
         <div className="flex gap-2">

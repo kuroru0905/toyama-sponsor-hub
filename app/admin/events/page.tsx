@@ -440,7 +440,7 @@ export default function AdminEventsPage() {
                     {ev.recruit_performers && (
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
-                          recruitOpen ? 'border-warn-line bg-accent/15 text-warn' : 'border-line-strong bg-surface text-ink-2'
+                          recruitOpen ? 'border-warn-line bg-warn-soft text-warn' : 'border-line-strong bg-surface text-ink-2'
                         }`}
                       >
                         {recruitOpen ? '出演者募集中' : '出演者募集 終了'}

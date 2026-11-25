@@ -29,7 +29,7 @@ type CouponForm = {
 const EMPTY: CouponForm = { id: null, shop_name: '', benefit_title: '', benefit_detail: '', is_published: true };
 
 const REVIEW: Record<ReviewStatus, { label: string; cls: string }> = {
-  pending: { label: '審査待ち', cls: 'border-warn-line bg-accent/15 text-warn' },
+  pending: { label: '審査待ち', cls: 'border-warn-line bg-warn-soft text-warn' },
   approved: { label: '承認済み', cls: 'border-brand-line bg-brand-soft text-brand' },
   rejected: { label: '差し戻し', cls: 'border-danger-line bg-danger-soft text-danger' },
 };

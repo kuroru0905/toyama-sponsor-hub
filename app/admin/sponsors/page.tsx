@@ -54,7 +54,7 @@ const TIER_META: Record<TierType, { label: string; badgeClass: string }> = {
   },
   fan: {
     label: 'ファン枠 (¥300)',
-    badgeClass: 'border-warn-line bg-accent/15 text-warn',
+    badgeClass: 'border-warn-line bg-warn-soft text-warn',
   },
 };
 
