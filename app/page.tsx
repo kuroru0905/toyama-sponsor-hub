@@ -91,7 +91,7 @@ function SampleTicket() {
       className="mx-auto w-full max-w-[400px] rounded-card bg-paper shadow-[0_30px_60px_-20px_rgba(0,0,0,0.25)]"
       style={{ ['--notch-bg' as string]: 'var(--surface)' }}
     >
-      <div className="metal metal-silver rounded-t-card px-7 pt-7 pb-6">
+      <div className="px-7 pt-7 pb-6">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium text-ink-2">電子チケット</span>
           <Badge tone="ok">入場済み</Badge>
@@ -112,10 +112,10 @@ function SampleTicket() {
         </dl>
       </div>
       <div className="ticket-perf" />
-      <div className="metal metal-cobalt rounded-b-card px-7 py-6">
-        <p className="metal-sub text-[13px] font-medium">入場特典</p>
+      <div className="rounded-b-card bg-brand px-7 py-6 text-white">
+        <p className="text-[13px] font-medium opacity-80">入場特典</p>
         <p className="mt-1 text-[19px] font-semibold leading-snug">お店のクーポンが1枚使えます</p>
-        <p className="metal-sub mt-1 text-[14px]">例：居酒屋〇〇の焼き鳥1本サービス。翌日23:59まで。</p>
+        <p className="mt-1 text-[14px] opacity-80">例：居酒屋〇〇の焼き鳥1本サービス。翌日23:59まで。</p>
       </div>
     </Tilt>
   );
@@ -325,10 +325,10 @@ export default function SponsorHubPage() {
                     aria-labelledby={`plan-${plan.id}-name`}
                     className="card flex h-full scroll-mt-24 flex-col"
                   >
-                    <div className={`metal ${TIER_METAL[plan.id]} rounded-t-card px-8 pt-8 pb-6`}>
+                    <div className="px-8 pt-8 pb-6">
                       <div className="flex items-start justify-between gap-3">
-                        <h3 id={`plan-${plan.id}-name`} className="text-[24px] font-semibold">
-                          {plan.name}
+                        <h3 id={`plan-${plan.id}-name`}>
+                          <span className={`metal-chip ${TIER_METAL[plan.id]} px-4 py-1 text-[17px]`}>{plan.name}</span>
                         </h3>
                         {avail ? (
                           full ? (
@@ -397,7 +397,7 @@ export default function SponsorHubPage() {
                 return (
                   <div key={g.tier} className="card p-8">
                     <div className="flex items-baseline justify-between gap-3">
-                      <h3 className="text-[19px] font-semibold">{g.title}</h3>
+                      <h3 className="flex items-center gap-2 text-[19px] font-semibold"><span className={`metal-dot ${TIER_METAL[g.tier]}`} aria-hidden />{g.title}</h3>
                       <span className="text-[15px] text-ink-2">
                         <span className="num text-[28px] font-semibold text-ink">{list.length}</span> {g.unit}
                       </span>
