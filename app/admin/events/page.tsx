@@ -19,6 +19,7 @@ type AdminEvent = {
   recruit_deadline: string | null;
   presale_start: string | null;
   general_sale_start: string | null;
+  stream_enabled: boolean;
   stream_url: string | null;
   stats: EventStats;
 };
@@ -44,6 +45,7 @@ type EventForm = {
   recruit_deadline: string; // datetime-local（日本時間）
   presale_start: string; // datetime-local（日本時間）空欄＝先行販売なし
   general_sale_start: string; // datetime-local（日本時間）空欄＝公開と同時に販売
+  stream_enabled: boolean; // 当日のライブ配信をするか
   stream_url: string; // 当日のYouTubeライブ（限定公開）URL
 };
 
@@ -60,6 +62,7 @@ const EMPTY: EventForm = {
   recruit_deadline: '',
   presale_start: '',
   general_sale_start: '',
+  stream_enabled: false,
   stream_url: '',
 };
 
@@ -154,7 +157,8 @@ export default function AdminEventsPage() {
       recruit_deadline: form.recruit_performers ? localToIso(form.recruit_deadline) : null,
       presale_start: localToIso(form.presale_start),
       general_sale_start: localToIso(form.general_sale_start),
-      stream_url: form.stream_url.trim(),
+      stream_enabled: form.stream_enabled,
+      stream_url: form.stream_enabled ? form.stream_url.trim() : '',
     };
     setSaving(true);
     try {
@@ -295,19 +299,34 @@ export default function AdminEventsPage() {
             <p className="text-xs text-zinc-500">入場ボタンは開演3時間前〜開演日の23:59まで使えます。</p>
           </div>
 
-          <div className="rounded-xl border border-red-400/30 bg-red-400/5 p-4 space-y-2">
-            <label className={labelClass}>当日のライブ配信URL（YouTube限定公開・スポンサー特典）</label>
-            <input
-              type="url"
-              inputMode="url"
-              className={inputClass}
-              placeholder="https://www.youtube.com/live/... または https://youtu.be/..."
-              value={form.stream_url}
-              onChange={(e) => setForm({ ...form, stream_url: e.target.value })}
-            />
-            <p className="text-xs text-zinc-400">
-              有効なスポンサー（全枠）のマイページにだけ表示されます。開演1時間前になっても空欄なら、管理者にアラートメールが届きます。
-            </p>
+          <div className="rounded-xl border border-red-400/30 bg-red-400/5 p-4 space-y-3">
+            <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={form.stream_enabled}
+                onChange={(e) => setForm({ ...form, stream_enabled: e.target.checked })}
+              />
+              <span>
+                当日のライブ配信をする（YouTube限定公開・スポンサー特典）
+                <span className="block text-xs text-zinc-400">
+                  有効なスポンサー（全枠）のマイページに配信リンクを表示します。開演1時間前になっても配信URLが空欄なら、管理者にアラートメールが届きます。
+                </span>
+              </span>
+            </label>
+            {form.stream_enabled && (
+              <div>
+                <label className={labelClass}>配信URL（当日までに入力）</label>
+                <input
+                  type="url"
+                  inputMode="url"
+                  className={inputClass}
+                  placeholder="https://www.youtube.com/live/... または https://youtu.be/..."
+                  value={form.stream_url}
+                  onChange={(e) => setForm({ ...form, stream_url: e.target.value })}
+                />
+              </div>
+            )}
           </div>
 
           <label className="flex items-start gap-2.5 text-sm text-white cursor-pointer">
@@ -388,7 +407,9 @@ export default function AdminEventsPage() {
                   {ev.presale_start && ` ／ 先行 ${fmt(ev.presale_start)}〜`}
                   {ev.general_sale_start && ` ／ 一般 ${fmt(ev.general_sale_start)}〜`}
                   {' ／ '}
-                  {ev.stream_url ? (
+                  {!ev.stream_enabled ? (
+                    <span className="text-zinc-500">配信なし</span>
+                  ) : ev.stream_url ? (
                     <span className="text-teal-300">配信URL設定済み</span>
                   ) : (
                     <span className="text-red-300 font-bold">配信URL未設定</span>
@@ -427,6 +448,7 @@ export default function AdminEventsPage() {
                         recruit_deadline: isoToLocal(ev.recruit_deadline),
                         presale_start: isoToLocal(ev.presale_start),
                         general_sale_start: isoToLocal(ev.general_sale_start),
+                        stream_enabled: ev.stream_enabled,
                         stream_url: ev.stream_url ?? '',
                       });
                       window.scrollTo({ top: 0, behavior: 'smooth' });
