@@ -85,7 +85,48 @@ export function parseEventInput(body: Json, partial: boolean) {
   }
   if (recruit === false && deadline === undefined) out.recruit_deadline = null;
 
+  // 先行販売（スポンサー限定）・一般販売の開始日時。空欄なら公開と同時に一般販売
+  const presale = date(body, 'presale_start', 'スポンサー先行販売の開始日時', false);
+  if (presale !== undefined) out.presale_start = presale;
+  const general = date(body, 'general_sale_start', '一般販売の開始日時', false);
+  if (general !== undefined) out.general_sale_start = general;
+
   return out;
+}
+
+type Timeline = {
+  starts_at?: string | null;
+  recruit_performers?: boolean | null;
+  recruit_deadline?: string | null;
+  presale_start?: string | null;
+  general_sale_start?: string | null;
+};
+
+// 日時の前後関係（作成時は入力そのもの、編集時は既存の値と合わせて確認）
+// 出演者募集（任意・いつからでも）→ 先行販売 → 一般販売 → 開演（販売終了）
+export function checkEventTimeline(input: Record<string, unknown>) {
+  const t = input as Timeline;
+  const ms = (v?: string | null) => (v ? new Date(v).getTime() : null);
+  const starts = ms(t.starts_at);
+  const deadline = ms(t.recruit_deadline);
+  const presale = ms(t.presale_start);
+  const general = ms(t.general_sale_start);
+
+  if (t.recruit_performers && deadline !== null && starts !== null && deadline > starts) {
+    throw new HttpError(400, '出演者募集の締切は、開演日時より前にしてください');
+  }
+  if (presale !== null && general === null) {
+    throw new HttpError(400, 'スポンサー先行販売を設定する場合は、一般販売の開始日時も入力してください');
+  }
+  if (presale !== null && general !== null && presale >= general) {
+    throw new HttpError(400, 'スポンサー先行販売の開始は、一般販売の開始より前にしてください');
+  }
+  if (general !== null && starts !== null && general >= starts) {
+    throw new HttpError(400, '一般販売の開始は、開演日時より前にしてください');
+  }
+  if (presale !== null && starts !== null && presale >= starts) {
+    throw new HttpError(400, 'スポンサー先行販売の開始は、開演日時より前にしてください');
+  }
 }
 
 export function parseCouponInput(body: Json, partial: boolean) {
