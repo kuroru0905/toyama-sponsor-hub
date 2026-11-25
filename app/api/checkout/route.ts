@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { TIER_CAPS } from '@/lib/tierCaps';
+import { sendInvoiceAppliedMails } from '@/lib/sponsorMails';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
@@ -115,6 +116,35 @@ export async function POST(req: NextRequest) {
           status: 'pending',
         })
         .eq('id', sponsor.id);
+
+      // 最初の請求書は「下書き」で作られ、そのままだと約1時間後まで確定・送信されない。
+      // 申込と同時に確定して、Stripeから請求書メールを送る
+      let invoiceUrl: string | null = null;
+      const latest = subscription.latest_invoice;
+      const invoiceId = typeof latest === 'string' ? latest : latest?.id;
+      if (invoiceId) {
+        try {
+          const current = await stripe.invoices.retrieve(invoiceId);
+          const finalized =
+            current.status === 'draft' ? await stripe.invoices.finalizeInvoice(invoiceId) : current;
+          const sent = await stripe.invoices.sendInvoice(finalized.id!);
+          invoiceUrl = sent.hosted_invoice_url ?? finalized.hosted_invoice_url ?? null;
+        } catch (err) {
+          console.error('請求書の確定・送信に失敗しました:', err);
+        }
+      }
+
+      await sendInvoiceAppliedMails(
+        {
+          id: sponsor.id,
+          tier,
+          applicant_name: applicantName.trim(),
+          display_name: finalDisplayName,
+          email: email.trim(),
+          payment_method: 'invoice',
+        },
+        invoiceUrl
+      );
 
       return NextResponse.json({
         url: `${siteUrl}/thanks?method=invoice&name=${encodeURIComponent(finalDisplayName)}`,

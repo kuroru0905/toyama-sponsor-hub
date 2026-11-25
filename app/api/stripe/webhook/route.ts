@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { sendActivatedMails, type SponsorForMail } from '@/lib/sponsorMails';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
@@ -15,6 +16,20 @@ function invoiceSubscription(invoice: Stripe.Invoice): { subscriptionId: string 
   const subscriptionId = typeof sub === 'string' ? sub : sub?.id ?? null;
   const sponsorId = details?.metadata?.sponsorId ?? null;
   return { subscriptionId, sponsorId };
+}
+
+const MAIL_FIELDS = 'id, tier, applicant_name, display_name, email, payment_method';
+
+// 入金待ち・未払いから有効に変わった行だけを返す（同じ通知が重なってもメールは1回）
+async function activate(match: { column: 'id' | 'stripe_subscription_id'; value: string }, extra: Record<string, unknown> = {}) {
+  const { data, error } = await supabaseAdmin
+    .from('sponsors')
+    .update({ status: 'active', updated_at: new Date().toISOString(), ...extra })
+    .eq(match.column, match.value)
+    .in('status', ['pending', 'past_due'])
+    .select(MAIL_FIELDS);
+  if (error) throw error;
+  return (data ?? []) as SponsorForMail[];
 }
 
 export async function POST(req: NextRequest) {
@@ -45,15 +60,16 @@ export async function POST(req: NextRequest) {
         const sponsorId = session.metadata?.sponsorId;
 
         if (sponsorId) {
-          await supabaseAdmin
-            .from('sponsors')
-            .update({
-              status: 'active',
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: session.subscription as string,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', sponsorId);
+          const ids = {
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: session.subscription as string,
+          };
+          const activated = await activate({ column: 'id', value: sponsorId }, ids);
+          // 先に invoice.paid で有効化済みでも、顧客ID・サブスクIDは保存しておく
+          if (activated.length === 0) {
+            await supabaseAdmin.from('sponsors').update(ids).eq('id', sponsorId);
+          }
+          await Promise.all(activated.map((s) => sendActivatedMails(s)));
         }
         break;
       }
@@ -63,19 +79,14 @@ export async function POST(req: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice;
         const { subscriptionId, sponsorId } = invoiceSubscription(invoice);
 
-        const update = {
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        };
+        let activated: SponsorForMail[] = [];
         if (subscriptionId) {
-          await supabaseAdmin
-            .from('sponsors')
-            .update(update)
-            .eq('stripe_subscription_id', subscriptionId)
-            .neq('status', 'canceled');
-        } else if (sponsorId) {
-          await supabaseAdmin.from('sponsors').update(update).eq('id', sponsorId).neq('status', 'canceled');
+          activated = await activate({ column: 'stripe_subscription_id', value: subscriptionId });
         }
+        if (activated.length === 0 && sponsorId) {
+          activated = await activate({ column: 'id', value: sponsorId });
+        }
+        await Promise.all(activated.map((s) => sendActivatedMails(s)));
         break;
       }
 
