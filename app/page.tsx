@@ -325,10 +325,10 @@ export default function SponsorHubPage() {
                     aria-labelledby={`plan-${plan.id}-name`}
                     className="card flex h-full scroll-mt-24 flex-col"
                   >
-                    <div className="px-8 pt-8 pb-6">
+                    <div className={`metal-surface ${TIER_METAL[plan.id]} rounded-t-card px-8 pt-8 pb-6`}>
                       <div className="flex items-start justify-between gap-3">
-                        <h3 id={`plan-${plan.id}-name`}>
-                          <span className={`metal-chip ${TIER_METAL[plan.id]} px-4 py-1 text-[17px]`}>{plan.name}</span>
+                        <h3 id={`plan-${plan.id}-name`} className="text-[24px] font-semibold">
+                          {plan.name}
                         </h3>
                         {avail ? (
                           full ? (

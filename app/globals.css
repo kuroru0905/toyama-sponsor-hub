@@ -338,6 +338,27 @@ input[type='radio'] {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 }
+/* 料金プランのチケットの上半分：なだらかな金属の面（筋の模様・動く光はつけない） */
+.metal-surface {
+  color: var(--metal-ink);
+  background-image: var(--metal-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.metal-surface .text-ink-2 {
+  color: var(--metal-sub);
+}
+.metal-gold {
+  --metal-sub: #5a4316;
+  --metal-soft: linear-gradient(160deg, #f8ecc4 0%, #ecd696 48%, #dcbd6f 100%);
+}
+.metal-silver {
+  --metal-sub: #4a4a4f;
+  --metal-soft: linear-gradient(160deg, #f9fafb 0%, #e6e8ec 48%, #d2d6dc 100%);
+}
+.metal-bronze {
+  --metal-sub: #5a3518;
+  --metal-soft: linear-gradient(160deg, #f8e2cc 0%, #ecc39c 48%, #dca87a 100%);
+}
 /* 色の丸（Apple Store のカラーの丸と同じ大きさ感） */
 .metal-dot {
   display: inline-block;
