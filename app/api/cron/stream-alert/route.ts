@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://toyama-sponsor-hub.vercel.app';
 const ALERT_BEFORE_MS = 60 * 60 * 1000;
 
-// 開演1時間前を過ぎても配信URLが空の公開イベントがあれば、管理者にアラートメール（1イベント1回）
+// 「配信する」にした公開イベントで、開演1時間前を過ぎても配信URLが空なら、管理者にアラートメール（1イベント1回）
 // Supabase の pg_cron から5分おきに呼ばれる（Authorization: Bearer CRON_SECRET）
 async function run(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -20,6 +20,7 @@ async function run(req: NextRequest) {
     .from('live_events')
     .select('id, title, venue, starts_at')
     .eq('is_published', true)
+    .eq('stream_enabled', true)
     .is('stream_url', null)
     .is('stream_alert_sent_at', null)
     .lte('starts_at', new Date(now + ALERT_BEFORE_MS).toISOString())
@@ -37,6 +38,7 @@ async function run(req: NextRequest) {
       .update({ stream_alert_sent_at: new Date().toISOString() })
       .eq('id', ev.id)
       .is('stream_alert_sent_at', null)
+      .eq('stream_enabled', true)
       .is('stream_url', null)
       .select('id')
       .maybeSingle();

@@ -64,7 +64,7 @@ export default function LiveStreams({ sponsorId, accessToken }: { sponsorId: str
       {error ? (
         <p className="text-sm text-red-300">{error}</p>
       ) : streams.length === 0 ? (
-        <p className="text-xs text-zinc-500">今後の公演が決まったら、ここに配信リンクが表示されます。</p>
+        <p className="text-xs text-zinc-500">配信予定の公演が決まったら、ここに配信リンクが表示されます。</p>
       ) : (
         <ul className="space-y-2">
           {streams.map((s) => (

@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
       .from('live_events')
       .select('id, title, venue, starts_at, stream_url')
       .eq('is_published', true)
+      .eq('stream_enabled', true)
       .gte('starts_at', since)
       .order('starts_at', { ascending: true })
       .limit(5);

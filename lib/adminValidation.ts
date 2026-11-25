@@ -85,8 +85,15 @@ export function parseEventInput(body: Json, partial: boolean) {
   }
   if (recruit === false && deadline === undefined) out.recruit_deadline = null;
 
+  // 当日のライブ配信をするか（しないイベントは配信URL・未入力アラートの対象外）
+  const streamEnabled = bool(body, 'stream_enabled');
+  if (streamEnabled !== undefined) out.stream_enabled = streamEnabled;
+
   // 当日のライブ配信（YouTubeの限定公開リンク）。スポンサーのマイページにだけ表示する
-  if (body.stream_url !== undefined) {
+  if (streamEnabled === false) {
+    out.stream_url = null;
+    out.stream_alert_sent_at = null;
+  } else if (body.stream_url !== undefined) {
     const raw = typeof body.stream_url === 'string' ? body.stream_url.trim() : body.stream_url;
     if (raw === null || raw === '') {
       out.stream_url = null;
