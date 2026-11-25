@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { HttpError, requireUserEmail, requireCouponSponsor, textField } from '@/lib/sponsorCoupons';
+import { sendMail, adminEmails, ADMIN_CONSOLE_URL } from '@/lib/mailer';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 function handleError(err: unknown) {
   if (err instanceof HttpError) {
@@ -80,6 +82,26 @@ export async function POST(req: NextRequest) {
       .select('id')
       .single();
     if (error || !data) throw new HttpError(500, 'クーポンの登録に失敗しました');
+
+    // 外山企画へ通知（失敗しても申請は成功扱い）
+    await sendMail({
+      to: adminEmails(),
+      subject: `【クーポン申請】${shopName}「${benefitTitle}」`,
+      text: [
+        'スポンサーから新しいLINEクーポンの申請がありました。',
+        '',
+        `契約名：${sponsor.display_name}`,
+        `申請者：${email}`,
+        `店舗名：${shopName}`,
+        `特典：${benefitTitle}`,
+        '',
+        '詳細・利用条件：',
+        benefitDetail,
+        '',
+        `管理画面で承認または差し戻しをしてください：`,
+        ADMIN_CONSOLE_URL,
+      ].join('\n'),
+    });
 
     return NextResponse.json({ id: data.id });
   } catch (err) {

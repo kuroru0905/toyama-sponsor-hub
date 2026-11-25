@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { HttpError, requireUserEmail, requireCouponSponsor, textField } from '@/lib/sponsorCoupons';
+import { sendMail, adminEmails, ADMIN_CONSOLE_URL } from '@/lib/mailer';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // クーポン編集
 // - 内容（店舗名・特典）を変えたら、もう一度「審査中」に戻る
@@ -21,7 +23,7 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
     if (!coupon || !coupon.sponsor_id) throw new HttpError(404, 'クーポンが見つかりません');
 
     // 自分の契約のクーポンか
-    await requireCouponSponsor(email, coupon.sponsor_id);
+    const sponsor = await requireCouponSponsor(email, coupon.sponsor_id);
 
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
@@ -44,6 +46,28 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
 
     const { error } = await supabaseAdmin.from('sponsor_coupons').update(update).eq('id', coupon.id);
     if (error) throw new HttpError(500, 'クーポンの更新に失敗しました');
+
+    // 内容が変わった（再申請）ときだけ外山企画へ通知
+    if (contentChanged) {
+      await sendMail({
+        to: adminEmails(),
+        subject: `【クーポン再申請】${String(update.shop_name)}「${String(update.benefit_title)}」`,
+        text: [
+          'スポンサーがLINEクーポンの内容を変更しました（再審査が必要です）。',
+          '',
+          `契約名：${sponsor.display_name}`,
+          `申請者：${email}`,
+          `店舗名：${String(update.shop_name)}`,
+          `特典：${String(update.benefit_title)}`,
+          '',
+          '詳細・利用条件：',
+          String(update.benefit_detail),
+          '',
+          '管理画面で承認または差し戻しをしてください：',
+          ADMIN_CONSOLE_URL,
+        ].join('\n'),
+      });
+    }
 
     return NextResponse.json({ success: true, reReview: contentChanged });
   } catch (err) {
