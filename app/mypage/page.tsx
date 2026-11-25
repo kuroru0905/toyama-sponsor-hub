@@ -13,6 +13,7 @@ import {
   ExternalLink,
   ShieldCheck,
 } from 'lucide-react';
+import CouponManager from './CouponManager';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -438,6 +439,15 @@ export default function MyPage() {
                           {savingId === sponsor.id ? '保存中...' : '掲載情報を保存する'}
                         </button>
                       </div>
+
+                      {(sponsor.tier === 'corporate' || sponsor.tier === 'store') && (
+                        <CouponManager
+                          sponsorId={sponsor.id}
+                          defaultShopName={sponsor.display_name}
+                          accessToken={session.access_token}
+                          isActive={sponsor.status === 'active'}
+                        />
+                      )}
 
                       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
