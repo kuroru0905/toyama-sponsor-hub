@@ -16,6 +16,8 @@ import {
 import CouponManager from './CouponManager';
 import PerformerApplication from './PerformerApplication';
 import LineLink from './LineLink';
+import LiveStreams from './LiveStreams';
+import CorporateInquiry from './CorporateInquiry';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -456,6 +458,18 @@ export default function MyPage() {
                           sponsorId={sponsor.id}
                           accessToken={session.access_token}
                           isActive={sponsor.status === 'active'}
+                        />
+                      )}
+
+                      {sponsor.status === 'active' && (
+                        <LiveStreams sponsorId={sponsor.id} accessToken={session.access_token} />
+                      )}
+
+                      {sponsor.status === 'active' && sponsor.tier === 'corporate' && (
+                        <CorporateInquiry
+                          sponsorId={sponsor.id}
+                          accessToken={session.access_token}
+                          defaultName={sponsor.applicant_name}
                         />
                       )}
 
