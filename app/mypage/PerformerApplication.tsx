@@ -420,6 +420,11 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                 />
               </div>
 
+              {error && (
+                <div role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+                  {error}
+                </div>
+              )}
               <div className="flex flex-col-reverse sm:flex-row gap-2">
                 <button
                   type="button"

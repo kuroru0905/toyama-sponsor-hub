@@ -267,6 +267,11 @@ export default function AdminEventsPage() {
 
           {form.id && <p className="text-xs text-zinc-500">※ 価格の変更は、これから購入する人にだけ適用されます。</p>}
 
+          {error && (
+            <div role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
           <div className="flex flex-col-reverse sm:flex-row gap-2">
             <button disabled={saving} onClick={() => setForm(null)} className="rounded-xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-300 hover:bg-zinc-800">
               キャンセル

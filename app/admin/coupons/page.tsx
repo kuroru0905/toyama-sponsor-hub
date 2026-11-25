@@ -197,6 +197,11 @@ export default function AdminCouponsPage() {
             <input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} />
             公開する
           </label>
+          {error && (
+            <div role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
           <div className="flex flex-col-reverse sm:flex-row gap-2">
             <button disabled={saving} onClick={() => setForm(null)} className="rounded-xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-bold text-zinc-300 hover:bg-zinc-800">
               キャンセル
