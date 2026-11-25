@@ -58,6 +58,26 @@ export async function requireCouponSponsor(email: string, sponsorId: string): Pr
   return data as OwnedSponsor;
 }
 
+// ログイン中のメールアドレスの契約で、契約中（active）のスポンサーか確認（枠は問わない）
+// 特典は「上位の枠は下位の枠の特典も含む」ので、ファン枠の特典（出演応募など）は全枠で使える
+export async function requireActiveSponsor(email: string, sponsorId: string): Promise<OwnedSponsor> {
+  if (!sponsorId) throw new HttpError(400, '対象の契約が指定されていません');
+
+  const { data, error } = await supabaseAdmin
+    .from('sponsors')
+    .select('id, tier, status, display_name')
+    .eq('id', sponsorId)
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error) throw new HttpError(500, 'データの取得に失敗しました');
+  if (!data) throw new HttpError(403, '権限がありません');
+  if (data.status !== 'active') {
+    throw new HttpError(403, 'ご契約が有効（契約中）になってからご利用いただけます');
+  }
+  return data as OwnedSponsor;
+}
+
 export function textField(body: Record<string, unknown>, key: string, label: string, max: number): string {
   const v = body[key];
   if (typeof v !== 'string' || !v.trim()) throw new HttpError(400, `${label}を入力してください`);

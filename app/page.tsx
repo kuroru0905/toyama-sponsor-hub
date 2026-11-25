@@ -42,6 +42,7 @@ const PLANS = [
     accent: 'border-orange-500/60 bg-gradient-to-b from-orange-950/30 to-zinc-900',
     btnColor: 'bg-orange-500 hover:bg-orange-400 text-zinc-950',
     description: '地元企業の「カッコいい本気」を同世代目線で翻訳し、若者のスマホと会場へ直接届けます。',
+    includes: '店舗ローカル枠・ファンサポーター枠の特典もすべて利用できます',
     features: [
       'イベント会場メインビジョンでのCM放映',
       '企業PRショート動画の制作（採用活動へ二次利用可）',
@@ -59,6 +60,7 @@ const PLANS = [
     accent: 'border-teal-500/60 bg-gradient-to-b from-teal-950/30 to-zinc-900',
     btnColor: 'bg-teal-400 hover:bg-teal-300 text-zinc-950',
     description: 'イベント会場の熱気と観光客（外貨）を、ライブ入場者向けのLINEクーポンで実店舗へ送客します。',
+    includes: 'ファンサポーター枠の特典もすべて利用できます',
     features: [
       'SNS告知用PR画像・ショップカード素材の制作',
       '会場内スポンサー看板への店舗名掲載',
@@ -69,11 +71,12 @@ const PLANS = [
     name: 'ファンサポーター枠',
     price: '300',
     target: '200人目標',
-    badge: 'ワンコイン応援',
+    badge: '気軽に応援',
     icon: Heart,
     accent: 'border-amber-400/60 bg-gradient-to-b from-amber-950/30 to-zinc-900',
     btnColor: 'bg-amber-400 hover:bg-amber-300 text-zinc-950',
-    description: '登別に「若者が主役となって楽しめる場」を創り続けるためのワンコイン・コミュニティ枠です。',
+    description: '登別に「若者が主役となって楽しめる場」を創り続けるための、気軽に参加できるコミュニティ枠です。',
+    includes: '',
     features: [
       '主催イベントの優先購入券・限定エリア案内',
       'ステージパフォーマンス・DJ/バンド出演応募権',
@@ -293,15 +296,31 @@ export default function SponsorHubPage() {
             <p className="text-zinc-400 text-sm sm:text-base">
               すべてのプランはいつでもマイページ・メールから解約可能。企業・店舗様は請求書払いにも対応しています。
             </p>
+            <p className="mt-3 inline-block rounded-full border border-teal-500/40 bg-teal-500/10 px-4 py-1.5 text-xs sm:text-sm font-bold text-teal-300">
+              上位の枠は、下位の枠の特典もすべてご利用いただけます
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:hidden sticky top-[63px] z-30 -mx-4 mb-6 flex gap-2 overflow-x-auto bg-zinc-950/90 px-4 py-2 backdrop-blur-md">
+            {PLANS.map((plan) => (
+              <a
+                key={plan.id}
+                href={`#plan-${plan.id}`}
+                className="flex-1 shrink-0 text-center rounded-full border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-bold text-zinc-200"
+              >
+                {({ corporate: '企業', store: '店舗', fan: 'ファン' } as Record<string, string>)[plan.id]} ¥{plan.price}
+              </a>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {PLANS.map((plan) => {
               const Icon = plan.icon;
               return (
                 <div
                   key={plan.id}
-                  className={`flex flex-col justify-between rounded-3xl border p-8 transition hover:-translate-y-1 ${plan.accent}`}
+                  id={`plan-${plan.id}`}
+                  className={`scroll-mt-32 flex flex-col justify-between rounded-3xl border p-5 sm:p-8 transition hover:-translate-y-1 ${plan.accent}`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-6">
@@ -327,6 +346,11 @@ export default function SponsorHubPage() {
                       <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4">
                         主なリターン・特典
                       </p>
+                      {plan.includes && (
+                        <p className="mb-3 rounded-lg bg-zinc-800/70 px-3 py-2 text-xs font-bold text-teal-300">
+                          ＋ {plan.includes}
+                        </p>
+                      )}
                       <ul className="space-y-3">
                         {plan.features.map((feat, idx) => (
                           <li key={idx} className="flex items-start gap-2.5 text-sm text-zinc-200">
@@ -410,7 +434,7 @@ export default function SponsorHubPage() {
                 ■ 個人・ファンサポーター（{fanSponsors.length}名）
               </h3>
               {fanSponsors.length === 0 ? (
-                <p className="text-sm text-zinc-500">ワンコインから応援クレジットにお名前が掲載されます！</p>
+                <p className="text-sm text-zinc-500">月300円から応援クレジットにお名前が掲載されます！</p>
               ) : (
                 <div className="flex flex-wrap gap-2.5">
                   {fanSponsors.map((s) => (
@@ -446,19 +470,20 @@ export default function SponsorHubPage() {
       </footer>
 
       {selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-lg rounded-3xl border border-zinc-700 bg-zinc-900 p-6 sm:p-8 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 p-0 sm:p-4 backdrop-blur-sm overflow-y-auto overscroll-contain">
+          <div className="relative w-full max-w-lg min-h-[100dvh] sm:min-h-0 rounded-none sm:rounded-3xl border-0 sm:border border-zinc-700 bg-zinc-900 px-5 pt-5 pb-10 sm:p-8 shadow-2xl sm:my-8">
             <button
               onClick={() => setSelectedPlan(null)}
-              className="absolute right-5 top-5 rounded-full p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              className="absolute right-3 top-3 sm:right-5 sm:top-5 rounded-full p-3 text-zinc-400 hover:bg-zinc-800 hover:text-white"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div className="mb-6">
               <span className="text-xs font-bold text-teal-400">スポンサーお申し込み</span>
-              <h3 className="text-2xl font-extrabold text-white mt-1">
-                {selectedPlan.name}（月額 ¥{selectedPlan.price}）
+              <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1 pr-10">
+                {selectedPlan.name}
+                <span className="block text-base sm:text-lg font-bold text-zinc-300">月額 ¥{selectedPlan.price}（税込）</span>
               </h3>
             </div>
 
@@ -552,11 +577,11 @@ export default function SponsorHubPage() {
                     <label className="block text-xs font-bold text-zinc-300 mb-1">
                       お支払い方法の選択
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                       <button
                         type="button"
                         onClick={() => setPaymentMethod('card')}
-                        className={`rounded-xl border py-2.5 px-3 text-xs font-bold transition ${
+                        className={`rounded-xl border py-3.5 sm:py-2.5 px-3 text-sm sm:text-xs font-bold transition ${
                           paymentMethod === 'card'
                             ? 'border-teal-400 bg-teal-400/10 text-teal-300'
                             : 'border-zinc-700 bg-zinc-950 text-zinc-400'
@@ -567,7 +592,7 @@ export default function SponsorHubPage() {
                       <button
                         type="button"
                         onClick={() => setPaymentMethod('invoice')}
-                        className={`rounded-xl border py-2.5 px-3 text-xs font-bold transition ${
+                        className={`rounded-xl border py-3.5 sm:py-2.5 px-3 text-sm sm:text-xs font-bold transition ${
                           paymentMethod === 'invoice'
                             ? 'border-teal-400 bg-teal-400/10 text-teal-300'
                             : 'border-zinc-700 bg-zinc-950 text-zinc-400'

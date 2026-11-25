@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import CouponManager from './CouponManager';
+import PerformerApplication from './PerformerApplication';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -233,7 +234,7 @@ export default function MyPage() {
           {session && (
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs text-zinc-300 hover:bg-zinc-800"
             >
               <LogOut className="h-3.5 w-3.5" />
               ログアウト
@@ -344,7 +345,7 @@ export default function MyPage() {
                   return (
                     <div
                       key={sponsor.id}
-                      className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8 shadow-xl"
+                      className="rounded-3xl border border-zinc-800 bg-zinc-900 p-4 sm:p-8 shadow-xl"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-5 mb-6">
                         <div>
@@ -415,7 +416,7 @@ export default function MyPage() {
                           </div>
                         )}
 
-                        <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer pt-1">
+                        <label className="flex items-center gap-2.5 text-sm sm:text-xs text-zinc-300 cursor-pointer pt-1">
                           <input
                             type="checkbox"
                             checked={form.isPublic}
@@ -433,7 +434,7 @@ export default function MyPage() {
                         <button
                           onClick={() => handleSaveProfile(sponsor.id)}
                           disabled={savingId === sponsor.id}
-                          className="inline-flex items-center gap-2 rounded-xl bg-teal-400 px-5 py-2.5 text-xs font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50"
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-400 px-5 py-3 sm:py-2.5 text-sm sm:text-xs font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50"
                         >
                           <Save className="h-4 w-4" />
                           {savingId === sponsor.id ? '保存中...' : '掲載情報を保存する'}
@@ -449,6 +450,12 @@ export default function MyPage() {
                         />
                       )}
 
+                      <PerformerApplication
+                        sponsorId={sponsor.id}
+                        accessToken={session.access_token}
+                        defaultName={sponsor.applicant_name}
+                      />
+
                       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                           <div className="flex items-center gap-2 text-sm font-bold text-white mb-1">
@@ -462,7 +469,7 @@ export default function MyPage() {
                         <button
                           onClick={() => handleOpenPortal(sponsor.id)}
                           disabled={portalLoadingId === sponsor.id || !sponsor.stripe_customer_id}
-                          className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-zinc-800 transition disabled:opacity-40"
+                          className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 sm:py-2.5 text-sm sm:text-xs font-bold text-white hover:bg-zinc-800 transition disabled:opacity-40"
                         >
                           {portalLoadingId === sponsor.id ? '移動中...' : '契約・決済を管理'}
                           <ExternalLink className="h-3.5 w-3.5" />

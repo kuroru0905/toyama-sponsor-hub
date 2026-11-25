@@ -30,7 +30,7 @@ const REVIEW_BADGES: Record<ReviewStatus, { label: string; color: string }> = {
 };
 
 const inputClass =
-  'w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-white focus:border-teal-400 focus:outline-none';
+  'w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 sm:py-2.5 text-base sm:text-sm text-white focus:border-teal-400 focus:outline-none';
 
 interface Props {
   sponsorId: string;
@@ -128,7 +128,7 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
   };
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 mb-6">
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 sm:p-5 mb-6">
       <div className="flex items-center gap-2 text-sm font-bold text-white mb-1">
         <Ticket className="h-4 w-4 text-teal-400" />
         LINEクーポンの掲載
@@ -189,14 +189,14 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
                               benefitDetail: c.benefit_detail,
                             })
                           }
-                          className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs font-bold text-white hover:bg-zinc-800"
+                          className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold text-white hover:bg-zinc-800"
                         >
                           編集
                         </button>
                         <button
                           type="button"
                           onClick={() => togglePublish(c)}
-                          className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800"
+                          className="rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-2.5 sm:px-3 sm:py-1.5 text-sm sm:text-xs font-bold text-zinc-300 hover:bg-zinc-800"
                         >
                           {c.is_published ? '掲載を停止' : '掲載を再開'}
                         </button>
@@ -248,7 +248,7 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
                   type="button"
                   disabled={saving}
                   onClick={save}
-                  className="rounded-xl bg-teal-400 px-5 py-2.5 text-xs font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50"
+                  className="flex-1 sm:flex-none rounded-xl bg-teal-400 px-5 py-3 sm:py-2.5 text-sm sm:text-xs font-bold text-zinc-950 hover:bg-teal-300 transition disabled:opacity-50"
                 >
                   {saving ? '送信中...' : form.id ? '変更して再申請する' : '申請する'}
                 </button>
@@ -256,7 +256,7 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
                   type="button"
                   disabled={saving}
                   onClick={() => setForm(null)}
-                  className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:bg-zinc-800"
+                  className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 sm:py-2.5 text-sm sm:text-xs font-bold text-zinc-300 hover:bg-zinc-800"
                 >
                   キャンセル
                 </button>
@@ -269,7 +269,7 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
                 setMessage('');
                 setForm({ id: null, shopName: defaultShopName, benefitTitle: '', benefitDetail: '' });
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-500/10 px-4 py-2.5 text-xs font-bold text-teal-300 hover:bg-teal-500/20"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-teal-500/40 bg-teal-500/10 px-4 py-3 sm:py-2.5 text-sm sm:text-xs font-bold text-teal-300 hover:bg-teal-500/20"
             >
               <Plus className="h-4 w-4" />
               クーポンを追加する
