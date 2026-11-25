@@ -58,10 +58,8 @@ const PLANS = [
     icon: Store,
     accent: 'border-teal-500/60 bg-gradient-to-b from-teal-950/30 to-zinc-900',
     btnColor: 'bg-teal-400 hover:bg-teal-300 text-zinc-950',
-    description: 'イベント会場の熱気と観光客（外貨）を、LINEクーポンとスタンプラリーで実店舗へ送客します。',
+    description: 'イベント会場の熱気と観光客（外貨）を、ライブ入場者向けのLINEクーポンで実店舗へ送客します。',
     features: [
-      'LINE回遊型スタンプラリーのチェックポイント登録',
-      'イベント終了後のLINE一斉クーポン配信対象店舗',
       'SNS告知用PR画像・ショップカード素材の制作',
       '会場内スポンサー看板への店舗名掲載',
     ],
@@ -77,7 +75,7 @@ const PLANS = [
     btnColor: 'bg-amber-400 hover:bg-amber-300 text-zinc-950',
     description: '登別に「若者が主役となって楽しめる場」を創り続けるためのワンコイン・コミュニティ枠です。',
     features: [
-      '主催イベントの優先入場権・限定エリア案内',
+      '主催イベントの優先購入券・限定エリア案内',
       'ステージパフォーマンス・DJ/バンド出演応募権',
       '公式サイト＆会場エンドロールへのサポーター名掲示',
       'サポーター限定LINEオープンチャット・先行情報',
@@ -270,7 +268,7 @@ export default function SponsorHubPage() {
               </div>
               <h3 className="text-lg font-bold mb-2">2. LINE O2Oで店舗・企業へ送客</h3>
               <p className="text-sm text-zinc-400 leading-relaxed">
-                電子チケット・スタンプラリー・一斉クーポン配信により、イベント終了後の来場者を下町の飲食店・地元企業へ誘導します。
+                電子チケットと入場特典のLINEクーポンにより、イベント終了後の来場者を下町の飲食店・地元企業へ誘導します。
               </p>
             </div>
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6">
