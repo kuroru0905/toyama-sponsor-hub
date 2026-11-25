@@ -265,8 +265,7 @@ export default function SponsorHubPage() {
               <p className="text-[17px] font-semibold text-brand">登別の、音楽とまちのスポンサー制度</p>
               <h1 className="mt-4 text-[40px] font-semibold leading-[1.15] tracking-tight sm:text-[64px] sm:leading-[1.08]">
                 <span className="inline-block">ライブの入場券を、</span>
-                <span className="inline-block">登別のお店への</span>
-                <span className="inline-block">きっぷに。</span>
+                <span className="inline-block">お店へのきっぷに。</span>
               </h1>
               <p className="mt-6 max-w-[34rem] text-[19px] leading-[1.6] text-ink-2 sm:text-[21px]">
                 地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開く。入場したお客さんのLINEには、<Em>スポンサー店のクーポン</Em>が届く。
