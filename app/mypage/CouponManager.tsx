@@ -240,6 +240,11 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
                   onChange={(e) => setForm({ ...form, benefitDetail: e.target.value })}
                 />
               </div>
+              {error && (
+                <div role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+                  {error}
+                </div>
+              )}
               {form.id && (
                 <p className="text-[11px] text-amber-300">※ 内容を変更すると、再度外山企画の確認が入ります（確認中は掲載されません）。</p>
               )}

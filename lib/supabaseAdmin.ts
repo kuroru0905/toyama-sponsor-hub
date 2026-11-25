@@ -8,4 +8,8 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     autoRefreshToken: false,
     persistSession: false,
   },
+  // Next.js のデータキャッシュに Supabase の結果を保存させない（更新がすぐ反映されるように）
+  global: {
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, { ...init, cache: 'no-store' }),
+  },
 });
