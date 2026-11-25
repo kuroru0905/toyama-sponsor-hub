@@ -264,7 +264,7 @@ export default function AdminEventsPage() {
                 <Mic2 className="inline h-4 w-4 text-amber-400 mr-1" />
                 出演者を募集する
                 <span className="block text-xs text-zinc-400">
-                  チケットを公開する前からでも、締切までスポンサーのマイページにこのイベントの出演応募欄が出ます（締切は開演より前）。保存すると5分以内に、有効なスポンサー全員へ募集開始のお知らせメールが届きます（1イベント1回）
+                  チケットを公開する前からでも、締切までスポンサーのマイページにこのイベントの出演応募欄が出ます（締切は開演より前）。保存すると5分以内に、有効なスポンサー全員へ募集開始のお知らせメール、公式LINEの友だち全員へLINEのお知らせが届きます（1イベント1回）
                 </span>
               </span>
             </label>
@@ -284,7 +284,7 @@ export default function AdminEventsPage() {
           <div className="rounded-xl border border-teal-400/30 bg-teal-400/5 p-4 space-y-3">
             <p className="text-sm font-bold text-white">チケット販売スケジュール</p>
             <p className="text-xs text-zinc-400">
-              出演者募集 → スポンサー先行販売 → 一般販売 → 開演（販売終了）。先行販売は、マイページでLINE連携した有効なスポンサーだけが購入できます。公開中のイベントが買えるようになった時（先行販売があればその開始時）に、有効なスポンサー全員へお知らせメールが届きます（1イベント1回）。
+              出演者募集 → スポンサー先行販売 → 一般販売 → 開演（販売終了）。先行販売は、マイページでLINE連携した有効なスポンサーだけが購入できます。公開中のイベントが買えるようになった時（先行販売があればその開始時）に、有効なスポンサー全員へお知らせメール、公式LINEの友だち全員へLINEのお知らせが届きます（1イベント1回）。
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
