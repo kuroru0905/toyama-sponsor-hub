@@ -180,8 +180,9 @@ export async function POST(req: NextRequest) {
       event_title: eventTitle,
     });
 
-    // 外山企画へ通知
-    await sendMail({
+    // 外山企画への通知と、応募者への受付確認を同時に送る
+    await Promise.all([
+      sendMail({
       to: adminEmails(),
       subject: `【出演応募】${actName}（${ACT_TYPES[actType]}）`,
       text: [
@@ -196,10 +197,8 @@ export async function POST(req: NextRequest) {
         '管理画面で選考状況を更新してください：',
         SPONSOR_ADMIN_URL,
       ].join('\n'),
-    });
-
-    // 応募者へ受付確認
-    await sendMail({
+      }),
+      sendMail({
       to: email,
       subject: `【受付完了】出演応募を受け付けました（${actName}）`,
       text: [
@@ -217,7 +216,8 @@ export async function POST(req: NextRequest) {
         '',
         '外山企画 スポンサー事務局',
       ].join('\n'),
-    });
+      }),
+    ]);
 
     return NextResponse.json({ id: data.id });
   } catch (err) {

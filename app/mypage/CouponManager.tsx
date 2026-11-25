@@ -134,7 +134,7 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
         LINEクーポンの掲載
       </div>
       <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-        イベント参加者のLINEに表示されるお店の特典クーポンです。登録・変更した内容は外山企画が確認したあとに掲載されます。クーポンはLINEユーザー1人につき1回ずつ使えます。
+        ライブに入場したお客様のLINEに、入場特典として表示されるお店のクーポンです。お客様は入場1回につき、掲載中のお店から1枚を選んで使えます。登録・変更した内容は外山企画が確認したあとに掲載されます。
       </p>
 
       {!isActive ? (
