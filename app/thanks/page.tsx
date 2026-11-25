@@ -38,7 +38,7 @@ function ThanksContent() {
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 mb-8 text-left">
           <p className="text-xs font-bold text-amber-400 mb-2">NEXT STEP（リターン受取・連絡窓口）</p>
           <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-            PR動画・画像の素材入稿や、イベント優先入場・スタンプラリー設定のご案内は「外山企画 公式LINE」にて一元管理しております。以下より友だち追加をお願いいたします。
+            PR動画・画像の素材入稿や、優先購入券・LINEクーポン掲載のご案内は「外山企画 公式LINE」にて一元管理しております。以下より友だち追加をお願いいたします。
           </p>
           <a
             href={lineUrl}
