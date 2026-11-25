@@ -139,3 +139,11 @@ input[type='radio'] {
     scroll-behavior: auto !important;
   }
 }
+
+/* 管理画面：PCでも押しやすい大きさに */
+.admin-ui button {
+  min-height: 44px;
+}
+.admin-ui input[type='checkbox'] {
+  min-height: 0;
+}

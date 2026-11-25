@@ -46,15 +46,15 @@ const TIER_PRICE: Record<TierType, number> = {
 const TIER_META: Record<TierType, { label: string; badgeClass: string }> = {
   corporate: {
     label: '企業枠 (¥10,000)',
-    badgeClass: 'border-orange-500/40 bg-orange-500/15 text-orange-300',
+    badgeClass: 'border-warn-line bg-warn-soft text-warn',
   },
   store: {
     label: '店舗枠 (¥3,000)',
-    badgeClass: 'border-teal-500/40 bg-teal-500/15 text-teal-300',
+    badgeClass: 'border-brand-line bg-brand-soft text-brand',
   },
   fan: {
     label: 'ファン枠 (¥300)',
-    badgeClass: 'border-amber-400/40 bg-amber-400/15 text-amber-200',
+    badgeClass: 'border-warn-line bg-accent/15 text-warn',
   },
 };
 
@@ -197,12 +197,12 @@ export default function AdminSponsorsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-white">スポンサー＆収益</h1>
-          <p className="text-xs text-zinc-400 mt-1">全 {sponsors.length} 件の申込レコード</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-ink">スポンサー＆収益</h1>
+          <p className="text-sm text-ink-2 mt-1">全 {sponsors.length} 件の申込レコード</p>
         </div>
         <button
           onClick={() => fetchAllSponsors()}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800 cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink hover:bg-surface cursor-pointer"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           最新データを再取得
@@ -210,82 +210,82 @@ export default function AdminSponsorsPage() {
       </div>
 
       {forbiddenError && (
-        <div className="mb-6 rounded-xl border border-red-500/40 bg-red-500/10 p-3.5 text-sm text-red-300">{forbiddenError}</div>
+        <div className="mb-6 rounded-ctl border border-danger-line bg-danger-soft p-3.5 text-sm text-danger">{forbiddenError}</div>
       )}
-      {loadingList && sponsors.length === 0 && <p className="text-sm text-zinc-400 mb-6">読み込み中...</p>}
+      {loadingList && sponsors.length === 0 && <p className="text-sm text-ink-2 mb-6">読み込み中...</p>}
 
             {toastMsg && (
-              <div className="mb-6 rounded-xl border border-teal-500/40 bg-teal-500/10 p-3.5 text-xs font-bold text-teal-200 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-teal-400" />
+              <div className="mb-6 rounded-ctl border border-brand-line bg-brand-soft p-3.5 text-sm font-bold text-brand flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-brand" />
                 {toastMsg}
               </div>
             )}
 
             {/* KPI サマリーカード */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="rounded-2xl border border-teal-500/30 bg-zinc-900 p-5">
-                <div className="flex items-center justify-between text-xs text-teal-300 font-bold mb-2">
+              <div className="rounded-panel border border-brand-line bg-paper p-5">
+                <div className="flex items-center justify-between text-sm text-brand font-bold mb-2">
                   <span>月間見込み収益（有効契約）</span>
                   <TrendingUp className="h-4 w-4" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-white">
+                <p className="text-2xl sm:text-3xl font-bold text-ink">
                   ¥{stats.monthlyRevenue.toLocaleString()}
-                  <span className="text-xs font-normal text-zinc-400 ml-1">/ 月</span>
+                  <span className="text-sm font-normal text-ink-2 ml-1">/ 月</span>
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-                <div className="flex items-center justify-between text-xs text-zinc-400 font-bold mb-2">
+              <div className="rounded-panel border border-line bg-paper p-5">
+                <div className="flex items-center justify-between text-sm text-ink-2 font-bold mb-2">
                   <span>有効サポーター合計</span>
-                  <Users className="h-4 w-4 text-teal-400" />
+                  <Users className="h-4 w-4 text-brand" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-white">
+                <p className="text-2xl sm:text-3xl font-bold text-ink">
                   {stats.activeTotal}
-                  <span className="text-xs font-normal text-zinc-400 ml-1">組</span>
+                  <span className="text-sm font-normal text-ink-2 ml-1">組</span>
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-                <div className="flex items-center justify-between text-xs text-orange-300 font-bold mb-2">
+              <div className="rounded-panel border border-line bg-paper p-5">
+                <div className="flex items-center justify-between text-sm text-warn font-bold mb-2">
                   <span>企業 / 店舗（有効）</span>
-                  <Building2 className="h-4 w-4 text-orange-400" />
+                  <Building2 className="h-4 w-4 text-warn" />
                 </div>
-                <p className="text-xl sm:text-2xl font-extrabold text-white">
+                <p className="text-xl sm:text-2xl font-bold text-ink">
                   企業 {stats.corporateCount}社{' '}
-                  <span className="text-zinc-600">/</span>{' '}
-                  <span className="text-teal-300">店舗 {stats.storeCount}店</span>
+                  <span className="text-ink-3">/</span>{' '}
+                  <span className="text-brand">店舗 {stats.storeCount}店</span>
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-                <div className="flex items-center justify-between text-xs text-amber-300 font-bold mb-2">
+              <div className="rounded-panel border border-line bg-paper p-5">
+                <div className="flex items-center justify-between text-sm text-warn font-bold mb-2">
                   <span>ファン枠（有効）</span>
-                  <Heart className="h-4 w-4 text-amber-400" />
+                  <Heart className="h-4 w-4 text-warn" />
                 </div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-white">
+                <p className="text-2xl sm:text-3xl font-bold text-ink">
                   {stats.fanCount}
-                  <span className="text-xs font-normal text-zinc-400 ml-1">名</span>
+                  <span className="text-sm font-normal text-ink-2 ml-1">名</span>
                 </p>
               </div>
             </div>
 
             {/* 検索・絞り込みバー */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 mb-6 flex flex-col md:flex-row gap-3">
+            <div className="rounded-panel border border-line bg-surface p-4 mb-6 flex flex-col md:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-3 h-4 w-4 text-zinc-500" />
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-ink-3" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="申込者名・掲載名・メール・業種・エリアで検索..."
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 pl-10 pr-4 py-2 text-sm text-white focus:border-teal-400 focus:outline-none"
+                  className="w-full rounded-ctl border border-line-strong bg-paper pl-10 pr-4 py-2 text-sm text-ink focus:border-brand focus:outline-none"
                 />
               </div>
 
               <select
                 value={tierFilter}
                 onChange={(e) => setTierFilter(e.target.value as any)}
-                className="rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-xs font-bold text-zinc-200 focus:border-teal-400 focus:outline-none"
+                className="rounded-ctl border border-line-strong bg-paper px-3.5 py-2 text-sm font-bold text-ink focus:border-brand focus:outline-none"
               >
                 <option value="all">すべてのプラン枠</option>
                 <option value="corporate">企業プレミアム枠 (¥10,000)</option>
@@ -296,7 +296,7 @@ export default function AdminSponsorsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-xs font-bold text-zinc-200 focus:border-teal-400 focus:outline-none"
+                className="rounded-ctl border border-line-strong bg-paper px-3.5 py-2 text-sm font-bold text-ink focus:border-brand focus:outline-none"
               >
                 <option value="all">すべてのステータス</option>
                 <option value="active">active（契約中）</option>
@@ -308,9 +308,9 @@ export default function AdminSponsorsPage() {
 
             {/* 申込者・契約一覧テーブル */}
             {loadingList ? (
-              <p className="text-sm text-zinc-400">スポンサー一覧を読み込み中...</p>
+              <p className="text-sm text-ink-2">スポンサー一覧を読み込み中...</p>
             ) : filteredSponsors.length === 0 ? (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-10 text-center text-sm text-zinc-400">
+              <div className="rounded-panel border border-line bg-paper p-10 text-center text-sm text-ink-2">
                 条件に一致するスポンサーデータはありません。
               </div>
             ) : (
@@ -318,31 +318,31 @@ export default function AdminSponsorsPage() {
                 {filteredSponsors.map((s) => {
                   const meta = TIER_META[s.tier] || {
                     label: s.tier,
-                    badgeClass: 'border-zinc-700 bg-zinc-800 text-zinc-200',
+                    badgeClass: 'border-line-strong bg-surface text-ink',
                   };
                   const asset = s.sponsor_assets?.[0];
 
                   return (
                     <div
                       key={s.id}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5"
+                      className="rounded-panel border border-line bg-paper p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5"
                     >
                       <div className="space-y-1.5">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
-                            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${meta.badgeClass}`}
+                            className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${meta.badgeClass}`}
                           >
                             {meta.label}
                           </span>
-                          <span className="text-base font-extrabold text-white">
+                          <span className="text-base font-bold text-ink">
                             {s.display_name}
                           </span>
-                          <span className="text-xs text-zinc-400">
+                          <span className="text-sm text-ink-2">
                             （申込者：{s.applicant_name}）
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-2">
                           <span>メール：{s.email}</span>
                           <span>決済：{s.payment_method === 'invoice' ? '請求書払い' : 'カード'}</span>
                           <span>
@@ -351,7 +351,7 @@ export default function AdminSponsorsPage() {
                         </div>
 
                         {(asset?.industry || asset?.address) && (
-                          <div className="flex flex-wrap gap-3 text-xs text-teal-300/90 pt-0.5">
+                          <div className="flex flex-wrap gap-3 text-sm text-brand pt-0.5">
                             {asset?.industry && <span>業種：{asset.industry}</span>}
                             {asset?.address && <span>エリア：{asset.address}</span>}
                           </div>
@@ -362,10 +362,10 @@ export default function AdminSponsorsPage() {
                         <button
                           onClick={() => handleTogglePublic(s)}
                           disabled={updatingId === s.id}
-                          className={`rounded-xl border px-3 py-2 text-xs font-bold transition cursor-pointer ${
+                          className={`rounded-ctl border px-3 py-2 text-sm font-bold transition cursor-pointer ${
                             s.is_public
-                              ? 'border-teal-500/40 bg-teal-500/10 text-teal-300'
-                              : 'border-zinc-700 bg-zinc-950 text-zinc-400'
+                              ? 'border-brand-line bg-brand-soft text-brand'
+                              : 'border-line-strong bg-paper text-ink-2'
                           }`}
                         >
                           {s.is_public ? '公開中' : '非公開'}
@@ -375,7 +375,7 @@ export default function AdminSponsorsPage() {
                           value={s.status}
                           disabled={updatingId === s.id}
                           onChange={(e) => handleStatusChange(s.id, e.target.value)}
-                          className="rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-white focus:border-teal-400 focus:outline-none cursor-pointer"
+                          className="rounded-ctl border border-line-strong bg-paper px-3 py-2 text-sm font-bold text-ink focus:border-brand focus:outline-none cursor-pointer"
                         >
                           <option value="active">active（有効）</option>
                           <option value="pending">pending（決済待ち）</option>

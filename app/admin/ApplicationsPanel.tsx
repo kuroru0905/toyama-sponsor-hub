@@ -11,10 +11,10 @@ const ACT_TYPES: Record<string, string> = {
 };
 
 const STATUS: Record<string, { label: string; color: string }> = {
-  submitted: { label: '受付済み', color: 'bg-zinc-700/40 text-zinc-200 border-zinc-600' },
-  reviewing: { label: '選考中', color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
-  accepted: { label: '採用', color: 'bg-teal-500/20 text-teal-300 border-teal-500/40' },
-  declined: { label: '見送り', color: 'bg-red-500/20 text-red-300 border-red-500/40' },
+  submitted: { label: '受付済み', color: 'bg-surface text-ink border-line-strong' },
+  reviewing: { label: '選考中', color: 'bg-warn-soft text-warn border-warn-line' },
+  accepted: { label: '採用', color: 'bg-brand-soft text-brand border-brand-line' },
+  declined: { label: '見送り', color: 'bg-danger-soft text-danger border-danger-line' },
 };
 
 const TIER_LABEL: Record<string, string> = { corporate: '企業枠', store: '店舗枠', fan: 'ファン枠' };
@@ -122,17 +122,17 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <Mic2 className="h-5 w-5 text-amber-400" />
-          <h2 className="text-lg sm:text-xl font-extrabold text-white">出演応募</h2>
+          <Mic2 className="h-5 w-5 text-warn" />
+          <h2 className="text-lg sm:text-xl font-bold text-ink">出演応募</h2>
           {openCount > 0 && (
-            <span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-bold text-zinc-950">未対応 {openCount}</span>
+            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold text-brand-ink">未対応 {openCount}</span>
           )}
         </div>
         <div className="flex gap-2">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as 'open' | 'all')}
-            className="rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-base sm:text-xs font-bold text-white"
+            className="rounded-ctl border border-line-strong bg-paper px-3 py-2 text-base font-bold text-ink"
           >
             <option value="open">未対応のみ</option>
             <option value="all">すべて</option>
@@ -140,7 +140,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
           <button
             type="button"
             onClick={load}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-300 hover:bg-zinc-800"
+            className="inline-flex items-center gap-1.5 rounded-ctl border border-line-strong bg-paper px-3 py-2 text-sm font-bold text-ink hover:bg-surface"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             更新
@@ -148,13 +148,13 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
         </div>
       </div>
 
-      {toast && <div className="mb-4 rounded-xl border border-teal-500/40 bg-teal-500/10 p-3 text-sm text-teal-200">{toast}</div>}
-      {error && <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</div>}
+      {toast && <div className="mb-4 rounded-ctl border border-brand-line bg-brand-soft p-3 text-sm text-brand">{toast}</div>}
+      {error && <div className="mb-4 rounded-ctl border border-danger-line bg-danger-soft p-3 text-sm text-danger">{error}</div>}
 
       {loading ? (
-        <p className="text-sm text-zinc-400">読み込み中...</p>
+        <p className="text-sm text-ink-2">読み込み中...</p>
       ) : shown.length === 0 ? (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-sm text-zinc-400">
+        <div className="rounded-panel border border-line bg-paper p-6 text-sm text-ink-2">
           {filter === 'open' ? '未対応の出演応募はありません。' : '出演応募はまだありません。'}
         </div>
       ) : (
@@ -164,55 +164,55 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
             const expanded = openId === a.id;
             const sponsorInactive = a.sponsor_status !== 'active';
             return (
-              <div key={a.id} className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 sm:p-5">
+              <div key={a.id} className="rounded-panel border border-line bg-paper p-4 sm:p-5">
                 <button type="button" onClick={() => setOpenId(expanded ? null : a.id)} className="w-full text-left">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-base font-bold text-white">
+                    <div className="text-base font-bold text-ink">
                       {a.act_name}
-                      <span className="ml-2 text-xs font-normal text-zinc-400">
+                      <span className="ml-2 text-sm font-normal text-ink-2">
                         {ACT_TYPES[a.act_type] ?? a.act_type}・{a.member_count}人
                       </span>
                     </div>
-                    <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${st.color}`}>{st.label}</span>
+                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${st.color}`}>{st.label}</span>
                   </div>
-                  <div className="mt-1 text-xs text-zinc-400">
+                  <div className="mt-1 text-sm text-ink-2">
                     {a.event_title ?? '希望イベント指定なし'} ／ {formatDateTime(a.created_at)} 応募 ／ 契約：{a.sponsor_name}
                     （{TIER_LABEL[a.sponsor_tier ?? ''] ?? '-'}）
                   </div>
                 </button>
 
                 {expanded && (
-                  <div className="mt-4 border-t border-zinc-800 pt-4 space-y-3 text-sm">
+                  <div className="mt-4 border-t border-line pt-4 space-y-3 text-sm">
                     {sponsorInactive && (
-                      <p className="rounded-lg border border-red-500/40 bg-red-500/10 p-2 text-xs text-red-300">
+                      <p className="rounded-lg border border-danger-line bg-danger-soft p-2 text-sm text-danger">
                         ⚠️ 応募した契約は現在「契約中」ではありません（{a.sponsor_status}）。
                       </p>
                     )}
-                    <dl className="grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-x-4 gap-y-2 text-zinc-200">
-                      <dt className="text-xs font-bold text-zinc-400">代表者</dt>
+                    <dl className="grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-x-4 gap-y-2 text-ink">
+                      <dt className="text-sm font-bold text-ink-2">代表者</dt>
                       <dd>{a.representative_name}（{a.applicant_email}）</dd>
                       {a.member_count > 1 && (
                         <>
-                          <dt className="text-xs font-bold text-zinc-400">メンバー</dt>
+                          <dt className="text-sm font-bold text-ink-2">メンバー</dt>
                           <dd>
                             {a.members && a.members.length > 0 ? (
                               <ul className="space-y-1">
                                 {a.members.map((m, i) => (
                                   <li key={i} className="text-sm">
-                                    <span className={m.verified ? 'text-teal-300' : 'text-red-300'}>{m.verified ? '✓' : '✗'}</span>{' '}
+                                    <span className={m.verified ? 'text-brand' : 'text-danger'}>{m.verified ? '✓' : '✗'}</span>{' '}
                                     {m.name}
-                                    <span className="text-xs text-zinc-400">
+                                    <span className="text-sm text-ink-2">
                                       （{m.email}
                                       {m.guardian ? '・保護者' : ''}）
                                     </span>
                                   </li>
                                 ))}
-                                <li className="text-xs text-zinc-500">✓ = 応募時に契約中のスポンサーとしてシステムで確認済み</li>
+                                <li className="text-sm text-ink-3">✓ = 応募時に契約中のスポンサーとしてシステムで確認済み</li>
                               </ul>
                             ) : (
                               <span className="whitespace-pre-wrap">
                                 {a.member_names}
-                                <span className="block text-xs text-zinc-500">
+                                <span className="block text-sm text-ink-3">
                                   ※ メール確認の導入前の応募です（{a.all_members_sponsor_confirmed ? '応募者が確認済みと回答' : '未確認'}）
                                 </span>
                               </span>
@@ -220,18 +220,18 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                           </dd>
                         </>
                       )}
-                      <dt className="text-xs font-bold text-zinc-400">ジャンル</dt>
+                      <dt className="text-sm font-bold text-ink-2">ジャンル</dt>
                       <dd>{a.genre || '-'}</dd>
-                      <dt className="text-xs font-bold text-zinc-400">音源・SNS</dt>
+                      <dt className="text-sm font-bold text-ink-2">音源・SNS</dt>
                       <dd className="whitespace-pre-wrap break-all">{a.links || '-'}</dd>
-                      <dt className="text-xs font-bold text-zinc-400">PR</dt>
+                      <dt className="text-sm font-bold text-ink-2">PR</dt>
                       <dd className="whitespace-pre-wrap">{a.message || '-'}</dd>
                     </dl>
 
                     <div>
-                      <label className="block text-xs font-bold text-zinc-300 mb-1.5">応募者へのメッセージ（採用・見送りのメールに載ります）</label>
+                      <label className="block text-sm font-bold text-ink mb-1.5">応募者へのメッセージ（採用・見送りのメールに載ります）</label>
                       <textarea
-                        className="w-full min-h-[80px] rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-base sm:text-sm text-white focus:border-teal-400 focus:outline-none"
+                        className="w-full min-h-[80px] rounded-ctl border border-line-strong bg-paper px-4 py-3 text-base sm:text-sm text-ink focus:border-brand focus:outline-none"
                         value={notes[a.id] ?? a.admin_note ?? ''}
                         maxLength={1000}
                         placeholder="例：6月のMMSで20分のステージをお願いしたいです。詳細は公式LINEで連絡します。"
@@ -244,7 +244,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                         type="button"
                         disabled={busyId === a.id}
                         onClick={() => update(a, 'reviewing')}
-                        className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-bold text-amber-300 hover:bg-amber-500/20 disabled:opacity-50"
+                        className="rounded-ctl border border-warn-line bg-warn-soft px-4 py-3 text-sm font-bold text-warn hover:bg-warn-soft disabled:opacity-50"
                       >
                         選考中にする
                       </button>
@@ -252,7 +252,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                         type="button"
                         disabled={busyId === a.id}
                         onClick={() => update(a, 'accepted')}
-                        className="rounded-xl bg-teal-400 px-4 py-3 text-sm font-bold text-zinc-950 hover:bg-teal-300 disabled:opacity-50"
+                        className="rounded-ctl bg-brand px-4 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover disabled:opacity-50"
                       >
                         採用（メール送信）
                       </button>
@@ -260,7 +260,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                         type="button"
                         disabled={busyId === a.id}
                         onClick={() => update(a, 'declined')}
-                        className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-300 hover:bg-red-500/20 disabled:opacity-50"
+                        className="rounded-ctl border border-danger-line bg-danger-soft px-4 py-3 text-sm font-bold text-danger hover:bg-danger-soft disabled:opacity-50"
                       >
                         見送り（メール送信）
                       </button>
