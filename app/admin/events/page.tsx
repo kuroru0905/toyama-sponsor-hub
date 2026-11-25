@@ -6,6 +6,13 @@ import { useAdmin } from '../AdminShell';
 
 type EventStats = { sold: number; entered: number; revenue: number; sent: number; applications: number };
 
+const RECRUIT_ACT_OPTIONS = [
+  { value: 'band', label: 'バンド' },
+  { value: 'dj', label: 'DJ' },
+  { value: 'performance', label: 'パフォーマンス' },
+  { value: 'other', label: 'その他' },
+];
+
 type AdminEvent = {
   id: string;
   title: string;
@@ -17,6 +24,8 @@ type AdminEvent = {
   is_published: boolean;
   recruit_performers: boolean;
   recruit_deadline: string | null;
+  recruit_act_types: string[];
+  recruit_note: string | null;
   presale_start: string | null;
   general_sale_start: string | null;
   stream_enabled: boolean;
@@ -43,6 +52,8 @@ type EventForm = {
   is_published: boolean;
   recruit_performers: boolean;
   recruit_deadline: string; // datetime-local（日本時間）
+  recruit_act_types: string[]; // 募集する出演形態
+  recruit_note: string; // ジャンル・条件（自由記述）
   presale_start: string; // datetime-local（日本時間）空欄＝先行販売なし
   general_sale_start: string; // datetime-local（日本時間）空欄＝公開と同時に販売
   stream_enabled: boolean; // 当日のライブ配信をするか
@@ -60,6 +71,8 @@ const EMPTY: EventForm = {
   is_published: true,
   recruit_performers: false,
   recruit_deadline: '',
+  recruit_act_types: ['band', 'dj', 'performance', 'other'],
+  recruit_note: '',
   presale_start: '',
   general_sale_start: '',
   stream_enabled: false,
@@ -137,6 +150,8 @@ export default function AdminEventsPage() {
     if (!form) return;
     if (!form.starts_at) return setError('開演日時を入力してください');
     if (form.recruit_performers && !form.recruit_deadline) return setError('出演者募集の締切を入力してください');
+    if (form.recruit_performers && form.recruit_act_types.length === 0)
+      return setError('募集する出演形態を1つ以上選んでください');
     if (form.recruit_performers && form.recruit_deadline > form.starts_at)
       return setError('出演者募集の締切は、開演日時より前にしてください');
     if (form.presale_start && !form.general_sale_start)
@@ -155,6 +170,8 @@ export default function AdminEventsPage() {
       is_published: form.is_published,
       recruit_performers: form.recruit_performers,
       recruit_deadline: form.recruit_performers ? localToIso(form.recruit_deadline) : null,
+      recruit_act_types: form.recruit_act_types.length > 0 ? form.recruit_act_types : ['band', 'dj', 'performance', 'other'],
+      recruit_note: form.recruit_note.trim(),
       presale_start: localToIso(form.presale_start),
       general_sale_start: localToIso(form.general_sale_start),
       stream_enabled: form.stream_enabled,
@@ -277,6 +294,45 @@ export default function AdminEventsPage() {
                   value={form.recruit_deadline}
                   onChange={(e) => setForm({ ...form, recruit_deadline: e.target.value })}
                 />
+              </div>
+            )}
+            {form.recruit_performers && (
+              <div>
+                <label className={labelClass}>募集する出演形態 *</label>
+                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                  {RECRUIT_ACT_OPTIONS.map((o) => (
+                    <label key={o.value} className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.recruit_act_types.indexOf(o.value) >= 0}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            recruit_act_types: e.target.checked
+                              ? RECRUIT_ACT_OPTIONS.map((x) => x.value).filter(
+                                  (v) => v === o.value || form.recruit_act_types.indexOf(v) >= 0
+                                )
+                              : form.recruit_act_types.filter((v) => v !== o.value),
+                          })
+                        }
+                      />
+                      {o.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            {form.recruit_performers && (
+              <div>
+                <label className={labelClass}>募集するジャンル・条件（任意・300文字まで）</label>
+                <input
+                  className={inputClass}
+                  maxLength={300}
+                  placeholder="例：ロック・ポップス中心／持ち時間20分／オリジナル曲歓迎"
+                  value={form.recruit_note}
+                  onChange={(e) => setForm({ ...form, recruit_note: e.target.value })}
+                />
+                <p className="mt-1 text-xs text-zinc-500">お知らせのメール・LINEと、マイページの応募欄に表示されます。</p>
               </div>
             )}
           </div>
@@ -403,7 +459,10 @@ export default function AdminEventsPage() {
                 <h3 className="text-lg font-bold text-white">{ev.title}</h3>
                 <p className="text-xs text-zinc-400 mb-3">
                   📍 {ev.venue} ／ {yen(ev.price_jpy)}
-                  {ev.recruit_performers && ` ／ 出演応募の締切 ${fmt(ev.recruit_deadline)}`}
+                  {ev.recruit_performers &&
+                    ` ／ 出演応募の締切 ${fmt(ev.recruit_deadline)}（${(ev.recruit_act_types ?? [])
+                      .map((t) => RECRUIT_ACT_OPTIONS.find((o) => o.value === t)?.label ?? t)
+                      .join('・')}）`}
                   {ev.presale_start && ` ／ 先行 ${fmt(ev.presale_start)}〜`}
                   {ev.general_sale_start && ` ／ 一般 ${fmt(ev.general_sale_start)}〜`}
                   {' ／ '}
@@ -446,6 +505,8 @@ export default function AdminEventsPage() {
                         is_published: ev.is_published,
                         recruit_performers: ev.recruit_performers,
                         recruit_deadline: isoToLocal(ev.recruit_deadline),
+                        recruit_act_types: ev.recruit_act_types ?? ['band', 'dj', 'performance', 'other'],
+                        recruit_note: ev.recruit_note ?? '',
                         presale_start: isoToLocal(ev.presale_start),
                         general_sale_start: isoToLocal(ev.general_sale_start),
                         stream_enabled: ev.stream_enabled,

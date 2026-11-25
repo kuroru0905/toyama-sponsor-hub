@@ -30,7 +30,18 @@ interface EventOption {
   title: string;
   starts_at: string;
   recruit_deadline: string;
+  recruit_act_types: string[] | null;
+  recruit_note: string | null;
 }
+
+const ALL_TYPES = ['band', 'dj', 'performance', 'other'];
+// そのイベントで募集している出演形態（未選択なら全部）
+const allowedTypes = (ev?: EventOption) =>
+  ev && ev.recruit_act_types && ev.recruit_act_types.length > 0 ? ev.recruit_act_types : ALL_TYPES;
+const typeLabels = (ev: EventOption) =>
+  allowedTypes(ev)
+    .map((t) => ACT_TYPES.find((x) => x.value === t)?.label ?? t)
+    .join('／');
 
 interface Application {
   id: string;
@@ -177,6 +188,8 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
   };
 
   // 募集中のイベントも、これまでの応募もなければ欄ごと出さない
+  const selectedEvent = events.find((ev) => ev.id === form.eventId);
+
   if (!loading && events.length === 0 && applications.length === 0 && !message && !error) return null;
 
   return (
@@ -236,6 +249,10 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                     <li key={ev.id} className="text-sm text-white">
                       {formatDate(ev.starts_at)} {ev.title}
                       <span className="block text-xs text-zinc-400">締切：{formatDateTime(ev.recruit_deadline)}</span>
+                      <span className="block text-xs text-zinc-400">募集する出演形態：{typeLabels(ev)}</span>
+                      {ev.recruit_note && (
+                        <span className="block text-xs text-amber-200">ジャンル・条件：{ev.recruit_note}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -244,7 +261,13 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
               type="button"
               onClick={() => {
                 setMessage('');
-                setForm({ ...EMPTY, representativeName: defaultName, eventId: events.length === 1 ? events[0].id : '' });
+                const only = events.length === 1 ? events[0] : undefined;
+                setForm({
+                  ...EMPTY,
+                  representativeName: defaultName,
+                  eventId: only ? only.id : '',
+                  actType: allowedTypes(only)[0],
+                });
                 setOpen(true);
               }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-400/10 px-5 py-3 text-sm font-bold text-amber-300 hover:bg-amber-400/20"
@@ -256,13 +279,39 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
           ) : (
             <form onSubmit={submit} className="rounded-xl border border-amber-400/30 bg-zinc-900 p-4 space-y-4">
               <div>
+                <label className={labelClass}>出演するイベント</label>
+                <select
+                  className={inputClass}
+                  value={form.eventId}
+                  required
+                  onChange={(e) => {
+                    const ev = events.find((x) => x.id === e.target.value);
+                    const types = allowedTypes(ev);
+                    setForm({ ...form, eventId: e.target.value, actType: types.indexOf(form.actType) >= 0 ? form.actType : types[0] });
+                  }}
+                >
+                  <option value="" disabled>
+                    選んでください
+                  </option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {formatDate(ev.starts_at)} {ev.title}（締切 {formatDate(ev.recruit_deadline)}）
+                    </option>
+                  ))}
+                </select>
+                {selectedEvent?.recruit_note && (
+                  <p className="mt-1.5 text-xs text-amber-200">募集するジャンル・条件：{selectedEvent.recruit_note}</p>
+                )}
+              </div>
+
+              <div>
                 <label className={labelClass}>出演形態</label>
                 <select
                   className={inputClass}
                   value={form.actType}
                   onChange={(e) => setForm({ ...form, actType: e.target.value })}
                 >
-                  {ACT_TYPES.map((t) => (
+                  {ACT_TYPES.filter((t) => allowedTypes(selectedEvent).indexOf(t.value) >= 0).map((t) => (
                     <option key={t.value} value={t.value}>
                       {t.label}
                     </option>
@@ -368,25 +417,6 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                   ))}
                 </div>
               )}
-
-              <div>
-                <label className={labelClass}>出演するイベント</label>
-                <select
-                  className={inputClass}
-                  value={form.eventId}
-                  required
-                  onChange={(e) => setForm({ ...form, eventId: e.target.value })}
-                >
-                  <option value="" disabled>
-                    選んでください
-                  </option>
-                  {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>
-                      {formatDate(ev.starts_at)} {ev.title}（締切 {formatDate(ev.recruit_deadline)}）
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <label className={labelClass}>ジャンル（任意）</label>

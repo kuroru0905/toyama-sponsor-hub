@@ -85,6 +85,20 @@ export function parseEventInput(body: Json, partial: boolean) {
   }
   if (recruit === false && deadline === undefined) out.recruit_deadline = null;
 
+  // 募集する出演形態（1つ以上）と、ジャンル・条件の自由記述
+  if (body.recruit_act_types !== undefined) {
+    const v = body.recruit_act_types;
+    const allowed = ['band', 'dj', 'performance', 'other'];
+    if (!Array.isArray(v) || v.length === 0 || !v.every((t) => typeof t === 'string' && allowed.indexOf(t) >= 0)) {
+      throw new HttpError(400, '募集する出演形態を1つ以上選んでください');
+    }
+    out.recruit_act_types = allowed.filter((t) => (v as string[]).indexOf(t) >= 0);
+  }
+  if (body.recruit_note !== undefined) {
+    const note = str(body, 'recruit_note', '募集するジャンル・条件', false, 300);
+    out.recruit_note = note ? note : null;
+  }
+
   // 当日のライブ配信をするか（しないイベントは配信URL・未入力アラートの対象外）
   const streamEnabled = bool(body, 'stream_enabled');
   if (streamEnabled !== undefined) out.stream_enabled = streamEnabled;

@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
     // 出演者を募集中のイベント（公開中・募集オン・締切前）
     const { data: events, error: eventsError } = await supabaseAdmin
       .from('live_events')
-      .select('id, title, starts_at, recruit_deadline')
+      .select('id, title, starts_at, recruit_deadline, recruit_act_types, recruit_note')
       // チケット公開前（先行販売より前）でも、募集をかけたイベントは応募できる
       .eq('recruit_performers', true)
       .gt('recruit_deadline', new Date().toISOString())
@@ -163,12 +163,19 @@ export async function POST(req: NextRequest) {
     if (!body.eventId) throw new HttpError(400, '出演するイベントを選んでください');
     const { data: ev } = await supabaseAdmin
       .from('live_events')
-      .select('id, title, recruit_performers, recruit_deadline')
+      .select('id, title, recruit_performers, recruit_deadline, recruit_act_types')
       .eq('id', String(body.eventId))
       .maybeSingle();
     if (!ev) throw new HttpError(400, 'イベントが見つかりません');
     if (!ev.recruit_performers || !ev.recruit_deadline || new Date(ev.recruit_deadline).getTime() <= Date.now()) {
       throw new HttpError(400, 'このイベントの出演者募集は締め切りました');
+    }
+    const allowedTypes: string[] = ev.recruit_act_types ?? [];
+    if (allowedTypes.length > 0 && allowedTypes.indexOf(actType) < 0) {
+      throw new HttpError(
+        400,
+        `このイベントで募集している出演形態は「${allowedTypes.map((t) => ACT_TYPES[t] ?? t).join('／')}」です`
+      );
     }
     const eventId: string = ev.id;
     const eventTitle: string = ev.title;
