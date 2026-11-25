@@ -9,5 +9,5 @@ export default function AdminIndexPage() {
   useEffect(() => {
     router.replace(`/admin/sponsors${window.location.hash}`);
   }, [router]);
-  return <p className="text-center text-zinc-400 py-20">移動中...</p>;
+  return <p className="py-20 text-center text-ink-2">移動しています…</p>;
 }
