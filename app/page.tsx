@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { Check, X } from 'lucide-react';
-import { Badge, Button, Field, Headline, Notice, Wordmark, buttonClass } from '@/components/ui';
+import { Badge, Button, Em, Field, Headline, Notice, TIER_METAL, Wordmark, buttonClass, rich } from '@/components/ui';
 import { Shelf, Tilt } from '@/components/motion';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -41,9 +41,9 @@ const PLANS: Plan[] = [
     lead: '地元企業の本気を、同世代の目線で若者のスマホと会場に届けます。採用や認知づくりに。',
     includes: '店舗ローカル枠・ファンサポーター枠の特典もすべて含みます',
     features: [
-      'イベント会場メインビジョンでのCM放映（マイページから相談）',
-      '企業PRショート動画の制作（採用活動にも使えます・マイページから相談）',
-      'Webサイト・会場パンフレットへの企業ロゴ／名称の掲載',
+      'イベント会場メインビジョンでの**CM放映**（マイページから相談）',
+      '企業PR**ショート動画の制作**（採用活動にも使えます・マイページから相談）',
+      'Webサイト・会場パンフレットへの**企業ロゴ／名称の掲載**',
     ],
   },
   {
@@ -55,7 +55,7 @@ const PLANS: Plan[] = [
     unit: '店',
     lead: 'ライブに入場したお客さんのLINEに、お店のクーポンが届きます。終演後の一軒目に。',
     includes: 'ファンサポーター枠の特典もすべて含みます',
-    features: ['ライブ入場者向けLINEクーポンの掲載（マイページから申請）', '会場メインビジョンでの店名掲載'],
+    features: ['ライブ入場者向け**LINEクーポン**の掲載（マイページから申請）', '会場メインビジョンでの**店名掲載**'],
   },
   {
     id: 'fan',
@@ -67,19 +67,19 @@ const PLANS: Plan[] = [
     lead: '登別に、若い人が主役になれる場所をつくり続けるための応援枠です。',
     includes: '',
     features: [
-      'スポンサー先行販売でチケットを先に買える・限定エリアの案内',
-      '当日のライブ配信（YouTube限定公開のリンクをマイページでお知らせ）',
-      'バンド・DJ・パフォーマンスの出演応募',
-      '公式サイトと会場エンドロールにお名前を掲示',
+      '**スポンサー先行販売**でチケットを先に買える・限定エリアの案内',
+      '当日の**ライブ配信**（YouTube限定公開のリンクをマイページでお知らせ）',
+      'バンド・DJ・パフォーマンスの**出演応募**',
+      '公式サイトと会場エンドロールに**お名前を掲示**',
     ],
   },
 ];
 
 const STEPS = [
-  { title: 'スポンサーが月額で支える', body: '地元の企業・お店・ファンが、それぞれ無理のない金額で毎月支えます。' },
+  { title: 'スポンサーが月額で支える', body: '地元の企業・お店・ファンが、それぞれ**無理のない金額で毎月**支えます。' },
   { title: 'ライブを開く', body: '集まったお金で、若い人が主役のライブを登別で続けて開きます。' },
-  { title: '入場するとクーポンが届く', body: 'LINEで買ったチケットで入場すると、スポンサー店のクーポンが1枚使えるようになります。' },
-  { title: '終演後、お店へ', body: '入場の翌日まで使えるので、そのまま街のお店に人が流れます。' },
+  { title: '入場するとクーポンが届く', body: 'LINEで買ったチケットで入場すると、**スポンサー店のクーポンが1枚**使えるようになります。' },
+  { title: '終演後、お店へ', body: '**入場の翌日まで**使えるので、そのまま街のお店に人が流れます。' },
 ];
 
 // ヒーローの見本チケット（このサービスの仕組みそのものを1枚で見せる）
@@ -91,7 +91,7 @@ function SampleTicket() {
       className="mx-auto w-full max-w-[400px] rounded-card bg-paper shadow-[0_30px_60px_-20px_rgba(0,0,0,0.25)]"
       style={{ ['--notch-bg' as string]: 'var(--surface)' }}
     >
-      <div className="px-7 pt-7 pb-6">
+      <div className="metal metal-silver rounded-t-card px-7 pt-7 pb-6">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium text-ink-2">電子チケット</span>
           <Badge tone="ok">入場済み</Badge>
@@ -112,10 +112,10 @@ function SampleTicket() {
         </dl>
       </div>
       <div className="ticket-perf" />
-      <div className="rounded-b-card bg-brand px-7 py-6 text-white">
-        <p className="text-[13px] font-medium opacity-80">入場特典</p>
+      <div className="metal metal-cobalt rounded-b-card px-7 py-6">
+        <p className="metal-sub text-[13px] font-medium">入場特典</p>
         <p className="mt-1 text-[19px] font-semibold leading-snug">お店のクーポンが1枚使えます</p>
-        <p className="mt-1 text-[14px] opacity-80">例：居酒屋〇〇の焼き鳥1本サービス。翌日23:59まで。</p>
+        <p className="metal-sub mt-1 text-[14px]">例：居酒屋〇〇の焼き鳥1本サービス。翌日23:59まで。</p>
       </div>
     </Tilt>
   );
@@ -269,7 +269,7 @@ export default function SponsorHubPage() {
                 <span className="inline-block">きっぷに。</span>
               </h1>
               <p className="mt-6 max-w-[34rem] text-[19px] leading-[1.6] text-ink-2 sm:text-[21px]">
-                地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開く。入場したお客さんのLINEには、スポンサー店のクーポンが届く。
+                地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開く。入場したお客さんのLINEには、<Em>スポンサー店のクーポン</Em>が届く。
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <a href="#plans" className={buttonClass('primary', 'md')}>
@@ -298,7 +298,7 @@ export default function SponsorHubPage() {
                 <article key={st.title} className="card card-lift flex min-h-[320px] flex-col p-8">
                   <span className="num text-[56px] font-semibold leading-none tracking-tight text-brand">{i + 1}</span>
                   <h3 className="mt-auto text-[24px] font-semibold leading-snug">{st.title}</h3>
-                  <p className="mt-3 text-[17px] leading-relaxed text-ink-2">{st.body}</p>
+                  <p className="mt-3 text-[17px] leading-relaxed text-ink-2">{rich(st.body)}</p>
                 </article>
               ))}
             </Shelf>
@@ -325,7 +325,7 @@ export default function SponsorHubPage() {
                     aria-labelledby={`plan-${plan.id}-name`}
                     className="card flex h-full scroll-mt-24 flex-col"
                   >
-                    <div className="px-8 pt-8 pb-6">
+                    <div className={`metal ${TIER_METAL[plan.id]} rounded-t-card px-8 pt-8 pb-6`}>
                       <div className="flex items-start justify-between gap-3">
                         <h3 id={`plan-${plan.id}-name`} className="text-[24px] font-semibold">
                           {plan.name}
@@ -358,7 +358,7 @@ export default function SponsorHubPage() {
                         {plan.features.map((f) => (
                           <li key={f} className="flex items-start gap-3 text-[15px] leading-relaxed">
                             <Check aria-hidden className="mt-1 h-4 w-4 shrink-0 text-brand" strokeWidth={2.6} />
-                            <span>{f}</span>
+                            <span>{rich(f)}</span>
                           </li>
                         ))}
                       </ul>
@@ -377,7 +377,7 @@ export default function SponsorHubPage() {
               })}
             </Shelf>
             <p className="mx-auto max-w-6xl px-4 text-[15px] leading-relaxed text-ink-2">
-              上の枠は、下の枠の特典もすべて使えます。どのプランもマイページからいつでも解約できます。企業・お店は請求書払いも選べます。
+              上の枠は、下の枠の特典もすべて使えます。どのプランもマイページから<Em>いつでも解約</Em>できます。企業・お店は<Em>請求書払い</Em>も選べます。
             </p>
           </div>
         </section>

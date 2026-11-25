@@ -215,3 +215,21 @@ export function Wordmark({ className = '' }: { className?: string }) {
     </span>
   );
 }
+
+// 大事な言葉の強調（色はサイト全体で1つ：globals.css の .em）
+export function Em({ children }: { children: React.ReactNode }) {
+  return <strong className="em">{children}</strong>;
+}
+
+// 文中の **ことば** を強調にする（配列で持っている文言用）
+export function rich(text: string): React.ReactNode {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  return parts.map((p, i) => (i % 2 === 1 ? <Em key={i}>{p}</Em> : <React.Fragment key={i}>{p}</React.Fragment>));
+}
+
+// スポンサー枠ごとの金属の色
+export const TIER_METAL: Record<string, string> = {
+  corporate: 'metal-gold',
+  store: 'metal-silver',
+  fan: 'metal-bronze',
+};

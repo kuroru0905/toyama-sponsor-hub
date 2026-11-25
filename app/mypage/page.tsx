@@ -8,7 +8,8 @@ import PerformerApplication from './PerformerApplication';
 import LineLink from './LineLink';
 import LiveStreams from './LiveStreams';
 import CorporateInquiry from './CorporateInquiry';
-import { Badge, Button, Field, Notice, Section, Wordmark, buttonClass } from '@/components/ui';
+import { Badge, Button, Em, Field, Notice, Section, TIER_METAL, Wordmark, buttonClass } from '@/components/ui';
+import { Tilt } from '@/components/motion';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -380,31 +381,39 @@ function SponsorView({
                 s.id === sponsor.id ? 'bg-ink text-white' : 'bg-paper text-ink shadow-card hover:bg-white'
               }`}
             >
+              <span className={`metal-dot ${TIER_METAL[s.tier] ?? ''} mr-2 align-[-1px]`} aria-hidden />
               {s.display_name}（{TIER[s.tier]?.name ?? s.tier}）
             </button>
           ))}
         </div>
       )}
 
-      {/* 契約のあらまし */}
-      <div className="card px-6 py-6 sm:px-8">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-[24px] font-semibold">{sponsor.display_name}</h2>
+      {/* 契約のあらまし：枠ごとの金属のプレート（企業＝ゴールド、店舗＝シルバー、ファン＝ブロンズ） */}
+      <Tilt
+        max={5}
+        aria-label={`${tier.name}のご契約`}
+        className={`metal ${TIER_METAL[sponsor.tier] ?? 'metal-silver'} rounded-card px-6 py-7 shadow-[0_20px_40px_-18px_rgba(0,0,0,0.35)] sm:px-9 sm:py-8`}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[15px] font-semibold">{tier.name}</p>
           <Badge tone={status.tone}>{status.label}</Badge>
         </div>
-        <p className="mt-1 text-ink-2">
-          {tier.name}　月額 <span className="num text-lg font-semibold text-ink">¥{tier.price}</span>（税込）
+        <h2 className="mt-6 text-[28px] font-semibold leading-tight tracking-tight sm:text-[34px]">{sponsor.display_name}</h2>
+        <p className="mt-2 text-ink-2">
+          月額 <span className="num text-[21px] font-semibold" style={{ color: 'var(--metal-ink)' }}>¥{tier.price}</span>（税込）
         </p>
+      </Tilt>
+      <div>
         {sponsor.status === 'pending' && (
           <Notice tone="warn" className="mt-4" title="お支払いの確認後に、特典が使えるようになります">
             {sponsor.payment_method === 'invoice'
-              ? 'メールでお送りした請求書のお支払いをお願いします。LINE連携は先に済ませておけます。'
-              : 'カード決済が完了していません。もう一度お申し込みの手続きをお願いします。'}
+              ? <>メールでお送りした<Em>請求書のお支払い</Em>をお願いします。LINE連携は先に済ませておけます。</>
+              : <>カード決済が完了していません。<Em>もう一度お申し込みの手続き</Em>をお願いします。</>}
           </Notice>
         )}
         {sponsor.status === 'past_due' && (
           <Notice tone="danger" className="mt-4" title="お支払いが確認できていません">
-            「お支払い・解約」から、カード情報の更新をお願いします。
+            「お支払い・解約」から、<Em>カード情報の更新</Em>をお願いします。
           </Notice>
         )}
       </div>
