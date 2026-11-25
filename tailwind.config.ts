@@ -10,7 +10,7 @@ const config: Config = {
         line: { DEFAULT: 'var(--line)', strong: 'var(--line-strong)' },
         paper: 'var(--paper)',
         surface: 'var(--surface)',
-        brand: { DEFAULT: 'var(--brand)', hover: 'var(--brand-hover)', soft: 'var(--brand-soft)', ink: 'var(--brand-ink)', line: 'var(--brand-line)' },
+        brand: { DEFAULT: 'var(--brand)', hover: 'var(--brand-hover)', soft: 'var(--brand-soft)', ink: 'var(--brand-ink)', line: 'var(--brand-line)', glow: 'var(--brand-glow)' },
         accent: { DEFAULT: 'var(--accent)', soft: 'var(--accent-soft)', ink: 'var(--accent-ink)' },
         ok: { DEFAULT: 'var(--ok)', soft: 'var(--ok-soft)', line: 'var(--ok-line)' },
         warn: { DEFAULT: 'var(--warn)', soft: 'var(--warn-soft)', line: 'var(--warn-line)' },

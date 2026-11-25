@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { Check, X } from 'lucide-react';
 import { Badge, Button, Field, Notice, Wordmark, buttonClass } from '@/components/ui';
+import { GlideCarousel, Tilt } from '@/components/motion';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -84,9 +85,10 @@ const STEPS = [
 // ヒーローの見本チケット（このサービスの仕組みそのものを1枚で見せる）
 function SampleTicket() {
   return (
-    <div
+    <Tilt
+      max={10}
       aria-label="見本：ライブの電子チケットと、入場特典のクーポン"
-      className="relative mx-auto w-full max-w-sm rounded-panel border border-line bg-paper shadow-[0_1px_0_var(--line),0_12px_32px_-12px_rgba(28,34,48,0.25)]"
+      className="mx-auto w-full max-w-sm rounded-panel border border-line bg-paper shadow-[0_1px_0_var(--line),0_12px_32px_-12px_rgba(28,34,48,0.25)]"
       style={{ ['--notch-bg' as string]: 'var(--surface)' }}
     >
       <div className="px-6 pt-6 pb-5">
@@ -117,7 +119,7 @@ function SampleTicket() {
         <p className="mt-1 text-lg font-bold leading-snug">スポンサー店のクーポンが1枚使えます</p>
         <p className="mt-1 text-sm">例：居酒屋〇〇 焼き鳥1本サービス（翌日23:59まで）</p>
       </div>
-    </div>
+    </Tilt>
   );
 }
 
@@ -265,6 +267,7 @@ export default function SponsorHubPage() {
                 <span className="inline-block">登別のお店への</span>
                 <span className="inline-block">きっぷに。</span>
               </h1>
+              <div aria-hidden className="glow-rule mt-6" />
               <p className="mt-6 max-w-prose text-base leading-[1.9] text-ink-2 sm:text-lg">
                 地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開きます。
                 入場したお客さんのLINEには、スポンサー店のクーポンが届きます。ライブの熱気が、そのまま街のお店に流れる仕組みです。
@@ -312,16 +315,22 @@ export default function SponsorHubPage() {
               どのプランもマイページからいつでも解約できます。企業・お店は請求書払いも選べます。上の枠は、下の枠の特典もすべて使えます。
             </p>
 
-            <div className="mt-10 grid gap-6 lg:grid-cols-3" style={{ ['--notch-bg' as string]: 'var(--surface)' }}>
-              {PLANS.map((plan) => {
+            <div className="mt-10" style={{ ['--notch-bg' as string]: 'var(--surface)' }}>
+              <GlideCarousel
+                ariaLabel="料金プラン"
+                labels={PLANS.map((p) => `${p.short} ¥${p.price}`)}
+                items={PLANS.map((plan) => {
                 const avail = availability[plan.id];
                 const full = avail?.remaining === 0;
                 return (
-                  <article
+                  <Tilt
+                    as="article"
                     key={plan.id}
+                    touch={false}
+                    max={5}
                     id={`plan-${plan.id}`}
                     aria-labelledby={`plan-${plan.id}-name`}
-                    className="flex scroll-mt-24 flex-col rounded-panel border border-line bg-paper"
+                    className="flex h-full scroll-mt-24 flex-col rounded-panel border border-line bg-paper"
                   >
                     <div className="px-6 pt-6 pb-5">
                       <div className="flex items-start justify-between gap-3">
@@ -373,9 +382,10 @@ export default function SponsorHubPage() {
                         )}
                       </div>
                     </div>
-                  </article>
+                  </Tilt>
                 );
               })}
+              />
             </div>
           </div>
         </section>
