@@ -3,7 +3,12 @@ import nodemailer from 'nodemailer';
 // Gmail（アプリパスワード）でメールを送る。
 // 環境変数 GMAIL_USER / GMAIL_APP_PASSWORD が未設定なら送らずに false を返す。
 // 送信に失敗しても例外は投げない（クーポン申請そのものは成功させるため）。
-export async function sendMail(params: { to: string | string[]; subject: string; text: string }): Promise<boolean> {
+export async function sendMail(params: {
+  to: string | string[];
+  subject: string;
+  text: string;
+  bcc?: string[];
+}): Promise<boolean> {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
   const to = Array.isArray(params.to) ? params.to.filter(Boolean) : params.to;
@@ -25,6 +30,7 @@ export async function sendMail(params: { to: string | string[]; subject: string;
     await transporter.sendMail({
       from: `"外山企画 スポンサー事務局" <${user}>`,
       to,
+      bcc: params.bcc && params.bcc.length > 0 ? params.bcc : undefined,
       subject: params.subject,
       text: params.text,
     });
