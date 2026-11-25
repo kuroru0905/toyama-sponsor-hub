@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
           プライバシーポリシー（個人情報保護方針）
         </h1>
         <p className="text-sm text-zinc-400 mb-10 leading-relaxed">
-          外山企画（以下「当企画」といいます）は、本サービスにおけるスポンサーおよびサポーターの皆様の個人情報の取り扱いについて、以下の通りプライバシーポリシーを定め、適切な管理と保護に努めます。
+          外山企画（以下「当企画」といいます）は、本サービス（スポンサー募集サイトおよびLINE公式アカウントのライブチケット＆クーポン）におけるスポンサー・サポーター・チケット購入者の皆様の個人情報の取り扱いについて、以下の通りプライバシーポリシーを定め、適切な管理と保護に努めます。
         </p>
 
         <div className="space-y-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8 text-sm leading-relaxed text-zinc-300">
@@ -32,6 +32,9 @@ export default function PrivacyPolicyPage() {
               <li>メールアドレス</li>
               <li>業種、店舗・事業所所在地（法人・店舗枠お申し込み時）</li>
               <li>決済および契約状況に関する識別情報（※クレジットカード番号等の決済情報は決済代行会社 Stripe が直接処理し、当企画のサーバーには一切保持いたしません）</li>
+              <li>出演応募の内容（グループ応募の場合はメンバーの氏名・メールアドレス）</li>
+              <li>LINEでチケットを購入・利用する場合：LINEのユーザー識別子および表示名、チケットの購入・入場・入場特典クーポンの利用履歴</li>
+              <li>スポンサーがLINE連携を行った場合：連携したLINEのユーザー識別子および表示名</li>
             </ul>
           </section>
 
@@ -42,6 +45,9 @@ export default function PrivacyPolicyPage() {
               <li>スポンサー契約の締結、継続課金管理、および請求書・領収書の発行</li>
               <li>Webサイト、イベント会場ビジョン・看板等へのクレジット掲載</li>
               <li>PR動画・画像制作、LINEクーポン配信等のリターン特典の履行およびご連絡</li>
+              <li>ライブチケットの販売・発券・入場確認、および入場特典クーポンの利用管理</li>
+              <li>スポンサー先行販売の対象者の確認、出演応募の受付・選考結果のご連絡</li>
+              <li>イベント別の販売数・入場数・店舗送客数などの集計（個人を特定しない形での統計利用を含む）</li>
               <li>お問い合わせへの対応および重要なお知らせの通知</li>
             </ul>
           </section>
@@ -55,6 +61,8 @@ export default function PrivacyPolicyPage() {
               <li>決済処理・請求書発行：Stripe, Inc.</li>
               <li>データベース・認証基盤：Supabase, Inc.</li>
               <li>Webホスティング：Vercel Inc.</li>
+              <li>LINEログイン・LINE公式アカウント：LINEヤフー株式会社</li>
+              <li>通知メールの送信：Google LLC（Gmail）</li>
             </ul>
           </section>
 
@@ -73,7 +81,7 @@ export default function PrivacyPolicyPage() {
             <div className="mt-3 rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-400">
               <p className="font-bold text-zinc-200">外山企画 個人情報お問い合わせ窓口</p>
               <p className="mt-1">代表：外山 愁真（北海道登別市）</p>
-              <p>メール：info@toyama-kikaku.example.com</p>
+              <p>メール：shyuucham0905@gmail.com</p>
             </div>
           </section>
         </div>
