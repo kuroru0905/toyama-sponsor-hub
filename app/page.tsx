@@ -260,10 +260,10 @@ export default function SponsorHubPage() {
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:py-20 lg:grid-cols-[1.1fr_1fr]">
             <div>
               <p className="text-[15px] font-bold text-brand">北海道登別市・音楽とまちのスポンサー制度</p>
-              <h1 className="mt-4 text-[2rem] font-bold leading-[1.35] sm:text-5xl sm:leading-[1.3]">
-                ライブの入場券を、
-                <br />
-                登別のお店へのきっぷに。
+              <h1 className="mt-4 text-[1.75rem] font-bold leading-[1.4] sm:text-5xl sm:leading-[1.3]">
+                <span className="inline-block">ライブの入場券を、</span>
+                <span className="inline-block">登別のお店への</span>
+                <span className="inline-block">きっぷに。</span>
               </h1>
               <p className="mt-6 max-w-prose text-base leading-[1.9] text-ink-2 sm:text-lg">
                 地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開きます。
