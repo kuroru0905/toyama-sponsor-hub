@@ -9,7 +9,6 @@ import LineLink from './LineLink';
 import LiveStreams from './LiveStreams';
 import CorporateInquiry from './CorporateInquiry';
 import { Badge, Button, Em, Field, Notice, Section, TIER_METAL, Wordmark, buttonClass } from '@/components/ui';
-import { Tilt } from '@/components/motion';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -388,21 +387,17 @@ function SponsorView({
         </div>
       )}
 
-      {/* 契約のあらまし：枠ごとの金属のプレート（企業＝ゴールド、店舗＝シルバー、ファン＝ブロンズ） */}
-      <Tilt
-        max={5}
-        aria-label={`${tier.name}のご契約`}
-        className={`metal ${TIER_METAL[sponsor.tier] ?? 'metal-silver'} rounded-card px-6 py-7 shadow-[0_20px_40px_-18px_rgba(0,0,0,0.35)] sm:px-9 sm:py-8`}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[15px] font-semibold">{tier.name}</p>
+      {/* 契約のあらまし：面は白のまま、枠名だけを金属の色で囲む（企業＝ゴールド、店舗＝シルバー、ファン＝ブロンズ） */}
+      <div className="card px-6 py-7 sm:px-8">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`metal-chip ${TIER_METAL[sponsor.tier] ?? 'metal-silver'}`}>{tier.name}</span>
           <Badge tone={status.tone}>{status.label}</Badge>
         </div>
-        <h2 className="mt-6 text-[28px] font-semibold leading-tight tracking-tight sm:text-[34px]">{sponsor.display_name}</h2>
-        <p className="mt-2 text-ink-2">
-          月額 <span className="num text-[21px] font-semibold" style={{ color: 'var(--metal-ink)' }}>¥{tier.price}</span>（税込）
+        <h2 className="mt-4 text-[28px] font-semibold leading-tight tracking-tight">{sponsor.display_name}</h2>
+        <p className="mt-1 text-ink-2">
+          月額 <span className="num text-[19px] font-semibold text-ink">¥{tier.price}</span>（税込）
         </p>
-      </Tilt>
+      </div>
       <div>
         {sponsor.status === 'pending' && (
           <Notice tone="warn" className="mt-4" title="お支払いの確認後に、特典が使えるようになります">
