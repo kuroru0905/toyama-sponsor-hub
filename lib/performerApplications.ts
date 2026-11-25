@@ -7,6 +7,19 @@ export const ACT_TYPES: Record<string, string> = {
   other: 'その他',
 };
 
+// 募集する出演形態（お知らせ・応募欄の表示用）。「パフォーマンス（ダンス…）」は短く
+export const ACT_TYPE_SHORT: Record<string, string> = {
+  band: 'バンド',
+  dj: 'DJ',
+  performance: 'パフォーマンス（ダンス・弾き語りなど）',
+  other: 'その他',
+};
+
+export function actTypesLabel(types: string[] | null | undefined): string {
+  const list = (types && types.length > 0 ? types : Object.keys(ACT_TYPE_SHORT)).filter((t) => ACT_TYPE_SHORT[t]);
+  return list.map((t) => ACT_TYPE_SHORT[t]).join('／');
+}
+
 export const APPLICATION_STATUS: Record<string, string> = {
   submitted: '受付済み',
   reviewing: '選考中',

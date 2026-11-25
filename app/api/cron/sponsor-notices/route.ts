@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { sendMail } from '@/lib/mailer';
 import { broadcastLine, retryKeyFor } from '@/lib/lineMessaging';
+import { actTypesLabel } from '@/lib/performerApplications';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,8 @@ type EventRow = {
   is_published: boolean;
   recruit_performers: boolean;
   recruit_deadline: string | null;
+  recruit_act_types: string[] | null;
+  recruit_note: string | null;
   presale_start: string | null;
   general_sale_start: string | null;
   recruit_notified_at: string | null;
@@ -94,7 +97,7 @@ async function run(req: NextRequest) {
   const { data, error } = await supabaseAdmin
     .from('live_events')
     .select(
-      'id, title, venue, starts_at, price_jpy, is_published, recruit_performers, recruit_deadline, presale_start, general_sale_start, recruit_notified_at, sale_notified_at'
+      'id, title, venue, starts_at, price_jpy, is_published, recruit_performers, recruit_deadline, recruit_act_types, recruit_note, presale_start, general_sale_start, recruit_notified_at, sale_notified_at'
     )
     .gt('starts_at', nowIso)
     .or('recruit_notified_at.is.null,sale_notified_at.is.null');
@@ -123,31 +126,40 @@ async function run(req: NextRequest) {
         [
           'スポンサーの皆さまへ',
           '',
-          `「${ev.title}」の出演者（バンド・DJ・パフォーマンスなど）を募集します。`,
+          `「${ev.title}」の出演者を募集します。`,
           '',
+          `イベント名：${ev.title}`,
           `開演：${fmt(ev.starts_at)}`,
           `会場：${ev.venue}`,
+          `募集する出演形態：${actTypesLabel(ev.recruit_act_types)}`,
+          ev.recruit_note ? `ジャンル・条件：${ev.recruit_note}` : null,
           `応募締切：${fmt(ev.recruit_deadline as string)}`,
           '',
           `応募はマイページの「出演応募」からどうぞ：${SITE_URL}/mypage`,
           '※ グループで応募する場合は、出演メンバー全員（未成年はその保護者）がスポンサーとしてご契約中である必要があります。',
           footer,
-        ].join('\n')
+        ]
+          .filter((l): l is string => l !== null)
+          .join('\n')
       );
       await broadcastLine(
         [
           `🎤 出演者募集｜${ev.title}`,
           '',
+          `イベント名：${ev.title}`,
           `開演：${fmt(ev.starts_at)}`,
           `会場：${ev.venue}`,
+          `募集する出演形態：${actTypesLabel(ev.recruit_act_types)}`,
+          ev.recruit_note ? `ジャンル・条件：${ev.recruit_note}` : null,
           `応募締切：${fmt(ev.recruit_deadline as string)}`,
           '',
-          'バンド・DJ・パフォーマンスの出演者を募集します！',
           'スポンサー（サポーター）の方は、マイページの「出演応募」から応募できます。',
           `▶ ${SITE_URL}/mypage`,
           '',
           `スポンサーは月300円のファンサポーター枠から：${SITE_URL}`,
-        ].join('\n'),
+        ]
+          .filter((l): l is string => l !== null)
+          .join('\n'),
         retryKeyFor(ev.id, 'recruit')
       );
       sent.push(`recruit:${ev.id}`);
