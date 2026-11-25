@@ -146,7 +146,7 @@ export default function TokushohoPage() {
               <tr>
                 <th className="block sm:table-cell align-top bg-surface px-5 pt-3 pb-3 sm:px-6 sm:py-4 font-semibold text-ink">入場特典クーポン</th>
                 <td className="block sm:table-cell px-5 pt-3 pb-3 sm:px-6 sm:py-4 text-ink-2">
-                  入場1回につき、スポンサー店舗のクーポンを1枚、入場日の翌日23:59までご利用いただけます。クーポンは無償の特典であり、内容は各店舗が提供します。
+                  入場1回につき、スポンサー店舗のクーポンを各店1回ずつ、ライブ当日の翌日23:59までご利用いただけます。クーポンは無償の特典であり、内容は各店舗が提供します。
                 </td>
               </tr>
             </tbody>
