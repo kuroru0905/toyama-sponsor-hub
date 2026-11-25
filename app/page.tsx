@@ -78,8 +78,8 @@ const PLANS: Plan[] = [
 const STEPS = [
   { title: 'スポンサーが月額で支える', body: '地元の企業・お店・ファンが、それぞれ**無理のない金額で毎月**支えます。' },
   { title: 'ライブを開く', body: '集まったお金で、若い人が主役のライブを登別で続けて開きます。' },
-  { title: '入場するとクーポンが届く', body: 'LINEで買ったチケットで入場すると、**スポンサー店のクーポンが1枚**使えるようになります。' },
-  { title: '終演後、お店へ', body: '**入場の翌日まで**使えるので、そのまま街のお店に人が流れます。' },
+  { title: '入場するとクーポンが届く', body: 'LINEで買ったチケットで入場すると、**スポンサー店のクーポンが各店1回ずつ**使えるようになります。' },
+  { title: '終演後、お店をはしご', body: '**ライブの翌日まで**、何軒でも回れるので、街のお店に人が流れます。' },
 ];
 
 // ヒーローの見本チケット（このサービスの仕組みそのものを1枚で見せる）
@@ -114,8 +114,8 @@ function SampleTicket() {
       <div className="ticket-perf" />
       <div className="rounded-b-card bg-brand px-7 py-6 text-white">
         <p className="text-[13px] font-medium opacity-80">入場特典</p>
-        <p className="mt-1 text-[19px] font-semibold leading-snug">お店のクーポンが1枚使えます</p>
-        <p className="mt-1 text-[14px] opacity-80">例：居酒屋〇〇の焼き鳥1本サービス。翌日23:59まで。</p>
+        <p className="mt-1 text-[19px] font-semibold leading-snug">お店のクーポンが各店で使えます</p>
+        <p className="mt-1 text-[14px] opacity-80">例：居酒屋〇〇の焼き鳥1本サービス。はしごOK・翌日23:59まで。</p>
       </div>
     </Tilt>
   );
