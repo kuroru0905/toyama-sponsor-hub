@@ -392,8 +392,8 @@ input[type='radio'] {
 /* ロゴ：ローマ字のワードマーク */
 .wordmark {
   font-family: var(--font-latin), -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.24em;
+  font-size: 15px;
+  letter-spacing: 0.22em;
   line-height: 1;
   white-space: nowrap;
 }
