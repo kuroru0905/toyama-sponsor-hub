@@ -36,11 +36,19 @@ export default function TokushohoPage() {
               <tr>
                 <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">連絡先</th>
                 <td className="px-6 py-4 text-zinc-400">
-                  メール：info@toyama-kikaku.example.com
+                  メール：shyuucham0905@gmail.com
                   <br />
                   （※お電話での開示をご希望の場合はメールにてご請求ください）
                 </td>
               </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 className="text-lg font-bold text-white mt-10 mb-4">スポンサー・サポーター（月額プラン）</h2>
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
+          <table className="w-full text-left text-sm">
+            <tbody className="divide-y divide-zinc-800">
               <tr>
                 <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">販売価格</th>
                 <td className="px-6 py-4 text-zinc-400">
@@ -86,6 +94,72 @@ export default function TokushohoPage() {
             </tbody>
           </table>
         </div>
+
+        <h2 id="ticket" className="scroll-mt-8 text-lg font-bold text-white mt-10 mb-4">
+          ライブチケット（LINE公式アカウントで販売）
+        </h2>
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
+          <table className="w-full text-left text-sm">
+            <tbody className="divide-y divide-zinc-800">
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">販売価格</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  公演ごとにLINE公式アカウントのチケット画面に表示する価格（税込）
+                </td>
+              </tr>
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">商品代金以外の必要料金</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  インターネット接続料金・通信料金等はお客様のご負担となります。
+                </td>
+              </tr>
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">お支払い方法・時期</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  クレジットカード決済（Stripe）。購入手続き時に決済されます。
+                </td>
+              </tr>
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">引渡し時期</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  決済完了後、直ちにLINE公式アカウントのチケット画面に電子チケットが表示されます。
+                </td>
+              </tr>
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">販売期間</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  公演ごとに定める販売期間（スポンサー先行販売・一般販売）から、開演時刻まで。お一人様1公演につき1枚までです。
+                </td>
+              </tr>
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">入場について</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  電子チケットの「入場する」ボタンは、開演3時間前から開演日の23:59まで利用できます。スタッフの前で押してください。一度使用すると元に戻せません。
+                </td>
+              </tr>
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">キャンセル・返金について</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  お客様のご都合によるキャンセル・返金は、原則としてお受けしておりません。主催者の都合により公演が中止となった場合は、購入代金の全額を、購入時のクレジットカードへ返金いたします。
+                </td>
+              </tr>
+              <tr>
+                <th className="bg-zinc-900/80 px-6 py-4 font-bold text-zinc-300">入場特典クーポン</th>
+                <td className="px-6 py-4 text-zinc-400">
+                  入場1回につき、スポンサー店舗のクーポンを1枚、入場日の翌日23:59までご利用いただけます。クーポンは無償の特典であり、内容は各店舗が提供します。
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mt-8 text-sm text-zinc-500">
+          個人情報の取り扱いは
+          <Link href="/privacy" className="text-teal-400 underline mx-1">
+            プライバシーポリシー
+          </Link>
+          をご確認ください。
+        </p>
       </div>
     </div>
   );
