@@ -175,7 +175,7 @@ input[type='radio'] {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   padding: 8px var(--shelf-pad) 32px;
-  margin: 0 calc(-1 * var(--shelf-pad));
+  margin: 0;
   scroll-padding-inline: var(--shelf-pad);
   scrollbar-width: none;
   --shelf-pad: max(16px, calc((100vw - 72rem) / 2 + 16px));

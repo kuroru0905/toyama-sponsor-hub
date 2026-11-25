@@ -88,7 +88,7 @@ function SampleTicket() {
     <Tilt
       max={10}
       aria-label="見本：ライブの電子チケットと、入場特典のクーポン"
-      className="mx-auto w-full max-w-[380px] rounded-card bg-paper shadow-[0_30px_60px_-20px_rgba(0,0,0,0.25)]"
+      className="mx-auto w-full max-w-[400px] rounded-card bg-paper shadow-[0_30px_60px_-20px_rgba(0,0,0,0.25)]"
       style={{ ['--notch-bg' as string]: 'var(--surface)' }}
     >
       <div className="px-7 pt-7 pb-6">
@@ -114,8 +114,8 @@ function SampleTicket() {
       <div className="ticket-perf" />
       <div className="rounded-b-card bg-brand px-7 py-6 text-white">
         <p className="text-[13px] font-medium opacity-80">入場特典</p>
-        <p className="mt-1 text-[20px] font-semibold leading-snug">スポンサー店のクーポンが1枚使えます</p>
-        <p className="mt-1 text-[14px] opacity-80">例：居酒屋〇〇 焼き鳥1本サービス（翌日23:59まで）</p>
+        <p className="mt-1 text-[19px] font-semibold leading-snug">お店のクーポンが1枚使えます</p>
+        <p className="mt-1 text-[14px] opacity-80">例：居酒屋〇〇の焼き鳥1本サービス。翌日23:59まで。</p>
       </div>
     </Tilt>
   );
