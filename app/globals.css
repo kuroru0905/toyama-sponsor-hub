@@ -322,7 +322,8 @@ input[type='radio'] {
   --metal-ink: #ffffff;
   --metal-base: linear-gradient(135deg, #3d72ff 0%, #1a4fd6 45%, #3a6cf2 62%, #1640b8 100%);
 }
-/* 枠名のラベル：金属の色で囲む */
+/* 枠名のラベル：金属の色で囲む（components 層に置き、文字の大きさはユーティリティで上書きできる） */
+@layer components {
 .metal-chip {
   display: inline-flex;
   align-items: center;
@@ -335,6 +336,7 @@ input[type='radio'] {
   color: var(--metal-ink);
   background-image: var(--metal-base);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
 }
 /* 色の丸（Apple Store のカラーの丸と同じ大きさ感） */
 .metal-dot {
