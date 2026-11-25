@@ -88,8 +88,9 @@ export async function sendActivatedMails(s: SponsorForMail) {
         `マイページ（${SITE_URL}/mypage）では次のことができます。`,
         '・LINEと連携する（スポンサー先行販売でチケットを購入するために必要です）',
         '・出演応募（募集中のイベントがあるとき）',
+        '・当日のライブ配信（YouTube限定公開）のリンク確認',
         canCoupon ? '・ライブ入場者向けLINEクーポンの掲載申請' : '',
-        isCorporate ? '\n企業PR動画の制作については、外山企画からこのメールアドレス宛にヒアリングのご連絡を差し上げます。' : '',
+        isCorporate ? '・CM放映・企業PR動画の制作のお問い合わせ' : '',
         '',
         '外山企画',
       ]
@@ -106,7 +107,6 @@ export async function sendActivatedMails(s: SponsorForMail) {
         `申込者：${s.applicant_name}`,
         `掲載名：${s.display_name}`,
         `メール：${s.email}`,
-        isCorporate ? '\n※ 企業PR動画のヒアリング連絡をお願いします。' : '',
         '',
         `管理画面：${SITE_URL}/admin/sponsors`,
       ]

@@ -85,6 +85,30 @@ export function parseEventInput(body: Json, partial: boolean) {
   }
   if (recruit === false && deadline === undefined) out.recruit_deadline = null;
 
+  // 当日のライブ配信（YouTubeの限定公開リンク）。スポンサーのマイページにだけ表示する
+  if (body.stream_url !== undefined) {
+    const raw = typeof body.stream_url === 'string' ? body.stream_url.trim() : body.stream_url;
+    if (raw === null || raw === '') {
+      out.stream_url = null;
+    } else {
+      if (typeof raw !== 'string') throw new HttpError(400, '配信URLの形式が不正です');
+      let host = '';
+      try {
+        const u = new URL(raw);
+        if (u.protocol !== 'https:') throw new Error('not https');
+        host = u.hostname.toLowerCase();
+      } catch {
+        throw new HttpError(400, '配信URLは https:// から始まるURLで入力してください');
+      }
+      const isYoutube = host === 'youtu.be' || host === 'youtube.com' || host.endsWith('.youtube.com');
+      if (!isYoutube) throw new HttpError(400, '配信URLはYouTubeのURL（youtube.com / youtu.be）を入力してください');
+      if (raw.length > 500) throw new HttpError(400, '配信URLが長すぎます');
+      out.stream_url = raw;
+    }
+    // URLを入れ直したら、未入力アラートの送信記録もリセット（消した場合は再びアラート対象）
+    out.stream_alert_sent_at = null;
+  }
+
   // 先行販売（スポンサー限定）・一般販売の開始日時。空欄なら公開と同時に一般販売
   const presale = date(body, 'presale_start', 'スポンサー先行販売の開始日時', false);
   if (presale !== undefined) out.presale_start = presale;
