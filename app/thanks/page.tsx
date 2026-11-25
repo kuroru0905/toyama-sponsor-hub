@@ -40,7 +40,7 @@ function ThanksContent() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <header className="border-b border-line bg-paper">
+      <header className="glass sticky top-0 z-40 border-b border-line">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
           <Link href="/" className="text-lg">
             <Wordmark />
@@ -49,8 +49,8 @@ function ThanksContent() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
-        <p className="text-[15px] font-bold text-ok">{isInvoice ? 'お申し込みを受け付けました' : 'お支払いが完了しました'}</p>
-        <h1 className="mt-2 text-3xl font-bold leading-snug">{name} 様、ありがとうございます。</h1>
+        <p className="text-[15px] font-semibold text-ok">{isInvoice ? 'お申し込みを受け付けました' : 'お支払いが完了しました'}</p>
+        <h1 className="mt-2 text-[32px] font-semibold leading-tight tracking-tight sm:text-[40px]">{name} 様、ありがとうございます。</h1>
 
         {isInvoice ? (
           <Notice tone="warn" title="お支払いの確認後に、特典が使えるようになります" className="mt-6">
@@ -62,14 +62,14 @@ function ThanksContent() {
           </p>
         )}
 
-        <h2 className="mt-12 text-xl font-bold">このあとやること</h2>
-        <ol className="mt-4 divide-y divide-line rounded-panel border border-line bg-paper">
+        <h2 className="mt-12 text-xl font-semibold">このあとやること</h2>
+        <ol className="mt-4 divide-y divide-line rounded-panel bg-paper shadow-card">
           {steps.map((s, i) => (
             <li key={s.title} className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-4">
                 <span className="num w-6 shrink-0 text-3xl font-semibold leading-none text-ink-3">{i + 1}</span>
                 <div>
-                  <h3 className="font-bold">{s.title}</h3>
+                  <h3 className="font-semibold">{s.title}</h3>
                   <p className="mt-1 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
                 </div>
               </div>

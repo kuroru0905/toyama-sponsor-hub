@@ -101,7 +101,7 @@ export default function CorporateInquiry({
         {done && <Notice tone="ok">{done}</Notice>}
 
         {open && (
-          <form onSubmit={submit} className="rounded-panel border border-brand-line bg-paper p-5 sm:p-6">
+          <form onSubmit={submit} className="rounded-panel bg-surface p-5 sm:p-6">
             <div className="max-w-prose space-y-6">
               <Field label="相談したいこと" htmlFor="q-kind" required>
                 <select id="q-kind" className="field-input" value={kind} onChange={(e) => setKind(e.target.value)}>
@@ -163,12 +163,12 @@ export default function CorporateInquiry({
 
         {inquiries.length > 0 && (
           <div>
-            <h3 className="text-[15px] font-bold">これまでのご相談</h3>
-            <ul className="mt-2 divide-y divide-line rounded-panel border border-line bg-paper">
+            <h3 className="text-[15px] font-semibold">これまでのご相談</h3>
+            <ul className="mt-2 divide-y divide-line rounded-panel bg-surface overflow-hidden">
               {inquiries.map((q) => (
                 <li key={q.id} className="px-5 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold">{INQUIRY_KINDS[q.kind] ?? q.kind}</span>
+                    <span className="font-semibold">{INQUIRY_KINDS[q.kind] ?? q.kind}</span>
                     <span className="flex items-center gap-2 text-sm text-ink-2">
                       <span className="num">{fmt(q.created_at)}</span>
                       <Badge tone={q.status === 'done' ? 'ok' : 'neutral'}>{q.status === 'done' ? '対応済み' : '受付済み'}</Badge>

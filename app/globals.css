@@ -5,13 +5,15 @@
 /* ===== デザイントークン =====
    ブランドカラーが決まったら --brand / --accent まわりだけを差し替える */
 :root {
-  --ink: #1c2230; /* 本文（墨） */
-  --ink-2: #4a5263; /* 補足文 */
-  --ink-3: #6b7383; /* さらに弱い文字（白地でAA） */
-  --line: #dde1e7;
-  --line-strong: #b9c0cb;
-  --paper: #ffffff;
-  --surface: #f4f5f7;
+  --ink: #1d1d1f; /* 本文 */
+  --ink-2: #6e6e73; /* 補足文・見出しの後半 */
+  --ink-3: #86868b; /* さらに弱い文字（大きい文字だけ） */
+  --line: #d2d2d7;
+  --line-strong: #c7c7cc;
+  --paper: #ffffff; /* カード */
+  --surface: #f5f5f7; /* ページの背景 */
+  --shadow-card: 2px 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 2px 4px 16px rgba(0, 0, 0, 0.16);
 
   --brand: #1a5cff; /* ブランドカラー：近未来感のある青（白文字とのコントラスト 5.2:1） */
   --brand-hover: #0f45d6;
@@ -42,12 +44,24 @@ html {
 }
 
 body {
-  background: var(--paper);
+  background: var(--surface);
   color: var(--ink);
-  font-family: var(--font-body), 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-  line-height: 1.7;
-  font-feature-settings: 'palt' 0;
+  /* Apple端末ではSF Pro＋ヒラギノ、それ以外はInter＋Noto Sans JP */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro JP', 'SF Pro Text', var(--font-latin), 'Hiragino Sans',
+    'Hiragino Kaku Gothic ProN', var(--font-jp), sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 見出しは字間を詰めて、締まった印象に */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.005em;
+  font-feature-settings: 'palt' 1;
 }
 
 /* キーボード操作のときだけ、はっきり見えるフォーカス枠 */
@@ -60,9 +74,9 @@ body {
 .field-input {
   display: block;
   width: 100%;
-  min-height: 48px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  min-height: 50px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: var(--paper);
   padding: 10px 14px;
   font-size: 16px;
@@ -126,9 +140,72 @@ input[type='radio'] {
 }
 
 .num {
-  font-family: var(--font-num), var(--font-body), sans-serif;
   font-feature-settings: 'tnum' 1;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
+}
+
+/* Apple風のカード：枠線なし・大きな角丸・薄い影。押せるカードは浮き上がる */
+.card {
+  background: var(--paper);
+  border-radius: 28px;
+  box-shadow: var(--shadow-card);
+}
+.card-lift {
+  transition: transform 400ms cubic-bezier(0, 0, 0.5, 1), box-shadow 400ms cubic-bezier(0, 0, 0.5, 1);
+}
+.card-lift:hover {
+  transform: scale(1.01);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* すりガラスのヘッダー */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* 横に滑る棚（Apple Storeの横スクロール） */
+.shelf {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(86vw, 400px);
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 8px var(--shelf-pad) 32px;
+  margin: 0 calc(-1 * var(--shelf-pad));
+  scroll-padding-inline: var(--shelf-pad);
+  scrollbar-width: none;
+  --shelf-pad: max(16px, calc((100vw - 72rem) / 2 + 16px));
+}
+.shelf::-webkit-scrollbar {
+  display: none;
+}
+.shelf > * {
+  scroll-snap-align: start;
+}
+.paddle {
+  width: 36px;
+  height: 36px;
+  min-height: 36px !important;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(210, 210, 215, 0.64);
+  color: rgba(0, 0, 0, 0.56);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 200ms, opacity 200ms;
+}
+.paddle:hover:not(:disabled) {
+  background: rgba(223, 223, 227, 0.7);
+  color: rgba(0, 0, 0, 0.64);
+}
+.paddle:disabled {
+  opacity: 0.36;
+  cursor: default;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -157,7 +234,7 @@ input[type='radio'] {
 }
 .tilt[data-active='true'] {
   transition: transform 80ms linear, box-shadow 200ms;
-  box-shadow: 0 18px 40px -18px rgba(26, 92, 255, 0.45);
+  box-shadow: var(--shadow-card-hover);
 }
 .tilt-glare {
   pointer-events: none;
@@ -219,27 +296,10 @@ input[type='radio'] {
   }
 }
 
-/* 見出しの下を、青い光がゆっくり流れる線（ページで1か所だけ） */
-.glow-rule {
-  height: 3px;
-  width: 120px;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--brand), var(--brand-glow), var(--brand));
-  background-size: 200% 100%;
-  animation: glow-run 4s linear infinite;
-}
-@keyframes glow-run {
-  to {
-    background-position: -200% 0;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .tilt,
   .tilt[data-active='true'] {
     transform: none !important;
-  }
-  .glow-rule {
-    animation: none;
   }
 }

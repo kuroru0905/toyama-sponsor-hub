@@ -18,12 +18,16 @@ const config: Config = {
         line_green: '#06C755',
       },
       fontFamily: {
-        sans: ['var(--font-body)', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', 'sans-serif'],
-        num: ['var(--font-num)', 'var(--font-body)', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro JP', 'var(--font-latin)', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'var(--font-jp)', 'sans-serif'],
       },
       borderRadius: {
-        ctl: '8px',
-        panel: '12px',
+        ctl: '12px',
+        panel: '18px',
+        card: '28px',
+      },
+      boxShadow: {
+        card: 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
       },
       maxWidth: {
         prose: '40rem',

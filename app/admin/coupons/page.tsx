@@ -36,8 +36,8 @@ const REVIEW: Record<ReviewStatus, { label: string; cls: string }> = {
 const ORDER: Record<ReviewStatus, number> = { pending: 0, rejected: 1, approved: 2 };
 
 const inputClass = 'field-input';
-const labelClass = 'block text-[15px] font-bold text-ink mb-2';
-const smallBtn = 'rounded-lg border px-4 py-2.5 text-sm font-bold';
+const labelClass = 'block text-[15px] font-semibold text-ink mb-2';
+const smallBtn = 'rounded-lg border px-4 py-2.5 text-sm font-semibold';
 
 export default function AdminCouponsPage() {
   const { token } = useAdmin();
@@ -155,7 +155,7 @@ export default function AdminCouponsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-ink">クーポン</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-ink">クーポン</h1>
           <p className="text-sm text-ink-2 mt-1">
             承認済み・公開中のクーポンが、ライブ入場者のLINEに入場特典として表示されます（入場1回につき1枚）。
           </p>
@@ -172,14 +172,14 @@ export default function AdminCouponsPage() {
       {toast && <div className="mb-4 rounded-ctl border border-brand-line bg-brand-soft p-3 text-sm text-brand">{toast}</div>}
       {error && <div className="mb-4 rounded-ctl border border-danger-line bg-danger-soft p-3 text-sm text-danger">{error}</div>}
       {pending > 0 && (
-        <div className="mb-4 rounded-ctl border border-warn-line bg-warn-soft p-3 text-sm font-bold text-warn">
+        <div className="mb-4 rounded-ctl border border-warn-line bg-warn-soft p-3 text-sm font-semibold text-warn">
           店舗から申請された審査待ちのクーポンが {pending} 件あります。
         </div>
       )}
 
       {form ? (
-        <section className="mb-6 rounded-panel border border-brand-line bg-paper p-4 sm:p-6 space-y-4">
-          <h2 className="text-lg font-bold text-ink">{form.id ? 'クーポンを編集' : '新しいクーポン'}</h2>
+        <section className="mb-6 rounded-panel bg-paper shadow-card p-4 sm:p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-ink">{form.id ? 'クーポンを編集' : '新しいクーポン'}</h2>
           <div>
             <label className={labelClass}>店舗名 *</label>
             <input className={inputClass} value={form.shop_name} maxLength={60} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} />
@@ -202,10 +202,10 @@ export default function AdminCouponsPage() {
             </div>
           )}
           <div className="flex flex-col-reverse sm:flex-row gap-2">
-            <button disabled={saving} onClick={() => setForm(null)} className="rounded-ctl border border-line-strong bg-paper px-5 py-3 text-sm font-bold text-ink hover:bg-surface">
+            <button disabled={saving} onClick={() => setForm(null)} className="rounded-ctl border border-line-strong bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-surface">
               キャンセル
             </button>
-            <button disabled={saving} onClick={save} className="flex-1 sm:flex-none rounded-ctl bg-brand px-6 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover disabled:opacity-50">
+            <button disabled={saving} onClick={save} className="flex-1 sm:flex-none rounded-ctl bg-brand px-6 py-3 text-sm font-semibold text-brand-ink hover:bg-brand-hover disabled:opacity-50">
               {saving ? '保存中...' : '保存する'}
             </button>
           </div>
@@ -216,7 +216,7 @@ export default function AdminCouponsPage() {
             setToast('');
             setForm({ ...EMPTY });
           }}
-          className="mb-6 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-ctl bg-brand px-5 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover"
+          className="mb-6 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-ctl bg-brand px-5 py-3 text-sm font-semibold text-brand-ink hover:bg-brand-hover"
         >
           <Plus className="h-4 w-4" />
           新しいクーポンを作成
@@ -226,7 +226,7 @@ export default function AdminCouponsPage() {
       {loading ? (
         <p className="text-sm text-ink-2">読み込み中...</p>
       ) : sorted.length === 0 ? (
-        <div className="rounded-panel border border-line bg-paper p-6 text-sm text-ink-2">クーポンはまだありません。</div>
+        <div className="rounded-panel bg-paper shadow-card p-6 text-sm text-ink-2">クーポンはまだありません。</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sorted.map((c) => (
@@ -237,11 +237,11 @@ export default function AdminCouponsPage() {
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                <span className="text-sm font-bold text-brand">{c.shop_name}</span>
+                <span className="text-sm font-semibold text-brand">{c.shop_name}</span>
                 <span className="flex gap-1.5">
-                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${REVIEW[c.review_status].cls}`}>{REVIEW[c.review_status].label}</span>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${REVIEW[c.review_status].cls}`}>{REVIEW[c.review_status].label}</span>
                   <span
-                    className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                       c.is_published ? 'border-brand-line bg-brand-soft text-brand' : 'border-line-strong bg-surface text-ink-2'
                     }`}
                   >
@@ -249,15 +249,15 @@ export default function AdminCouponsPage() {
                   </span>
                 </span>
               </div>
-              <h3 className="text-base font-bold text-ink">{c.benefit_title}</h3>
+              <h3 className="text-base font-semibold text-ink">{c.benefit_title}</h3>
               <p className="text-sm text-ink-2 mt-1 whitespace-pre-wrap">{c.benefit_detail}</p>
               <p className="text-sm text-ink-3 mt-2">登録：{c.sponsor_name ? `スポンサー（${c.sponsor_name}）` : '外山企画'}</p>
               {c.review_status === 'rejected' && c.review_note && <p className="text-sm text-danger mt-1">差し戻し理由：{c.review_note}</p>}
-              <p className="text-sm font-bold text-ink mt-2 mb-3">利用回数：{c.use_count}回</p>
+              <p className="text-sm font-semibold text-ink mt-2 mb-3">利用回数：{c.use_count}回</p>
 
               {c.review_status !== 'approved' && (
                 <div className="flex gap-2 mb-2">
-                  <button onClick={() => review(c, 'approved')} className="flex-1 rounded-lg bg-brand px-4 py-2.5 text-sm font-bold text-brand-ink hover:bg-brand-hover">
+                  <button onClick={() => review(c, 'approved')} className="flex-1 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-brand-ink hover:bg-brand-hover">
                     承認して掲載
                   </button>
                   {c.review_status === 'pending' && (

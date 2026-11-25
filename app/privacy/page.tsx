@@ -14,16 +14,16 @@ export default function PrivacyPolicyPage() {
           トップページへ戻る
         </Link>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-ink mb-4">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-ink mb-4">
           プライバシーポリシー（個人情報保護方針）
         </h1>
         <p className="text-sm text-ink-2 mb-10 leading-relaxed">
           外山企画（以下「当企画」といいます）は、本サービス（スポンサー募集サイトおよびLINE公式アカウントのライブチケット＆クーポン）におけるスポンサー・サポーター・チケット購入者の皆様の個人情報の取り扱いについて、以下の通りプライバシーポリシーを定め、適切な管理と保護に努めます。
         </p>
 
-        <div className="space-y-8 rounded-panel border border-line bg-paper p-6 sm:p-8 text-[15px] leading-[1.9] text-ink">
+        <div className="space-y-8 rounded-panel bg-paper shadow-card p-6 sm:p-8 text-[15px] leading-[1.9] text-ink">
           <section>
-            <h2 className="text-base font-bold text-ink mb-2">1. 取得する個人情報</h2>
+            <h2 className="text-base font-semibold text-ink mb-2">1. 取得する個人情報</h2>
             <p className="text-ink-2">
               当企画は、スポンサー・サポーターのお申し込みおよびリターン提供にあたり、以下の情報を取得いたします。
             </p>
@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-bold text-ink mb-2">2. 個人情報の利用目的</h2>
+            <h2 className="text-base font-semibold text-ink mb-2">2. 個人情報の利用目的</h2>
             <p className="text-ink-2">取得した個人情報は、以下の目的の範囲内でのみ利用いたします。</p>
             <ul className="list-disc list-inside text-ink-2 mt-2 space-y-1">
               <li>スポンサー契約の締結、継続課金管理、および請求書・領収書の発行</li>
@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-bold text-ink mb-2">3. 外部サービスの利用および第三者提供</h2>
+            <h2 className="text-base font-semibold text-ink mb-2">3. 外部サービスの利用および第三者提供</h2>
             <p className="text-ink-2">
               当企画は、法令に基づく場合を除き、ご本人の同意なく個人情報を第三者へ提供いたしません。ただし、本サービスのシステム運営および決済処理のため、以下の信頼できる外部サービス事業者へ業務を委託しております。
             </p>
@@ -67,19 +67,19 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-bold text-ink mb-2">4. 安全管理措置</h2>
+            <h2 className="text-base font-semibold text-ink mb-2">4. 安全管理措置</h2>
             <p className="text-ink-2">
               当企画は、個人情報の漏えい、滅失またはき損を防止するため、通信の暗号化（SSL/TLS）およびアクセス権限の厳格な制御（Row Level Security）を実施し、適切な安全管理措置を講じます。
             </p>
           </section>
 
           <section>
-            <h2 className="text-base font-bold text-ink mb-2">5. 開示・訂正・削除およびお問い合わせ窓口</h2>
+            <h2 className="text-base font-semibold text-ink mb-2">5. 開示・訂正・削除およびお問い合わせ窓口</h2>
             <p className="text-ink-2">
               ご本人から個人情報の開示、訂正、利用停止、削除等のご請求があった場合、ご本人確認の上、速やかに対応いたします。お問い合わせは下記窓口までご連絡ください。
             </p>
             <div className="mt-3 rounded-ctl border border-line bg-surface p-4 text-xs text-ink-2">
-              <p className="font-bold text-ink">外山企画 個人情報お問い合わせ窓口</p>
+              <p className="font-semibold text-ink">外山企画 個人情報お問い合わせ窓口</p>
               <p className="mt-1">代表：外山 愁真（北海道登別市）</p>
               <p>メール：shyuucham0905@gmail.com</p>
             </div>

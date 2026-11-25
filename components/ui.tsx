@@ -7,21 +7,22 @@ import React from 'react';
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'line';
 type ButtonSize = 'md' | 'sm';
 
+// Apple風：ピル型（丸い楕円）のボタン
 const VARIANT: Record<ButtonVariant, string> = {
   primary: 'bg-brand text-brand-ink hover:bg-brand-hover border border-brand',
-  secondary: 'bg-paper text-ink border border-line-strong hover:bg-surface',
-  ghost: 'bg-transparent text-brand border border-transparent hover:bg-brand-soft',
+  secondary: 'bg-paper text-brand border border-brand hover:bg-brand-soft',
+  ghost: 'bg-transparent text-brand border border-transparent hover:underline underline-offset-4',
   danger: 'bg-paper text-danger border border-danger-line hover:bg-danger-soft',
   line: 'bg-line_green text-white border border-line_green hover:brightness-95',
 };
 const SIZE: Record<ButtonSize, string> = {
-  md: 'min-h-[48px] px-5 text-[15px]',
-  sm: 'min-h-[44px] px-4 text-sm',
+  md: 'min-h-[48px] px-6 text-[17px]',
+  sm: 'min-h-[40px] px-4 text-[15px]',
 };
 
 export function buttonClass(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', block = false) {
   return [
-    'inline-flex items-center justify-center gap-2 rounded-ctl font-bold transition-colors',
+    'inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-normal transition-colors',
     'disabled:opacity-50 disabled:cursor-not-allowed',
     VARIANT[variant],
     SIZE[size],
@@ -61,15 +62,15 @@ export function Field({
 }) {
   return (
     <div className={className}>
-      <label htmlFor={htmlFor} className="flex flex-wrap items-center gap-2 text-[15px] font-bold text-ink">
+      <label htmlFor={htmlFor} className="flex flex-wrap items-center gap-2 text-[15px] font-semibold text-ink">
         {label}
-        {required && <span className="rounded px-1.5 py-0.5 text-xs font-bold bg-danger-soft text-danger">必須</span>}
-        {optional && <span className="rounded px-1.5 py-0.5 text-xs font-bold bg-surface text-ink-2">任意</span>}
+        {required && <span className="text-xs font-medium text-danger">必須</span>}
+        {optional && <span className="text-xs font-medium text-ink-2">任意</span>}
       </label>
       {hint && <p className="mt-1 text-sm leading-relaxed text-ink-2">{hint}</p>}
       <div className="mt-2">{children}</div>
       {error && (
-        <p role="alert" className="mt-1.5 text-sm font-bold text-danger">
+        <p role="alert" className="mt-1.5 text-sm font-semibold text-danger">
           {error}
         </p>
       )}
@@ -106,10 +107,10 @@ export function Notice({
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}
-      className={`relative overflow-hidden rounded-ctl border pl-5 pr-4 py-3 text-sm leading-relaxed ${NOTICE[tone]} ${className}`}
+      className={`relative overflow-hidden rounded-ctl border pl-5 pr-4 py-3 text-[15px] leading-relaxed ${NOTICE[tone]} ${className}`}
     >
       <span aria-hidden className={`absolute left-0 top-0 h-full w-1.5 ${NOTICE_BAR[tone]}`} />
-      {title && <p className="font-bold">{title}</p>}
+      {title && <p className="font-semibold">{title}</p>}
       {children && <div className={title ? 'mt-0.5' : ''}>{children}</div>}
     </div>
   );
@@ -135,7 +136,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-bold leading-5 ${BADGE[tone]} ${className}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-5 ${BADGE[tone]} ${className}`}
     >
       {children}
     </span>
@@ -159,29 +160,57 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={`scroll-mt-36 lg:scroll-mt-24 border-t border-line pt-8 ${className}`}>
+    <section id={id} className={`card scroll-mt-36 p-6 sm:p-8 lg:scroll-mt-24 ${className}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-ink">{title}</h2>
-          {description && <p className="mt-1 max-w-prose text-sm leading-relaxed text-ink-2">{description}</p>}
+          <h2 className="text-2xl font-semibold text-ink">{title}</h2>
+          {description && <p className="mt-2 max-w-prose text-[15px] leading-relaxed text-ink-2">{description}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      <div className="mt-5">{children}</div>
+      <div className="mt-6">{children}</div>
     </section>
+  );
+}
+
+// Apple Store風の二色の見出し：前半を濃く、後半を灰色で
+export function Headline({
+  lead,
+  rest,
+  as: Tag = 'h2',
+  size = 'section',
+  className = '',
+  id,
+}: {
+  lead: React.ReactNode;
+  rest?: React.ReactNode;
+  as?: 'h1' | 'h2';
+  size?: 'hero' | 'section';
+  className?: string;
+  id?: string;
+}) {
+  const cls =
+    size === 'hero'
+      ? 'text-[40px] leading-[1.15] sm:text-[64px] sm:leading-[1.08] lg:text-[80px]'
+      : 'text-[24px] leading-[1.25] sm:text-[28px] sm:leading-[1.2]';
+  return (
+    <Tag id={id} className={`font-semibold ${cls} ${className}`}>
+      <span className="text-ink">{lead}</span>
+      {rest && <span className="text-ink-2"> {rest}</span>}
+    </Tag>
   );
 }
 
 // 白い面（一覧の1件・フォームの枠など、中身を囲う必要がある時だけ使う）
 export function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-panel border border-line bg-paper ${className}`}>{children}</div>;
+  return <div className={`card ${className}`}>{children}</div>;
 }
 
 // 外山企画のロゴ文字
 export function Wordmark({ className = '' }: { className?: string }) {
   return (
-    <span className={`inline-flex items-baseline gap-2 font-bold text-ink ${className}`}>
-      <span aria-hidden className="inline-block h-3 w-3 translate-y-[1px] rounded-sm bg-accent" />
+    <span className={`inline-flex items-center gap-2 font-semibold tracking-tight text-ink ${className}`}>
+      <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-full bg-brand" />
       外山企画
     </span>
   );

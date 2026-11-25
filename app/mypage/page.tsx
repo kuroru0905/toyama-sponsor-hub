@@ -186,7 +186,7 @@ export default function MyPage() {
   };
 
   const header = (
-    <header className="sticky top-0 z-30 border-b border-line bg-paper">
+    <header className="glass sticky top-0 z-30 border-b border-line">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         <Link href="/" className="text-lg">
           <Wordmark />
@@ -218,17 +218,17 @@ export default function MyPage() {
       <div className="min-h-screen bg-surface">
         {header}
         <main className="mx-auto max-w-md px-4 py-12 sm:py-16">
-          <h1 className="text-2xl font-bold">スポンサーのマイページ</h1>
+          <h1 className="text-[32px] font-semibold leading-tight tracking-tight">スポンサーのマイページ</h1>
           <p className="mt-3 leading-relaxed text-ink-2">
             パスワードはいりません。お申し込みのときのメールアドレスに、ログイン用のリンクをお送りします。
           </p>
 
-          <div className="mt-8 rounded-panel border border-line bg-paper p-5 sm:p-6">
+          <div className="card mt-8 p-6 sm:p-8">
             {mailSent ? (
               <div>
-                <h2 className="text-lg font-bold">メールを送りました</h2>
+                <h2 className="text-lg font-semibold">メールを送りました</h2>
                 <p className="mt-2 leading-relaxed text-ink-2">
-                  <span className="font-bold text-ink">{loginEmail}</span> に届いたメールの「ログイン」リンクを開くと、このページに戻ってきます。
+                  <span className="font-semibold text-ink">{loginEmail}</span> に届いたメールの「ログイン」リンクを開くと、このページに戻ってきます。
                 </p>
                 <p className="mt-3 text-sm text-ink-2">届かないときは、迷惑メールのフォルダも確認してください。</p>
                 <Button variant="ghost" className="mt-4 -ml-2" onClick={() => setMailSent(false)}>
@@ -277,7 +277,7 @@ export default function MyPage() {
       {header}
 
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:pt-10">
-        <h1 className="text-2xl font-bold sm:text-3xl">マイページ</h1>
+        <h1 className="text-[32px] font-semibold tracking-tight sm:text-[40px]">マイページ</h1>
 
         {dataLoading && sponsors.length === 0 ? (
           <p className="mt-8 text-ink-2">ご契約の情報を読み込んでいます…</p>
@@ -376,8 +376,8 @@ function SponsorView({
               role="tab"
               aria-selected={s.id === sponsor.id}
               onClick={() => onSwitch(s.id)}
-              className={`min-h-[44px] rounded-ctl border px-4 text-[15px] font-bold ${
-                s.id === sponsor.id ? 'border-brand bg-brand text-brand-ink' : 'border-line-strong bg-paper text-ink hover:bg-surface'
+              className={`min-h-[40px] rounded-full px-4 text-[15px] ${
+                s.id === sponsor.id ? 'bg-ink text-white' : 'bg-paper text-ink shadow-card hover:bg-white'
               }`}
             >
               {s.display_name}（{TIER[s.tier]?.name ?? s.tier}）
@@ -387,9 +387,9 @@ function SponsorView({
       )}
 
       {/* 契約のあらまし */}
-      <div className="rounded-panel border border-line bg-paper px-5 py-5 sm:px-6">
+      <div className="card px-6 py-6 sm:px-8">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-xl font-bold">{sponsor.display_name}</h2>
+          <h2 className="text-[24px] font-semibold">{sponsor.display_name}</h2>
           <Badge tone={status.tone}>{status.label}</Badge>
         </div>
         <p className="mt-1 text-ink-2">
@@ -410,11 +410,11 @@ function SponsorView({
       </div>
 
       {/* スマホ：目次を横スクロールで */}
-      <nav aria-label="このページの項目" className="sticky top-16 z-20 -mx-4 mt-6 overflow-x-auto border-b border-line bg-surface px-4 py-2 lg:hidden">
+      <nav aria-label="このページの項目" className="glass sticky top-16 z-20 -mx-4 mt-6 overflow-x-auto px-4 py-2 lg:hidden">
         <ul className="flex gap-2">
           {nav.map((n) => (
             <li key={n.id} className="shrink-0">
-              <a href={`#${n.id}`} className="inline-flex min-h-[44px] items-center rounded-full border border-line-strong bg-paper px-4 text-sm font-bold">
+              <a href={`#${n.id}`} className="inline-flex min-h-[40px] items-center rounded-full bg-paper px-4 text-[14px] shadow-card">
                 {n.label}
               </a>
             </li>
@@ -425,10 +425,10 @@ function SponsorView({
       <div className="mt-6 lg:mt-10 lg:grid lg:grid-cols-[13rem_1fr] lg:gap-12">
         {/* PC：左に目次 */}
         <nav aria-label="このページの項目" className="hidden lg:block">
-          <ul className="sticky top-24 space-y-1 border-l-2 border-line">
+          <ul className="sticky top-24 space-y-1">
             {nav.map((n) => (
               <li key={n.id}>
-                <a href={`#${n.id}`} className="-ml-[2px] block border-l-2 border-transparent py-2 pl-4 text-[15px] text-ink-2 hover:border-ink hover:text-ink">
+                <a href={`#${n.id}`} className="block rounded-full px-4 py-2 text-[15px] text-ink-2 hover:bg-paper hover:text-ink">
                   {n.label}
                 </a>
               </li>
@@ -436,8 +436,8 @@ function SponsorView({
           </ul>
         </nav>
 
-        <div className="min-w-0 space-y-12">
-          <Section id="profile" title="掲載情報" description="サイトのサポーター一覧と、会場のクレジットに載る内容です。" className="border-t-0 pt-0">
+        <div className="min-w-0 space-y-6">
+          <Section id="profile" title="掲載情報" description="サイトのサポーター一覧と、会場のクレジットに載る内容です。">
             <div className="max-w-prose space-y-6">
               <Field label="サイト・会場に載せるお名前" htmlFor="displayName">
                 <input

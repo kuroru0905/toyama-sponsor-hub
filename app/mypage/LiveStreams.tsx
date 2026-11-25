@@ -56,7 +56,7 @@ export default function LiveStreams({ sponsorId, accessToken }: { sponsorId: str
       ) : streams.length === 0 ? (
         <p className="text-ink-2">配信予定のライブはまだありません。決まったら、ここに配信のリンクが出ます。</p>
       ) : (
-        <ul className="divide-y divide-line rounded-panel border border-line bg-paper">
+        <ul className="divide-y divide-line rounded-panel bg-surface overflow-hidden">
           {streams.map((s) => (
             <li key={s.id} className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-4">
@@ -67,7 +67,7 @@ export default function LiveStreams({ sponsorId, accessToken }: { sponsorId: str
                   </p>
                 </div>
                 <div>
-                  <p className="font-bold">{s.title}</p>
+                  <p className="font-semibold">{s.title}</p>
                   <p className="text-sm text-ink-2">{s.venue}</p>
                 </div>
               </div>
