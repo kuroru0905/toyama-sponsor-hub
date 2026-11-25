@@ -21,8 +21,9 @@ export const GROUP_RULE =
 export const SPONSOR_MYPAGE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/mypage` : 'https://toyama-sponsor-hub.vercel.app/mypage';
 
+// 統合管理画面の出演応募タブ
 export const SPONSOR_ADMIN_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/admin` : 'https://toyama-sponsor-hub.vercel.app/admin';
+  process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/admin/applications` : 'https://toyama-sponsor-hub.vercel.app/admin/applications';
 
 export type ApplicationSummary = {
   act_type: string;

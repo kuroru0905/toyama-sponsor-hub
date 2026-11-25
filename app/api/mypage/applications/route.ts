@@ -56,11 +56,13 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
     if (error) throw new HttpError(500, '応募履歴の取得に失敗しました');
 
+    // 出演者を募集中のイベント（公開中・募集オン・締切前）
     const { data: events, error: eventsError } = await supabaseAdmin
       .from('live_events')
-      .select('id, title, starts_at')
+      .select('id, title, starts_at, recruit_deadline')
       .eq('is_published', true)
-      .gte('starts_at', new Date().toISOString())
+      .eq('recruit_performers', true)
+      .gt('recruit_deadline', new Date().toISOString())
       .order('starts_at', { ascending: true });
     if (eventsError) throw new HttpError(500, 'イベントの取得に失敗しました');
 
@@ -113,20 +115,28 @@ export async function POST(req: NextRequest) {
       if (!confirmed) throw new HttpError(400, GROUP_RULE);
     }
 
-    // 希望イベント（任意）
-    let eventId: string | null = null;
-    let eventTitle: string | null = null;
-    if (body.eventId) {
-      const { data: ev } = await supabaseAdmin
-        .from('live_events')
-        .select('id, title')
-        .eq('id', String(body.eventId))
-        .eq('is_published', true)
-        .maybeSingle();
-      if (!ev) throw new HttpError(400, '希望イベントが見つかりません');
-      eventId = ev.id;
-      eventTitle = ev.title;
+    // 出演するイベント（必須）：募集中であること
+    if (!body.eventId) throw new HttpError(400, '出演するイベントを選んでください');
+    const { data: ev } = await supabaseAdmin
+      .from('live_events')
+      .select('id, title, recruit_performers, recruit_deadline, is_published')
+      .eq('id', String(body.eventId))
+      .maybeSingle();
+    if (!ev || !ev.is_published) throw new HttpError(400, 'イベントが見つかりません');
+    if (!ev.recruit_performers || !ev.recruit_deadline || new Date(ev.recruit_deadline).getTime() <= Date.now()) {
+      throw new HttpError(400, 'このイベントの出演者募集は締め切りました');
     }
+    const eventId: string = ev.id;
+    const eventTitle: string = ev.title;
+
+    // 同じイベントへの重複応募（結果待ち）は不可
+    const { count: dup } = await supabaseAdmin
+      .from('performer_applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('sponsor_id', sponsor.id)
+      .eq('event_id', eventId)
+      .in('status', ['submitted', 'reviewing']);
+    if ((dup ?? 0) > 0) throw new HttpError(400, 'このイベントにはすでに応募しています（結果待ち）');
 
     // 同じ契約からの「結果待ち」の応募は3件まで
     const { count } = await supabaseAdmin

@@ -29,6 +29,7 @@ interface EventOption {
   id: string;
   title: string;
   starts_at: string;
+  recruit_deadline: string;
 }
 
 interface Application {
@@ -67,6 +68,17 @@ const EMPTY: FormState = {
   links: '',
   message: '',
 };
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ja-JP', {
@@ -159,6 +171,9 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
     }
   };
 
+  // 募集中のイベントも、これまでの応募もなければ欄ごと出さない
+  if (!loading && events.length === 0 && applications.length === 0 && !message && !error) return null;
+
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 sm:p-5 mb-6">
       <div className="flex items-center gap-2 text-sm font-bold text-white mb-1">
@@ -203,12 +218,28 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
 
           {!isActive ? (
             <p className="text-xs text-amber-300">ご契約が有効（契約中）になると、出演応募ができます。</p>
+          ) : events.length === 0 ? (
+            <p className="text-xs text-zinc-400">
+              現在、出演者を募集中のイベントはありません。募集が始まるとここに応募欄が表示されます。
+            </p>
           ) : !open ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-3">
+                <div className="text-xs font-bold text-amber-300 mb-1.5">出演者募集中のイベント</div>
+                <ul className="space-y-1">
+                  {events.map((ev) => (
+                    <li key={ev.id} className="text-sm text-white">
+                      {formatDate(ev.starts_at)} {ev.title}
+                      <span className="block text-xs text-zinc-400">締切：{formatDateTime(ev.recruit_deadline)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             <button
               type="button"
               onClick={() => {
                 setMessage('');
-                setForm({ ...EMPTY, representativeName: defaultName });
+                setForm({ ...EMPTY, representativeName: defaultName, eventId: events.length === 1 ? events[0].id : '' });
                 setOpen(true);
               }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-400/40 bg-amber-400/10 px-5 py-3 text-sm font-bold text-amber-300 hover:bg-amber-400/20"
@@ -216,6 +247,7 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
               <Mic2 className="h-4 w-4" />
               出演応募フォームを開く
             </button>
+            </div>
           ) : (
             <form onSubmit={submit} className="rounded-xl border border-amber-400/30 bg-zinc-900 p-4 space-y-4">
               <div>
@@ -297,16 +329,19 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
               )}
 
               <div>
-                <label className={labelClass}>出演を希望するイベント</label>
+                <label className={labelClass}>出演するイベント</label>
                 <select
                   className={inputClass}
                   value={form.eventId}
+                  required
                   onChange={(e) => setForm({ ...form, eventId: e.target.value })}
                 >
-                  <option value="">指定なし（どのイベントでも）</option>
+                  <option value="" disabled>
+                    選んでください
+                  </option>
                   {events.map((ev) => (
                     <option key={ev.id} value={ev.id}>
-                      {formatDate(ev.starts_at)} {ev.title}
+                      {formatDate(ev.starts_at)} {ev.title}（締切 {formatDate(ev.recruit_deadline)}）
                     </option>
                   ))}
                 </select>
@@ -355,7 +390,7 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                 </button>
                 <button
                   type="submit"
-                  disabled={sending || (isGroup && !form.confirmed)}
+                  disabled={sending || !form.eventId || (isGroup && !form.confirmed)}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold text-zinc-950 hover:bg-amber-300 transition disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />

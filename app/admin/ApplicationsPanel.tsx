@@ -118,7 +118,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
   const openCount = apps.filter((a) => a.status === 'submitted' || a.status === 'reviewing').length;
 
   return (
-    <section className="mt-12">
+    <section>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <Mic2 className="h-5 w-5 text-amber-400" />

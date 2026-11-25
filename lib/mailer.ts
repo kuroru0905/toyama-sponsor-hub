@@ -43,5 +43,6 @@ export function adminEmails(): string[] {
     .filter(Boolean);
 }
 
+// 統合管理画面のクーポンタブ
 export const ADMIN_CONSOLE_URL =
-  process.env.COUPON_ADMIN_URL || 'https://toyama-line-ticket-coupon.vercel.app/admin';
+  process.env.COUPON_ADMIN_URL || 'https://toyama-sponsor-hub.vercel.app/admin/coupons';
