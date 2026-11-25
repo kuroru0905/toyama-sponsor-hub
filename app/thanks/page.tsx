@@ -39,7 +39,8 @@ function ThanksContent() {
           <p className="text-xs font-bold text-amber-400 mb-2">NEXT STEP（リターン受取・連絡窓口）</p>
           <p className="text-xs text-zinc-400 leading-relaxed mb-4">
             LINEクーポンの掲載申請・出演応募・LINE連携（スポンサー先行販売の購入に必要）はマイページから行えます。
-            PR動画・画像の素材入稿などのご連絡は「外山企画 公式LINE」で承りますので、友だち追加をお願いいたします。
+            企業PR動画の制作など個別のご案内は、外山企画からご登録のメールアドレス宛にご連絡します。
+            ライブチケットの購入と入場特典クーポンは「外山企画 公式LINE」から利用できますので、友だち追加をお願いいたします。
           </p>
           <a
             href={lineUrl}

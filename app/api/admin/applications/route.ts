@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest) {
           '',
           ...(accepted && app.member_count > 1 ? ['【ご確認ください】', GROUP_RULE, ''] : []),
           accepted
-            ? '今後の詳細（出演日時・リハーサル・機材など）は、外山企画 公式LINEまたはメールでご連絡します。'
+            ? '今後の詳細（出演日時・リハーサル・機材など）は、外山企画からこのメールアドレス宛にご連絡します。'
             : '次回以降のイベントでも出演応募を受け付けています。またのご応募をお待ちしています。',
           '',
           SPONSOR_MYPAGE_URL,
