@@ -196,17 +196,17 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
           <>
             {!open && (
               <div>
-                <h3 className="text-[15px] font-bold">出演者を募集しているライブ</h3>
+                <h3 className="text-[15px] font-semibold">出演者を募集しているライブ</h3>
                 {!isActive ? (
                   <p className="mt-2 text-ink-2">ご契約が有効になると、出演の応募ができます。</p>
                 ) : events.length === 0 ? (
                   <p className="mt-2 text-ink-2">いま募集しているライブはありません。募集が始まったら、メールと公式LINEでお知らせします。</p>
                 ) : (
-                  <ul className="mt-2 divide-y divide-line rounded-panel border border-line bg-paper">
+                  <ul className="mt-2 divide-y divide-line rounded-panel bg-surface overflow-hidden">
                     {events.map((ev) => (
                       <li key={ev.id} className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                          <p className="font-bold">{ev.title}</p>
+                          <p className="font-semibold">{ev.title}</p>
                           <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 text-sm text-ink-2">
                             <dt>開演</dt>
                             <dd className="num text-[15px] text-ink">{fmtDate(ev.starts_at)}</dd>
@@ -233,8 +233,8 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
             )}
 
             {open && (
-              <form onSubmit={submit} className="rounded-panel border border-brand-line bg-paper p-5 sm:p-6">
-                <h3 className="text-lg font-bold">出演の応募</h3>
+              <form onSubmit={submit} className="rounded-panel bg-surface p-5 sm:p-6">
+                <h3 className="text-lg font-semibold">出演の応募</h3>
                 <div className="mt-5 max-w-prose space-y-6">
                   <Field label="出演するライブ" htmlFor="p-event" required>
                     <select
@@ -309,19 +309,19 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
 
                   {isGroup && (
                     <fieldset className="space-y-4">
-                      <legend className="text-[15px] font-bold">メンバー</legend>
+                      <legend className="text-[15px] font-semibold">メンバー</legend>
                       <Notice tone="warn">{GROUP_RULE}</Notice>
                       <p className="text-sm leading-relaxed text-ink-2">
                         メンバー全員のお名前と、スポンサー登録しているメールアドレスを入れてください。応募のときに、全員が契約中のスポンサーかを確認します。
                       </p>
                       <div className="rounded-ctl border border-line bg-surface px-4 py-3">
-                        <p className="text-sm font-bold text-ink-2">1人目（代表者・あなた）</p>
-                        <p className="font-bold">{form.representativeName || '代表者のお名前を入れてください'}</p>
+                        <p className="text-sm font-semibold text-ink-2">1人目（代表者・あなた）</p>
+                        <p className="font-semibold">{form.representativeName || '代表者のお名前を入れてください'}</p>
                         <p className="break-all text-sm text-ink-2">{loginEmail}</p>
                       </div>
                       {form.others.map((m, i) => (
                         <div key={i} className="space-y-4 rounded-ctl border border-line px-4 py-4">
-                          <p className="text-sm font-bold text-ink-2">{i + 2}人目</p>
+                          <p className="text-sm font-semibold text-ink-2">{i + 2}人目</p>
                           <Field label="お名前" htmlFor={`p-m${i}-name`} required hint="記入例：佐藤 花子（ギター）">
                             <input id={`p-m${i}-name`} className="field-input" value={m.name} maxLength={40} required onChange={(e) => setOther(i, { name: e.target.value })} />
                           </Field>
@@ -374,14 +374,14 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
 
             {applications.length > 0 && (
               <div>
-                <h3 className="text-[15px] font-bold">これまでの応募</h3>
-                <ul className="mt-2 divide-y divide-line rounded-panel border border-line bg-paper">
+                <h3 className="text-[15px] font-semibold">これまでの応募</h3>
+                <ul className="mt-2 divide-y divide-line rounded-panel bg-surface overflow-hidden">
                   {applications.map((a) => {
                     const st = STATUS[a.status] ?? STATUS.submitted;
                     return (
                       <li key={a.id} className="px-5 py-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-bold">{a.act_name}</span>
+                          <span className="font-semibold">{a.act_name}</span>
                           <Badge tone={st.tone}>{st.label}</Badge>
                         </div>
                         <p className="mt-1 text-sm text-ink-2">

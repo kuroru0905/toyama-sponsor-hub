@@ -93,7 +93,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const frame = (inner: React.ReactNode) => (
     <div className="min-h-screen bg-surface">
-      <header className="border-b border-line bg-paper">
+      <header className="glass sticky top-0 z-40 border-b border-line">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
           <Link href="/" className="text-lg">
             <Wordmark />
@@ -112,14 +112,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   if (!session) {
     return frame(
       <div>
-        <h1 className="text-2xl font-bold">外山企画 管理画面</h1>
+        <h1 className="text-2xl font-semibold">外山企画 管理画面</h1>
         <p className="mt-3 leading-relaxed text-ink-2">
           スポンサー、イベントとチケット、クーポン、出演応募をまとめて管理します。管理者のメールアドレスにログイン用のリンクを送ります。
         </p>
-        <div className="mt-8 rounded-panel border border-line bg-paper p-5 sm:p-6">
+        <div className="mt-8 rounded-panel bg-paper shadow-card p-5 sm:p-6">
           {mailSent ? (
             <p className="leading-relaxed">
-              <span className="font-bold">{loginEmail}</span> にログイン用のリンクを送りました。メールのリンクを開いてください。
+              <span className="font-semibold">{loginEmail}</span> にログイン用のリンクを送りました。メールのリンクを開いてください。
             </p>
           ) : (
             <form onSubmit={handleSendMagicLink} className="space-y-5">
@@ -152,7 +152,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   if (adminState === 'forbidden') {
     return frame(
       <div>
-        <h1 className="text-2xl font-bold">このアカウントでは管理画面を使えません</h1>
+        <h1 className="text-2xl font-semibold">このアカウントでは管理画面を使えません</h1>
         <Notice tone="danger" className="mt-6" title={forbiddenMsg}>
           ログイン中：{session.user.email}
           <br />
@@ -168,7 +168,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   return (
     <AdminContext.Provider value={{ token: session.access_token, email: session.user.email ?? '' }}>
       <div className="min-h-screen bg-surface">
-        <header className="sticky top-0 z-40 border-b border-line bg-paper">
+        <header className="glass sticky top-0 z-40 border-b border-line">
           <div className="mx-auto max-w-6xl px-4">
             <div className="flex h-14 items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
@@ -193,7 +193,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                     key={tab.href}
                     href={tab.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 border-b-[3px] px-3 text-[15px] font-bold ${
+                    className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 border-b-[3px] px-3 text-[15px] font-semibold ${
                       active ? 'border-brand text-ink' : 'border-transparent text-ink-2 hover:text-ink'
                     }`}
                   >

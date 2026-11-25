@@ -88,72 +88,58 @@ export function Tilt({
   );
 }
 
-// 横スワイプで滑るカルーセル（スマホ）。PCでは普通の3列に戻る。
-// いま見ているカードを大きく、ほかを少し小さくして「滑っている」感じを出す。
-export function GlideCarousel({
-  items,
-  labels,
-  ariaLabel,
-}: {
-  items: React.ReactNode[];
-  labels: string[];
-  ariaLabel: string;
-}) {
+// Apple Store風の「棚」：横に滑らせて見るカードの列。
+// スマホは指でスワイプ、PCはトラックパッドの横スクロールか、右下の矢印ボタンで1枚ずつ滑る。
+export function Shelf({ children, ariaLabel }: { children: React.ReactNode; ariaLabel: string }) {
   const track = useRef<HTMLDivElement>(null);
-  const [current, setCurrent] = useState(0);
+  const [edge, setEdge] = useState({ start: true, end: false });
 
-  useEffect(() => {
+  const update = useCallback(() => {
     const el = track.current;
     if (!el) return;
-    const children = Array.from(el.children) as HTMLElement[];
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting && en.intersectionRatio > 0.6) {
-            setCurrent(children.indexOf(en.target as HTMLElement));
-          }
-        });
-      },
-      { root: el, threshold: [0.6] }
-    );
-    children.forEach((c) => io.observe(c));
-    return () => io.disconnect();
-  }, [items.length]);
+    setEdge({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
+  }, []);
 
-  const go = (i: number) => {
+  useEffect(() => {
+    update();
     const el = track.current;
-    const child = el?.children[i] as HTMLElement | undefined;
-    if (!el || !child) return;
-    el.scrollTo({ left: child.offsetLeft - 16, behavior: reducedMotion() ? 'auto' : 'smooth' });
+    if (!el) return;
+    el.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [update]);
+
+  const move = (dir: 1 | -1) => {
+    const el = track.current;
+    const first = el?.children[0] as HTMLElement | undefined;
+    if (!el || !first) return;
+    el.scrollBy({ left: dir * (first.offsetWidth + 20), behavior: reducedMotion() ? 'auto' : 'smooth' });
   };
+
+  const scrollable = !(edge.start && edge.end);
 
   return (
     <div>
-      {/* スマホ：どれを見ているかと、押して移動できるタブ */}
-      <div role="tablist" aria-label={ariaLabel} className="mb-4 flex gap-2 lg:hidden">
-        {labels.map((l, i) => (
-          <button
-            key={l}
-            type="button"
-            role="tab"
-            aria-selected={current === i}
-            onClick={() => go(i)}
-            className={`min-h-[44px] flex-1 rounded-full border text-sm font-bold transition-colors ${
-              current === i ? 'border-brand bg-brand text-brand-ink' : 'border-line-strong bg-paper text-ink-2'
-            }`}
-          >
-            {l}
+      <div ref={track} className="shelf" role="region" aria-label={ariaLabel} tabIndex={0}>
+        {children}
+      </div>
+      {scrollable && (
+        <div className="mx-auto flex max-w-6xl justify-end gap-3 px-4">
+          <button type="button" className="paddle" aria-label="前へ" disabled={edge.start} onClick={() => move(-1)}>
+            <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden>
+              <path d="M8 2 2 8l6 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-        ))}
-      </div>
-      <div ref={track} className="glide-track" aria-label={ariaLabel}>
-        {items.map((it, i) => (
-          <div key={i} className="glide-item" data-current={current === i ? 'true' : 'false'}>
-            {it}
-          </div>
-        ))}
-      </div>
-      <p className="mt-1 text-center text-sm text-ink-2 lg:hidden">左右にスワイプして、ほかのプランも見られます</p>
+          <button type="button" className="paddle" aria-label="次へ" disabled={edge.end} onClick={() => move(1)}>
+            <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden>
+              <path d="m2 2 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

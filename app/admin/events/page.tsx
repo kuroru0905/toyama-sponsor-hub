@@ -97,7 +97,7 @@ const fmt = (iso: string | null) =>
 const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 const inputClass = 'field-input';
-const labelClass = 'block text-[15px] font-bold text-ink mb-2';
+const labelClass = 'block text-[15px] font-semibold text-ink mb-2';
 
 export default function AdminEventsPage() {
   const { token } = useAdmin();
@@ -222,7 +222,7 @@ export default function AdminEventsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-ink">イベント・チケット</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-ink">イベント・チケット</h1>
           <p className="text-sm text-ink-2 mt-1">公開したイベントはLINEのチケット画面に表示され、購入できます。</p>
         </div>
         <button
@@ -238,8 +238,8 @@ export default function AdminEventsPage() {
       {error && <div className="mb-4 rounded-ctl border border-danger-line bg-danger-soft p-3 text-sm text-danger">{error}</div>}
 
       {form ? (
-        <section className="mb-6 rounded-panel border border-brand-line bg-paper p-4 sm:p-6 space-y-4">
-          <h2 className="text-lg font-bold text-ink">{form.id ? 'イベントを編集' : '新しいイベント'}</h2>
+        <section className="mb-6 rounded-panel bg-paper shadow-card p-4 sm:p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-ink">{form.id ? 'イベントを編集' : '新しいイベント'}</h2>
 
           <div>
             <label className={labelClass}>公演名 *</label>
@@ -337,7 +337,7 @@ export default function AdminEventsPage() {
           </div>
 
           <div className="rounded-ctl border border-brand-line bg-brand-soft p-4 space-y-3">
-            <p className="text-sm font-bold text-ink">チケット販売スケジュール</p>
+            <p className="text-sm font-semibold text-ink">チケット販売スケジュール</p>
             <p className="text-sm text-ink-2">
               出演者募集 → スポンサー先行販売 → 一般販売 → 開演（販売終了）。先行販売は、マイページでLINE連携した有効なスポンサーだけが購入できます。公開中のイベントが買えるようになった時（先行販売があればその開始時）に、有効なスポンサー全員へお知らせメール、公式LINEの友だち全員へLINEのお知らせが届きます（1イベント1回）。
             </p>
@@ -400,10 +400,10 @@ export default function AdminEventsPage() {
             </div>
           )}
           <div className="flex flex-col-reverse sm:flex-row gap-2">
-            <button disabled={saving} onClick={() => setForm(null)} className="rounded-ctl border border-line-strong bg-paper px-5 py-3 text-sm font-bold text-ink hover:bg-surface">
+            <button disabled={saving} onClick={() => setForm(null)} className="rounded-ctl border border-line-strong bg-paper px-5 py-3 text-sm font-semibold text-ink hover:bg-surface">
               キャンセル
             </button>
-            <button disabled={saving} onClick={save} className="flex-1 sm:flex-none rounded-ctl bg-brand px-6 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover disabled:opacity-50">
+            <button disabled={saving} onClick={save} className="flex-1 sm:flex-none rounded-ctl bg-brand px-6 py-3 text-sm font-semibold text-brand-ink hover:bg-brand-hover disabled:opacity-50">
               {saving ? '保存中...' : '保存する'}
             </button>
           </div>
@@ -414,7 +414,7 @@ export default function AdminEventsPage() {
             setToast('');
             setForm({ ...EMPTY });
           }}
-          className="mb-6 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-ctl bg-brand px-5 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover"
+          className="mb-6 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-ctl bg-brand px-5 py-3 text-sm font-semibold text-brand-ink hover:bg-brand-hover"
         >
           <Plus className="h-4 w-4" />
           新しいイベントを作成
@@ -424,7 +424,7 @@ export default function AdminEventsPage() {
       {loading ? (
         <p className="text-sm text-ink-2">読み込み中...</p>
       ) : events.length === 0 ? (
-        <div className="rounded-panel border border-line bg-paper p-6 text-sm text-ink-2">イベントはまだありません。</div>
+        <div className="rounded-panel bg-paper shadow-card p-6 text-sm text-ink-2">イベントはまだありません。</div>
       ) : (
         <div className="space-y-4">
           {events.map((ev) => {
@@ -432,14 +432,14 @@ export default function AdminEventsPage() {
             const recruitOpen =
               ev.recruit_performers && ev.recruit_deadline !== null && new Date(ev.recruit_deadline).getTime() > now;
             return (
-              <section key={ev.id} className={`rounded-panel border border-line bg-paper p-4 sm:p-5 ${ev.is_published ? '' : 'opacity-75'}`}>
+              <section key={ev.id} className={`rounded-panel bg-paper shadow-card p-4 sm:p-5 ${ev.is_published ? '' : 'opacity-75'}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                  <span className="text-sm font-bold text-brand">{fmt(ev.starts_at)} 開演</span>
+                  <span className="text-sm font-semibold text-brand">{fmt(ev.starts_at)} 開演</span>
                   <span className="flex flex-wrap gap-1.5">
-                    {soldOut && <span className="rounded-full border border-line-strong bg-surface px-2.5 py-0.5 text-xs font-bold text-ink">完売</span>}
+                    {soldOut && <span className="rounded-full border border-line-strong bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">完売</span>}
                     {ev.recruit_performers && (
                       <span
-                        className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                           recruitOpen ? 'border-warn-line bg-warn-soft text-warn' : 'border-line-strong bg-surface text-ink-2'
                         }`}
                       >
@@ -447,7 +447,7 @@ export default function AdminEventsPage() {
                       </span>
                     )}
                     <span
-                      className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                      className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                         ev.is_published ? 'border-brand-line bg-brand-soft text-brand' : 'border-line-strong bg-surface text-ink-2'
                       }`}
                     >
@@ -455,7 +455,7 @@ export default function AdminEventsPage() {
                     </span>
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-ink">{ev.title}</h3>
+                <h3 className="text-lg font-semibold text-ink">{ev.title}</h3>
                 <p className="text-sm text-ink-2 mb-3">
                   📍 {ev.venue} ／ {yen(ev.price_jpy)}
                   {ev.recruit_performers &&
@@ -470,7 +470,7 @@ export default function AdminEventsPage() {
                   ) : ev.stream_url ? (
                     <span className="text-brand">配信URL設定済み</span>
                   ) : (
-                    <span className="text-danger font-bold">配信URL未設定</span>
+                    <span className="text-danger font-semibold">配信URL未設定</span>
                   )}
                 </p>
 
@@ -483,8 +483,8 @@ export default function AdminEventsPage() {
                     ['出演応募', `${ev.stats.applications}件`],
                   ].map(([k, v]) => (
                     <div key={k} className="rounded-ctl bg-paper px-3 py-2">
-                      <div className="text-xs font-bold text-ink-3">{k}</div>
-                      <div className="text-base font-bold text-ink">{v}</div>
+                      <div className="text-xs font-semibold text-ink-3">{k}</div>
+                      <div className="text-base font-semibold text-ink">{v}</div>
                     </div>
                   ))}
                 </div>
@@ -513,7 +513,7 @@ export default function AdminEventsPage() {
                       });
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-bold text-ink hover:bg-surface"
+                    className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
                   >
                     編集
                   </button>
@@ -528,7 +528,7 @@ export default function AdminEventsPage() {
                           : `「${ev.title}」を公開して販売を始めますか？`
                       )
                     }
-                    className={`rounded-lg border px-4 py-2.5 text-sm font-bold ${
+                    className={`rounded-lg border px-4 py-2.5 text-sm font-semibold ${
                       ev.is_published ? 'border-danger-line bg-danger-soft text-danger hover:bg-danger-soft' : 'border-line-strong bg-paper text-ink hover:bg-surface'
                     }`}
                   >
@@ -536,7 +536,7 @@ export default function AdminEventsPage() {
                   </button>
                   <button
                     onClick={() => showOrders(ev)}
-                    className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-bold text-ink hover:bg-surface"
+                    className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
                   >
                     {ordersOf === ev.id ? '購入者を閉じる' : '購入者一覧'}
                   </button>
@@ -560,7 +560,7 @@ export default function AdminEventsPage() {
                             <tr key={o.id} className="border-t border-line">
                               <td className="py-2 pr-3 text-ink">{o.display_name ?? '（名前なし）'}</td>
                               <td className="py-2 pr-3 text-ink whitespace-nowrap">{fmt(o.paid_at)}</td>
-                              <td className={`py-2 whitespace-nowrap font-bold ${o.status === 'used' ? 'text-brand' : 'text-ink-3'}`}>
+                              <td className={`py-2 whitespace-nowrap font-semibold ${o.status === 'used' ? 'text-brand' : 'text-ink-3'}`}>
                                 {o.status === 'used' ? fmt(o.used_at) : '未入場'}
                               </td>
                             </tr>

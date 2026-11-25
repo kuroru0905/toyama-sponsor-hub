@@ -1,22 +1,21 @@
 import type { Metadata, Viewport } from 'next';
-import { BIZ_UDPGothic, Barlow_Condensed } from 'next/font/google';
+import { Inter, Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 
-// 本文・見出し：モリサワのユニバーサルデザイン書体（読みやすさ優先）
-const body = BIZ_UDPGothic({
-  weight: ['400', '700'],
+// Apple端末では SF Pro / ヒラギノ（システム書体）を優先。
+// それ以外（Windows・Android）では、近い印象の Inter（英数字）と Noto Sans JP（日本語）を使う
+const latin = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-body',
-  preload: false,
+  variable: '--font-latin',
 });
 
-// 価格・日時・枚数などの数字：チケットの印字のような細長い数字
-const num = Barlow_Condensed({
-  weight: ['500', '600'],
+const jp = Noto_Sans_JP({
+  weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-num',
+  variable: '--font-jp',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -27,12 +26,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#ffffff',
+  themeColor: '#f5f5f7',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={`${body.variable} ${num.variable}`}>
+    <html lang="ja" className={`${latin.variable} ${jp.variable}`}>
       <body>{children}</body>
     </html>
   );

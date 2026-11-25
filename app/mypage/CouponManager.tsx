@@ -143,8 +143,8 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
           {error && !form && <Notice tone="danger">{error}</Notice>}
 
           {form && (
-            <div className="rounded-panel border border-brand-line bg-paper p-5 sm:p-6">
-              <h3 className="text-lg font-bold">{form.id ? 'クーポンを直す' : '新しいクーポン'}</h3>
+            <div className="rounded-panel bg-surface p-5 sm:p-6">
+              <h3 className="text-lg font-semibold">{form.id ? 'クーポンを直す' : '新しいクーポン'}</h3>
               <div className="mt-5 max-w-prose space-y-6">
                 <Field label="お店の名前" htmlFor="c-shop" required>
                   <input id="c-shop" className="field-input" value={form.shopName} maxLength={60} onChange={(e) => setForm({ ...form, shopName: e.target.value })} />
@@ -183,13 +183,13 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
               {coupons.map((c) => {
                 const st = couponState(c);
                 return (
-                  <li key={c.id} className="flex flex-col rounded-panel border border-line bg-paper">
+                  <li key={c.id} className="flex flex-col rounded-panel bg-surface">
                     <div className="px-5 pt-4 pb-4">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm text-ink-2">{c.shop_name}</span>
                         <Badge tone={st.tone}>{st.label}</Badge>
                       </div>
-                      <p className="mt-1 text-lg font-bold leading-snug">{c.benefit_title}</p>
+                      <p className="mt-1 text-lg font-semibold leading-snug">{c.benefit_title}</p>
                       <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">{c.benefit_detail}</p>
                       {c.review_status === 'rejected' && c.review_note && (
                         <Notice tone="danger" className="mt-3" title="差し戻しの理由">
@@ -219,7 +219,7 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
                     </div>
                     {confirmId === c.id && (
                       <div className="border-t border-line px-5 py-3">
-                        <p className="text-[15px] font-bold">
+                        <p className="text-[15px] font-semibold">
                           {c.is_published ? 'このクーポンの掲載を止めますか？' : 'このクーポンの掲載を再開しますか？'}
                         </p>
                         <div className="mt-2 flex gap-2">

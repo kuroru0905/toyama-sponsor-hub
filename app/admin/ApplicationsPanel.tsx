@@ -123,16 +123,16 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <Mic2 className="h-5 w-5 text-warn" />
-          <h2 className="text-lg sm:text-xl font-bold text-ink">出演応募</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-ink">出演応募</h2>
           {openCount > 0 && (
-            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold text-accent-ink">未対応 {openCount}</span>
+            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-semibold text-accent-ink">未対応 {openCount}</span>
           )}
         </div>
         <div className="flex gap-2">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as 'open' | 'all')}
-            className="rounded-ctl border border-line-strong bg-paper px-3 py-2 text-base font-bold text-ink"
+            className="rounded-ctl border border-line-strong bg-paper px-3 py-2 text-base font-semibold text-ink"
           >
             <option value="open">未対応のみ</option>
             <option value="all">すべて</option>
@@ -140,7 +140,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
           <button
             type="button"
             onClick={load}
-            className="inline-flex items-center gap-1.5 rounded-ctl border border-line-strong bg-paper px-3 py-2 text-sm font-bold text-ink hover:bg-surface"
+            className="inline-flex items-center gap-1.5 rounded-ctl border border-line-strong bg-paper px-3 py-2 text-sm font-semibold text-ink hover:bg-surface"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             更新
@@ -154,7 +154,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
       {loading ? (
         <p className="text-sm text-ink-2">読み込み中...</p>
       ) : shown.length === 0 ? (
-        <div className="rounded-panel border border-line bg-paper p-6 text-sm text-ink-2">
+        <div className="rounded-panel bg-paper shadow-card p-6 text-sm text-ink-2">
           {filter === 'open' ? '未対応の出演応募はありません。' : '出演応募はまだありません。'}
         </div>
       ) : (
@@ -164,16 +164,16 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
             const expanded = openId === a.id;
             const sponsorInactive = a.sponsor_status !== 'active';
             return (
-              <div key={a.id} className="rounded-panel border border-line bg-paper p-4 sm:p-5">
+              <div key={a.id} className="rounded-panel bg-paper shadow-card p-4 sm:p-5">
                 <button type="button" onClick={() => setOpenId(expanded ? null : a.id)} className="w-full text-left">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-base font-bold text-ink">
+                    <div className="text-base font-semibold text-ink">
                       {a.act_name}
                       <span className="ml-2 text-sm font-normal text-ink-2">
                         {ACT_TYPES[a.act_type] ?? a.act_type}・{a.member_count}人
                       </span>
                     </div>
-                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${st.color}`}>{st.label}</span>
+                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${st.color}`}>{st.label}</span>
                   </div>
                   <div className="mt-1 text-sm text-ink-2">
                     {a.event_title ?? '希望イベント指定なし'} ／ {formatDateTime(a.created_at)} 応募 ／ 契約：{a.sponsor_name}
@@ -189,11 +189,11 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                       </p>
                     )}
                     <dl className="grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-x-4 gap-y-2 text-ink">
-                      <dt className="text-sm font-bold text-ink-2">代表者</dt>
+                      <dt className="text-sm font-semibold text-ink-2">代表者</dt>
                       <dd>{a.representative_name}（{a.applicant_email}）</dd>
                       {a.member_count > 1 && (
                         <>
-                          <dt className="text-sm font-bold text-ink-2">メンバー</dt>
+                          <dt className="text-sm font-semibold text-ink-2">メンバー</dt>
                           <dd>
                             {a.members && a.members.length > 0 ? (
                               <ul className="space-y-1">
@@ -220,16 +220,16 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                           </dd>
                         </>
                       )}
-                      <dt className="text-sm font-bold text-ink-2">ジャンル</dt>
+                      <dt className="text-sm font-semibold text-ink-2">ジャンル</dt>
                       <dd>{a.genre || '-'}</dd>
-                      <dt className="text-sm font-bold text-ink-2">音源・SNS</dt>
+                      <dt className="text-sm font-semibold text-ink-2">音源・SNS</dt>
                       <dd className="whitespace-pre-wrap break-all">{a.links || '-'}</dd>
-                      <dt className="text-sm font-bold text-ink-2">PR</dt>
+                      <dt className="text-sm font-semibold text-ink-2">PR</dt>
                       <dd className="whitespace-pre-wrap">{a.message || '-'}</dd>
                     </dl>
 
                     <div>
-                      <label className="block text-sm font-bold text-ink mb-1.5">応募者へのメッセージ（採用・見送りのメールに載ります）</label>
+                      <label className="block text-sm font-semibold text-ink mb-1.5">応募者へのメッセージ（採用・見送りのメールに載ります）</label>
                       <textarea
                         className="w-full min-h-[80px] rounded-ctl border border-line-strong bg-paper px-4 py-3 text-base sm:text-sm text-ink focus:border-brand focus:outline-none"
                         value={notes[a.id] ?? a.admin_note ?? ''}
@@ -244,7 +244,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                         type="button"
                         disabled={busyId === a.id}
                         onClick={() => update(a, 'reviewing')}
-                        className="rounded-ctl border border-warn-line bg-warn-soft px-4 py-3 text-sm font-bold text-warn hover:bg-warn-soft disabled:opacity-50"
+                        className="rounded-ctl border border-warn-line bg-warn-soft px-4 py-3 text-sm font-semibold text-warn hover:bg-warn-soft disabled:opacity-50"
                       >
                         選考中にする
                       </button>
@@ -252,7 +252,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                         type="button"
                         disabled={busyId === a.id}
                         onClick={() => update(a, 'accepted')}
-                        className="rounded-ctl bg-brand px-4 py-3 text-sm font-bold text-brand-ink hover:bg-brand-hover disabled:opacity-50"
+                        className="rounded-ctl bg-brand px-4 py-3 text-sm font-semibold text-brand-ink hover:bg-brand-hover disabled:opacity-50"
                       >
                         採用（メール送信）
                       </button>
@@ -260,7 +260,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                         type="button"
                         disabled={busyId === a.id}
                         onClick={() => update(a, 'declined')}
-                        className="rounded-ctl border border-danger-line bg-danger-soft px-4 py-3 text-sm font-bold text-danger hover:bg-danger-soft disabled:opacity-50"
+                        className="rounded-ctl border border-danger-line bg-danger-soft px-4 py-3 text-sm font-semibold text-danger hover:bg-danger-soft disabled:opacity-50"
                       >
                         見送り（メール送信）
                       </button>

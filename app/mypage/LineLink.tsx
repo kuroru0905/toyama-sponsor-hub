@@ -106,7 +106,7 @@ export default function LineLink({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex flex-wrap items-center gap-2 text-[15px]">
               <Badge tone="ok">連携済み</Badge>
-              {link.display_name && <span className="font-bold">{link.display_name}</span>}
+              {link.display_name && <span className="font-semibold">{link.display_name}</span>}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button variant="secondary" size="sm" onClick={issue} disabled={busy}>
@@ -138,7 +138,7 @@ export default function LineLink({
         )}
 
         {url && (
-          <div className="rounded-panel border border-line bg-paper p-4">
+          <div className="rounded-panel bg-surface p-4">
             <p className="text-[15px] leading-relaxed">
               スマホのLINEでこのリンクを開いてください。10分間、1回だけ使えます。パソコンで見ている場合は、リンクをコピーして自分のLINEに送ると開けます。
             </p>
