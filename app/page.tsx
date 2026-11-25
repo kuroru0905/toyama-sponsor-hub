@@ -306,9 +306,9 @@ export default function SponsorHubPage() {
               <a
                 key={plan.id}
                 href={`#plan-${plan.id}`}
-                className="shrink-0 rounded-full border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-bold text-zinc-200"
+                className="flex-1 shrink-0 text-center rounded-full border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-bold text-zinc-200"
               >
-                {plan.name.replace('枠', '')} ¥{plan.price}
+                {({ corporate: '企業', store: '店舗', fan: 'ファン' } as Record<string, string>)[plan.id]} ¥{plan.price}
               </a>
             ))}
           </div>
