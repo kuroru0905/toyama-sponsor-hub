@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { sendMail } from '@/lib/mailer';
+import { broadcastLine, retryKeyFor } from '@/lib/lineMessaging';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,7 +79,8 @@ const footer = [
   '外山企画',
 ].join('\n');
 
-// スポンサー向けのお知らせ（Supabase の pg_cron から5分おきに呼ばれる）
+// お知らせ：スポンサーにはメール、LINE公式アカウントの友だち全員にはLINEで一斉配信
+// （Supabase の pg_cron から5分おきに呼ばれる）
 // ・出演者募集が始まった
 // ・チケットが買えるようになった（先行販売があれば先行販売の開始、なければ販売開始）
 async function run(req: NextRequest) {
@@ -132,6 +134,22 @@ async function run(req: NextRequest) {
           footer,
         ].join('\n')
       );
+      await broadcastLine(
+        [
+          `🎤 出演者募集｜${ev.title}`,
+          '',
+          `開演：${fmt(ev.starts_at)}`,
+          `会場：${ev.venue}`,
+          `応募締切：${fmt(ev.recruit_deadline as string)}`,
+          '',
+          'バンド・DJ・パフォーマンスの出演者を募集します！',
+          'スポンサー（サポーター）の方は、マイページの「出演応募」から応募できます。',
+          `▶ ${SITE_URL}/mypage`,
+          '',
+          `スポンサーは月300円のファンサポーター枠から：${SITE_URL}`,
+        ].join('\n'),
+        retryKeyFor(ev.id, 'recruit')
+      );
       sent.push(`recruit:${ev.id}`);
     }
 
@@ -168,6 +186,25 @@ async function run(req: NextRequest) {
           ]
             .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
             .join('\n')
+        );
+        await broadcastLine(
+          [
+            isPresale ? `🎫 スポンサー先行販売スタート｜${ev.title}` : `🎫 チケット販売スタート｜${ev.title}`,
+            '',
+            `開演：${fmt(ev.starts_at)}`,
+            `会場：${ev.venue}`,
+            `料金：${price}`,
+            isPresale && ev.general_sale_start ? `一般販売：${fmt(ev.general_sale_start)}から` : '',
+            '',
+            isPresale
+              ? 'スポンサー（サポーター）の方は、マイページで「LINEと連携する」を済ませると先行購入できます。'
+              : 'このトークのメニュー「チケット」から購入できます。',
+            `▶ ${LIFF_URL}`,
+            isPresale ? `\nスポンサーは月300円のファンサポーター枠から：${SITE_URL}` : '',
+          ]
+            .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
+            .join('\n'),
+          retryKeyFor(ev.id, 'sale')
         );
         sent.push(`sale:${ev.id}`);
       }
