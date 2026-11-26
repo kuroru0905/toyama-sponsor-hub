@@ -71,10 +71,11 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: '権限がありません' }, { status: 403 });
     }
 
+    const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
     const { error: updateErr } = await supabaseAdmin
       .from('sponsors')
       .update({
-        display_name: displayName?.trim() || 'サポーター',
+        display_name: str(displayName, 60) || 'サポーター',
         is_public: Boolean(isPublic),
         updated_at: new Date().toISOString(),
       })
@@ -88,8 +89,8 @@ export async function PATCH(req: NextRequest) {
       await supabaseAdmin
         .from('sponsor_assets')
         .update({
-          industry: industry ?? '',
-          address: address ?? '',
+          industry: str(industry, 60),
+          address: str(address, 100),
         })
         .eq('sponsor_id', sponsorId);
     }

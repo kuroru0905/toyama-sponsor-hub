@@ -120,10 +120,12 @@ export default function MyPage() {
     const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/mypage` : undefined;
     const { error } = await supabase.auth.signInWithOtp({
       email: loginEmail.trim(),
-      options: { emailRedirectTo: redirectUrl },
+      // 登録済みのメールアドレスにだけ送る（知らないアドレスにログインメールを送りつけられないように）
+      options: { emailRedirectTo: redirectUrl, shouldCreateUser: false },
     });
     setSendingMail(false);
-    if (error) setLoginError('メールを送れませんでした。メールアドレスを確かめて、少し時間をおいてからもう一度お試しください。');
+    const notRegistered = !!error && /signups not allowed|not found|otp_disabled/i.test(error.message);
+    if (error && !notRegistered) setLoginError('メールを送れませんでした。メールアドレスを確かめて、少し時間をおいてからもう一度お試しください。');
     else setMailSent(true);
   };
 
@@ -228,7 +230,7 @@ export default function MyPage() {
               <div>
                 <h2 className="text-lg font-semibold">メールを送りました</h2>
                 <p className="mt-2 leading-relaxed text-ink-2">
-                  <span className="font-semibold text-ink">{loginEmail}</span> に届いたメールの「ログイン」リンクを開くと、このページに戻ってきます。
+                  <span className="font-semibold text-ink">{loginEmail}</span> がお申し込みのときのメールアドレスなら、ログイン用のメールが届きます。メールの「ログイン」リンクを開くと、このページに戻ってきます。届かないときは、お申し込みのときのアドレスか確かめてください。
                 </p>
                 <p className="mt-3 text-sm text-ink-2">届かないときは、迷惑メールのフォルダも確認してください。</p>
                 <Button variant="ghost" className="mt-4 -ml-2" onClick={() => setMailSent(false)}>

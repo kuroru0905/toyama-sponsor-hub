@@ -79,10 +79,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/admin` : undefined;
     const { error } = await supabase.auth.signInWithOtp({
       email: loginEmail.trim(),
-      options: { emailRedirectTo: redirectUrl },
+      // 登録済みのメールアドレスにだけ送る（知らないアドレスにログインメールを送りつけられないように）
+      options: { emailRedirectTo: redirectUrl, shouldCreateUser: false },
     });
     setSendingMail(false);
-    if (error) setLoginError('ログイン用のメールを送れませんでした。少し時間をおいてもう一度お試しください。');
+    const notRegistered = !!error && /signups not allowed|not found|otp_disabled/i.test(error.message);
+    if (error && !notRegistered) setLoginError('ログイン用のメールを送れませんでした。少し時間をおいてもう一度お試しください。');
     else setMailSent(true);
   };
 
@@ -119,7 +121,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="mt-8 rounded-panel bg-paper shadow-card p-5 sm:p-6">
           {mailSent ? (
             <p className="leading-relaxed">
-              <span className="font-semibold">{loginEmail}</span> にログイン用のリンクを送りました。メールのリンクを開いてください。
+              <span className="font-semibold">{loginEmail}</span> が管理者として登録されていれば、ログイン用のリンクが届きます。メールのリンクを開いてください。
             </p>
           ) : (
             <form onSubmit={handleSendMagicLink} className="space-y-5">

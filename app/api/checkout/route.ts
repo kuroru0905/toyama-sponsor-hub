@@ -14,26 +14,82 @@ const PRICE_MAP: Record<string, string | undefined> = {
   fan: process.env.STRIPE_PRICE_FAN,
 };
 
+// 文字列の項目だけ受け取り、前後の空白を除いて長さを制限する（型の違う値・長すぎる値は 400）
+function text(body: Record<string, unknown>, key: string, label: string, max: number, required = false): string {
+  const v = body[key];
+  if (v === undefined || v === null || v === '') {
+    if (required) throw new InputError(`${label}を入力してください`);
+    return '';
+  }
+  if (typeof v !== 'string') throw new InputError(`${label}の形式が正しくありません`);
+  const s = v.trim();
+  if (required && !s) throw new InputError(`${label}を入力してください`);
+  if (s.length > max) throw new InputError(`${label}は${max}文字以内で入力してください`);
+  return s;
+}
+class InputError extends Error {}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SAME_EMAIL_WINDOW_MS = 10 * 60 * 1000; // 同じメールアドレスからの申込は10分に1回まで
+const INVOICE_HOURLY_LIMIT = 10; // 請求書払いの申込は全体で1時間に10件まで（請求書メールの悪用を防ぐ）
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const {
-      tier,
-      applicantName,
-      displayName,
-      isPublic,
-      email,
-      paymentMethod,
-      industry,
-      address,
-      contactNote,
-    } = body;
-
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: '申込内容を読み取れませんでした' }, { status: 400 });
+    }
+    // プランは決まった3つだけ（"constructor" などの名前で通り抜けないよう、自分のキーか確かめる）
+    const tier = typeof body.tier === 'string' && Object.prototype.hasOwnProperty.call(PRICE_MAP, body.tier) ? body.tier : '';
     if (!tier || !PRICE_MAP[tier]) {
       return NextResponse.json({ error: '無効なプランが指定されました' }, { status: 400 });
     }
-    if (!applicantName || !email) {
-      return NextResponse.json({ error: '必須項目が入力されていません' }, { status: 400 });
+
+    let applicantName: string, displayName: string, email: string, industry: string, address: string, contactNote: string;
+    try {
+      applicantName = text(body, 'applicantName', 'お名前（会社名・店名）', 60, true);
+      displayName = text(body, 'displayName', '掲載名', 60);
+      email = text(body, 'email', 'メールアドレス', 254, true).toLowerCase();
+      industry = text(body, 'industry', '業種', 60);
+      address = text(body, 'address', 'エリア', 100);
+      contactNote = text(body, 'contactNote', '備考', 500);
+      if (!EMAIL_RE.test(email)) throw new InputError('メールアドレスの形式が正しくありません');
+    } catch (err) {
+      if (err instanceof InputError) return NextResponse.json({ error: err.message }, { status: 400 });
+      throw err;
+    }
+    const isPublic = body.isPublic === true;
+    const paymentMethod = body.paymentMethod === 'invoice' ? 'invoice' : 'card';
+
+    // 連続申込の制限：同じメールアドレスで10分以内の申込があれば断る
+    {
+      const since = new Date(Date.now() - SAME_EMAIL_WINDOW_MS).toISOString();
+      const { count } = await supabaseAdmin
+        .from('sponsors')
+        .select('id', { count: 'exact', head: true })
+        .eq('email', email)
+        .gte('created_at', since);
+      if ((count ?? 0) > 0) {
+        return NextResponse.json(
+          { error: '同じメールアドレスでのお申し込みを受け付けたばかりです。届いたメールをご確認ください（10分ほどあけて再度お試しいただけます）' },
+          { status: 429 }
+        );
+      }
+    }
+    // 請求書払い：全体で1時間あたりの件数を制限（他人のメールアドレスに請求書を送りつける悪用を防ぐ）
+    if (paymentMethod === 'invoice') {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await supabaseAdmin
+        .from('sponsors')
+        .select('id', { count: 'exact', head: true })
+        .eq('payment_method', 'invoice')
+        .gte('created_at', since);
+      if ((count ?? 0) >= INVOICE_HOURLY_LIMIT) {
+        return NextResponse.json(
+          { error: 'ただいま請求書払いのお申し込みが混み合っています。時間をおくか、カード払いでお申し込みください' },
+          { status: 429 }
+        );
+      }
     }
 
     const cap = TIER_CAPS[tier];
@@ -54,17 +110,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const finalDisplayName = displayName?.trim() ? displayName.trim() : applicantName.trim();
+    const finalDisplayName = displayName || applicantName;
 
     const { data: sponsor, error: dbError } = await supabaseAdmin
       .from('sponsors')
       .insert({
         tier,
-        applicant_name: applicantName.trim(),
+        applicant_name: applicantName,
         display_name: finalDisplayName,
-        is_public: Boolean(isPublic),
-        email: email.trim(),
-        payment_method: paymentMethod === 'invoice' ? 'invoice' : 'card',
+        is_public: isPublic,
+        email,
+        payment_method: paymentMethod,
         status: 'pending',
       })
       .select()
@@ -78,18 +134,27 @@ export async function POST(req: NextRequest) {
     if (tier === 'corporate' || tier === 'store') {
       await supabaseAdmin.from('sponsor_assets').insert({
         sponsor_id: sponsor.id,
-        industry: industry || '',
-        address: address || '',
-        contact_note: contactNote || '',
+        industry,
+        address,
+        contact_note: contactNote,
       });
+    }
+
+    // マイページにログインできるよう、ログイン用のユーザーを作っておく
+    // （ログインのメールは登録済みのアドレスにしか送らない設定にしているため。すでにあれば何もしない）
+    {
+      const { error: userError } = await supabaseAdmin.auth.admin.createUser({ email, email_confirm: true });
+      if (userError && !/already|registered|exists/i.test(userError.message)) {
+        console.error('ログイン用ユーザーの作成に失敗しました:', userError.message);
+      }
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
     if (paymentMethod === 'invoice' && (tier === 'corporate' || tier === 'store')) {
       const customer = await stripe.customers.create({
-        email: email.trim(),
-        name: applicantName.trim(),
+        email,
+        name: applicantName,
         metadata: {
           sponsorId: sponsor.id,
           tier,
@@ -138,9 +203,9 @@ export async function POST(req: NextRequest) {
         {
           id: sponsor.id,
           tier,
-          applicant_name: applicantName.trim(),
+          applicant_name: applicantName,
           display_name: finalDisplayName,
-          email: email.trim(),
+          email,
           payment_method: 'invoice',
         },
         invoiceUrl
@@ -154,7 +219,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      customer_email: email.trim(),
+      customer_email: email,
       line_items: [
         {
           price: PRICE_MAP[tier]!,
