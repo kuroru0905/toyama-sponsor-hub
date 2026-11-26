@@ -71,6 +71,20 @@ export async function POST(req: NextRequest) {
           }
           await Promise.all(activated.map((s) => sendActivatedMails(s)));
         }
+
+        // LINEのチケット購入（同じStripeアカウント）：支払い済みなら注文を確定する。
+        // 購入者が決済後に画面を閉じても、チケットが「購入済み」になるための保険
+        const orderId = session.metadata?.order_id;
+        if (orderId && session.payment_status === 'paid') {
+          const { error } = await supabaseAdmin
+            .from('ticket_orders')
+            .update({ status: 'paid', paid_at: new Date().toISOString() })
+            .eq('id', orderId)
+            .eq('stripe_session_id', session.id)
+            .eq('status', 'pending');
+          // 23505 = 同じ公演をすでに購入済み（二重購入）。ほかのエラーはStripeに再送してもらう
+          if (error && error.code !== '23505') throw new Error(`チケット注文の確定に失敗しました（${error.message}）`);
+        }
         break;
       }
 

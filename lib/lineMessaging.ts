@@ -36,3 +36,34 @@ export function retryKeyFor(eventId: string, kind: 'recruit' | 'sale'): string {
   const h = (tag + hex).slice(0, 32).padEnd(32, '0');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
+
+// 1人に送る（公演中止・返金のお知らせなど）。月200通の無料枠に数えられる
+export async function pushLine(to: string, text: string, retryKey: string): Promise<boolean> {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    console.warn('[line] LINE_CHANNEL_ACCESS_TOKEN が未設定のため送信をスキップしました');
+    return false;
+  }
+  try {
+    const res = await fetch('https://api.line.me/v2/bot/message/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Line-Retry-Key': retryKey },
+      body: JSON.stringify({ to, messages: [{ type: 'text', text: text.slice(0, 5000) }] }),
+      cache: 'no-store',
+    });
+    if (res.ok || res.status === 409) return true;
+    console.error('[line] 個別送信に失敗しました', res.status, await res.text());
+    return false;
+  } catch (err) {
+    console.error('[line] 個別送信でエラー', err);
+    return false;
+  }
+}
+
+// 任意の文字列から、決まったUUID形式の再送キーを作る（同じ相手に同じお知らせを二重に送らない）
+export function retryKeyFromSeed(seed: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { createHash } = require('crypto') as typeof import('crypto');
+  const h = createHash('sha256').update(seed).digest('hex').slice(0, 32);
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}

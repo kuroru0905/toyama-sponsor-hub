@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, RefreshCw, Mic2 } from 'lucide-react';
 import { useAdmin } from '../AdminShell';
 
-type EventStats = { sold: number; entered: number; revenue: number; sent: number; applications: number };
+type EventStats = { sold: number; entered: number; revenue: number; sent: number; applications: number; refunded: number; refundedAmount: number; unnotified: number };
 
 const RECRUIT_ACT_OPTIONS = [
   { value: 'band', label: 'バンド' },
@@ -30,13 +30,15 @@ type AdminEvent = {
   general_sale_start: string | null;
   stream_enabled: boolean;
   stream_url: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
   stats: EventStats;
 };
 
 type Order = {
   id: string;
   display_name: string | null;
-  status: 'paid' | 'used';
+  status: 'paid' | 'used' | 'refunded';
   paid_at: string | null;
   used_at: string | null;
 };
@@ -46,6 +48,7 @@ type EventForm = {
   title: string;
   venue: string;
   starts_at: string; // datetime-local（日本時間）
+  orig_starts_at?: string; // 編集前の開演日時（過去の日時への変更を止めるため）
   price_jpy: string;
   capacity: string;
   description: string;
@@ -109,6 +112,11 @@ export default function AdminEventsPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState<string | null>(null); // 削除の確認を出しているイベント
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [cancelling, setCancelling] = useState<string | null>(null); // 中止の確認を出しているイベント
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelBusy, setCancelBusy] = useState(false);
 
   const api = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -148,6 +156,10 @@ export default function AdminEventsPage() {
   const save = async () => {
     if (!form) return;
     if (!form.starts_at) return setError('開演日時を入力してください');
+    // スマホの日時入力は、触ると「いまの時刻」が入ることがある。過去の開演はLINEに出ず販売もできないので止める
+    const startMs = new Date(localToIso(form.starts_at) as string).getTime();
+    if (startMs <= Date.now() && (!form.id || form.starts_at !== form.orig_starts_at))
+      return setError(`開演日時が過去になっています（${fmt(localToIso(form.starts_at))}）。日付と時刻を確かめてください`);
     if (form.recruit_performers && !form.recruit_deadline) return setError('出演者募集の締切を入力してください');
     if (form.recruit_performers && form.recruit_act_types.length === 0)
       return setError('募集する出演形態を1つ以上選んでください');
@@ -205,6 +217,38 @@ export default function AdminEventsPage() {
     }
   };
 
+  const remove = async (ev: AdminEvent) => {
+    setDeleteBusy(true);
+    try {
+      await api(`/api/admin/events/${ev.id}`, { method: 'DELETE' });
+      setDeleting(null);
+      flash(`「${ev.title}」を削除しました`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '削除に失敗しました');
+      setDeleting(null);
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
+  // 公演中止・全額返金（もう一度押すと、残りの返金・お知らせだけを続ける）
+  const cancelEvent = async (ev: AdminEvent) => {
+    setCancelBusy(true);
+    try {
+      const r = await api(`/api/admin/events/${ev.id}/cancel`, { method: 'POST', body: JSON.stringify({ reason: cancelReason }) });
+      setCancelling(null);
+      setCancelReason('');
+      const rest = r.failed > 0 || r.remaining > 0 ? `（${r.failed + r.remaining}件が残っています。もう一度「返金・お知らせを再実行」を押してください）` : '';
+      flash(`「${ev.title}」を中止にしました。返金 ${r.refunded}件 ${yen(r.refundedAmount)}・LINEでお知らせ ${r.notified}件${rest}`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '中止の処理に失敗しました');
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
   const showOrders = async (ev: AdminEvent) => {
     if (ordersOf === ev.id) return setOrdersOf(null);
     try {
@@ -253,6 +297,12 @@ export default function AdminEventsPage() {
             <div>
               <label className={labelClass}>開演日時（日本時間） *</label>
               <input type="datetime-local" className={inputClass} value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} />
+              {form.starts_at && (
+                <p className={`mt-1 text-sm ${new Date(localToIso(form.starts_at) as string).getTime() <= Date.now() ? 'text-danger' : 'text-ink-2'}`}>
+                  {fmt(localToIso(form.starts_at))} 開演
+                  {new Date(localToIso(form.starts_at) as string).getTime() <= Date.now() ? '（過去の日時です）' : ''}
+                </p>
+              )}
             </div>
             <div>
               <label className={labelClass}>価格（円） *</label>
@@ -436,6 +486,7 @@ export default function AdminEventsPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                   <span className="text-sm font-semibold text-brand">{fmt(ev.starts_at)} 開演</span>
                   <span className="flex flex-wrap gap-1.5">
+                    {ev.cancelled_at && <span className="rounded-full border border-danger-line bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">公演中止</span>}
                     {soldOut && <span className="rounded-full border border-line-strong bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">完売</span>}
                     {ev.recruit_performers && (
                       <span
@@ -474,6 +525,13 @@ export default function AdminEventsPage() {
                   )}
                 </p>
 
+                {ev.cancelled_at && (
+                  <p className="mb-3 text-sm text-danger">
+                    {fmt(ev.cancelled_at)} に中止{ev.cancel_reason ? `（${ev.cancel_reason}）` : ''}。返金 {ev.stats.refunded}件 {yen(ev.stats.refundedAmount)}
+                    {ev.stats.sold > 0 && `・未返金 ${ev.stats.sold}件`}
+                    {ev.stats.unnotified > 0 && `・LINE未通知 ${ev.stats.unnotified}件`}
+                  </p>
+                )}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
                   {[
                     ['販売', `${ev.stats.sold}${ev.capacity ? ` / ${ev.capacity}` : ''}枚`],
@@ -498,6 +556,7 @@ export default function AdminEventsPage() {
                         title: ev.title,
                         venue: ev.venue,
                         starts_at: isoToLocal(ev.starts_at),
+                        orig_starts_at: isoToLocal(ev.starts_at),
                         price_jpy: String(ev.price_jpy),
                         capacity: ev.capacity === null ? '' : String(ev.capacity),
                         description: ev.description,
@@ -540,7 +599,88 @@ export default function AdminEventsPage() {
                   >
                     {ordersOf === ev.id ? '購入者を閉じる' : '購入者一覧'}
                   </button>
+                  {(!ev.cancelled_at || ev.stats.sold > 0 || ev.stats.unnotified > 0) && (
+                    <button
+                      onClick={() => setCancelling(cancelling === ev.id ? null : ev.id)}
+                      className="rounded-lg border border-danger-line bg-paper px-4 py-2.5 text-sm font-semibold text-danger hover:bg-danger-soft"
+                    >
+                      {ev.cancelled_at ? '返金・お知らせを再実行' : '公演中止・全額返金'}
+                    </button>
+                  )}
+                  {ev.stats.sold === 0 && ev.stats.applications === 0 && ev.stats.refunded === 0 && (
+                    <button
+                      onClick={() => setDeleting(deleting === ev.id ? null : ev.id)}
+                      className="rounded-lg px-4 py-2.5 text-sm font-semibold text-danger hover:bg-danger-soft"
+                    >
+                      削除
+                    </button>
+                  )}
                 </div>
+
+                {cancelling === ev.id && (
+                  <div role="alertdialog" aria-label="公演中止・全額返金" className="mt-3 rounded-ctl border border-danger-line bg-danger-soft p-4">
+                    <p className="text-sm font-semibold text-danger">
+                      {ev.cancelled_at
+                        ? `残りの返金とLINEのお知らせを続けます（未返金 ${ev.stats.sold}件・未通知 ${ev.stats.unnotified}件）。`
+                        : `「${ev.title}」を中止にして、${ev.stats.sold}件 ${yen(ev.stats.revenue)} を全額返金します（入場済みも含む）。元に戻せません。`}
+                    </p>
+                    <ul className="mt-2 list-disc pl-5 text-sm text-ink-2">
+                      <li>LINEの画面に「公演中止」と出て、販売・入場・出演応募が止まります</li>
+                      <li>購入者にLINEで中止と返金を知らせます（無料枠の月200通に数えます）</li>
+                      <li>Stripeの決済手数料は戻りません。返金がカードに反映されるまで5〜10営業日</li>
+                    </ul>
+                    {!ev.cancelled_at && (
+                      <div className="mt-3">
+                        <label htmlFor={`reason-${ev.id}`} className="text-sm font-semibold text-ink">中止の理由（任意・お知らせに載ります）</label>
+                        <p className="text-sm text-ink-3">例：出演者の体調不良のため</p>
+                        <input
+                          id={`reason-${ev.id}`}
+                          className="mt-1 w-full rounded-ctl border border-line-strong bg-paper px-3 py-2.5 text-base text-ink"
+                          maxLength={200}
+                          value={cancelReason}
+                          onChange={(e) => setCancelReason(e.target.value)}
+                        />
+                      </div>
+                    )}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => cancelEvent(ev)}
+                        disabled={cancelBusy}
+                        className="rounded-lg bg-danger px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        {cancelBusy ? '返金しています…（閉じずにお待ちください）' : ev.cancelled_at ? '続ける' : '中止して全額返金する'}
+                      </button>
+                      <button
+                        onClick={() => setCancelling(null)}
+                        className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
+                      >
+                        やめる
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {deleting === ev.id && (
+                  <div role="alertdialog" aria-label="イベントの削除" className="mt-3 rounded-ctl border border-danger-line bg-danger-soft p-4">
+                    <p className="text-sm font-semibold text-danger">「{ev.title}」を削除します。元に戻せません。</p>
+                    <p className="mt-1 text-sm text-ink-2">誤って作ったイベント用です。購入・出演応募があるイベントは削除できないので、「非公開にする」を使ってください。</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => remove(ev)}
+                        disabled={deleteBusy}
+                        className="rounded-lg bg-danger px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        {deleteBusy ? '削除しています…' : '削除する'}
+                      </button>
+                      <button
+                        onClick={() => setDeleting(null)}
+                        className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
+                      >
+                        やめる
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {ordersOf === ev.id && (
                   <div className="mt-4 border-t border-line pt-4 overflow-x-auto">
@@ -560,8 +700,8 @@ export default function AdminEventsPage() {
                             <tr key={o.id} className="border-t border-line">
                               <td className="py-2 pr-3 text-ink">{o.display_name ?? '（名前なし）'}</td>
                               <td className="py-2 pr-3 text-ink whitespace-nowrap">{fmt(o.paid_at)}</td>
-                              <td className={`py-2 whitespace-nowrap font-semibold ${o.status === 'used' ? 'text-brand' : 'text-ink-3'}`}>
-                                {o.status === 'used' ? fmt(o.used_at) : '未入場'}
+                              <td className={`py-2 whitespace-nowrap font-semibold ${o.status === 'used' ? 'text-brand' : o.status === 'refunded' ? 'text-danger' : 'text-ink-3'}`}>
+                                {o.status === 'refunded' ? '返金済み' : o.status === 'used' ? fmt(o.used_at) : '未入場'}
                               </td>
                             </tr>
                           ))}

@@ -23,6 +23,7 @@ async function run(req: NextRequest) {
     .eq('stream_enabled', true)
     .is('stream_url', null)
     .is('stream_alert_sent_at', null)
+    .is('cancelled_at', null)
     .lte('starts_at', new Date(now + ALERT_BEFORE_MS).toISOString())
     .gt('starts_at', new Date(now - 6 * 60 * 60 * 1000).toISOString());
   if (error) {

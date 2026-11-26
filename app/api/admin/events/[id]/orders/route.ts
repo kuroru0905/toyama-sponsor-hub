@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
       .from('ticket_orders')
       .select('id, display_name, status, amount_jpy, paid_at, used_at')
       .eq('event_id', context.params.id)
-      .in('status', ['paid', 'used'])
+      .in('status', ['paid', 'used', 'refunded'])
       .order('paid_at', { ascending: true });
     if (error) throw new HttpError(500, '購入者一覧の取得に失敗しました');
     return NextResponse.json({ orders: data ?? [] });
