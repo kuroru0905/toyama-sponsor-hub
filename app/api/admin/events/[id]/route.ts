@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
   try {
     await requireAdminEmail(req);
+    if (!/^[0-9a-f-]{36}$/i.test(context.params.id)) throw new HttpError(404, 'イベントが見つかりません');
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const input = parseEventInput(body, true);
     if (Object.keys(input).length === 0) throw new HttpError(400, '変更する項目がありません');
@@ -30,6 +31,18 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
       new Date(String(input.starts_at)).getTime() <= Date.now()
     ) {
       throw new HttpError(400, '開演日時が過去になっています。日付と時刻を確かめてください');
+    }
+    // 出演者募集を始める・締切を変えるときは、締切が未来であること
+    {
+      const recruit = input.recruit_performers ?? current.recruit_performers;
+      const deadline = input.recruit_deadline !== undefined ? input.recruit_deadline : current.recruit_deadline;
+      const changed =
+        (input.recruit_performers === true && !current.recruit_performers) ||
+        (input.recruit_deadline !== undefined &&
+          new Date(String(input.recruit_deadline)).getTime() !== new Date(String(current.recruit_deadline)).getTime());
+      if (recruit && changed && deadline && new Date(String(deadline)).getTime() <= Date.now()) {
+        throw new HttpError(400, '出演者募集の締切が過去になっています。日付と時刻を確かめてください');
+      }
     }
 
     const { data, error } = await supabaseAdmin
@@ -54,6 +67,7 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
 export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
   try {
     await requireAdminEmail(req);
+    if (!/^[0-9a-f-]{36}$/i.test(context.params.id)) throw new HttpError(404, 'イベントが見つかりません');
     const id = context.params.id;
 
     const { data: ev, error: evError } = await supabaseAdmin.from('live_events').select('id, title').eq('id', id).maybeSingle();

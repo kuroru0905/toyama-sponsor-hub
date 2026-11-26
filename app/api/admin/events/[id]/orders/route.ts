@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest, context: { params: { id: string } }) {
   try {
     await requireAdminEmail(req);
+    if (!/^[0-9a-f-]{36}$/i.test(context.params.id)) throw new HttpError(404, 'イベントが見つかりません');
     const { data, error } = await supabaseAdmin
       .from('ticket_orders')
       .select('id, display_name, status, amount_jpy, paid_at, used_at')

@@ -50,6 +50,8 @@ type EventForm = {
   venue: string;
   starts_at: string; // datetime-local（日本時間）
   orig_starts_at?: string; // 編集前の開演日時（過去の日時への変更を止めるため）
+  orig_recruit_deadline?: string;
+  orig_recruit?: boolean;
   price_jpy: string;
   capacity: string;
   description: string;
@@ -182,6 +184,12 @@ export default function AdminEventsPage() {
     if (form.recruit_performers && !form.recruit_deadline) return setError('出演者募集の締切を入力してください');
     if (form.recruit_performers && form.recruit_act_types.length === 0)
       return setError('募集する出演形態を1つ以上選んでください');
+    if (
+      form.recruit_performers &&
+      new Date(localToIso(form.recruit_deadline) as string).getTime() <= Date.now() &&
+      (!form.id || !form.orig_recruit || form.recruit_deadline !== form.orig_recruit_deadline)
+    )
+      return setError('出演者募集の締切が過去になっています。日付と時刻を確かめてください');
     if (form.recruit_performers && form.recruit_deadline > form.starts_at)
       return setError('出演者募集の締切は、開演日時より前にしてください');
     if (form.presale_start && !form.general_sale_start)
@@ -576,6 +584,8 @@ export default function AdminEventsPage() {
                         venue: ev.venue,
                         starts_at: isoToLocal(ev.starts_at),
                         orig_starts_at: isoToLocal(ev.starts_at),
+                        orig_recruit_deadline: ev.recruit_deadline ? isoToLocal(ev.recruit_deadline) : '',
+                        orig_recruit: ev.recruit_performers,
                         price_jpy: String(ev.price_jpy),
                         capacity: ev.capacity === null ? '' : String(ev.capacity),
                         description: ev.description,
