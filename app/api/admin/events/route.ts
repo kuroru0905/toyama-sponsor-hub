@@ -77,6 +77,10 @@ export async function POST(req: NextRequest) {
     if (new Date(String(input.starts_at)).getTime() <= Date.now()) {
       throw new HttpError(400, '開演日時が過去になっています。日付と時刻を確かめてください');
     }
+    // 出演者募集の締切が過去だと、募集のお知らせも応募もできない
+    if (input.recruit_performers && input.recruit_deadline && new Date(String(input.recruit_deadline)).getTime() <= Date.now()) {
+      throw new HttpError(400, '出演者募集の締切が過去になっています。日付と時刻を確かめてください');
+    }
 
     const { data, error } = await supabaseAdmin.from('live_events').insert(input).select('id').single();
     if (error || !data) throw new HttpError(500, `イベントの作成に失敗しました${error ? `（${error.message}）` : ''}`);

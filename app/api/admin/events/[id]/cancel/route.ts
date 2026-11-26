@@ -31,6 +31,7 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
   const started = Date.now();
   try {
     await requireAdminEmail(req);
+    if (!/^[0-9a-f-]{36}$/i.test(context.params.id)) throw new HttpError(404, 'イベントが見つかりません');
     const id = context.params.id;
     const body = (await req.json().catch(() => ({}))) as { reason?: unknown; notify?: unknown };
     const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 200) : '';
