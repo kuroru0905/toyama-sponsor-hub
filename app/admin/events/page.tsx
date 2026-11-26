@@ -110,6 +110,8 @@ export default function AdminEventsPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState<string | null>(null); // 削除の確認を出しているイベント
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const api = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -207,6 +209,21 @@ export default function AdminEventsPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : '更新に失敗しました');
+    }
+  };
+
+  const remove = async (ev: AdminEvent) => {
+    setDeleteBusy(true);
+    try {
+      await api(`/api/admin/events/${ev.id}`, { method: 'DELETE' });
+      setDeleting(null);
+      flash(`「${ev.title}」を削除しました`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '削除に失敗しました');
+      setDeleting(null);
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -552,7 +569,37 @@ export default function AdminEventsPage() {
                   >
                     {ordersOf === ev.id ? '購入者を閉じる' : '購入者一覧'}
                   </button>
+                  {ev.stats.sold === 0 && ev.stats.applications === 0 && (
+                    <button
+                      onClick={() => setDeleting(deleting === ev.id ? null : ev.id)}
+                      className="rounded-lg px-4 py-2.5 text-sm font-semibold text-danger hover:bg-danger-soft"
+                    >
+                      削除
+                    </button>
+                  )}
                 </div>
+
+                {deleting === ev.id && (
+                  <div role="alertdialog" aria-label="イベントの削除" className="mt-3 rounded-ctl border border-danger-line bg-danger-soft p-4">
+                    <p className="text-sm font-semibold text-danger">「{ev.title}」を削除します。元に戻せません。</p>
+                    <p className="mt-1 text-sm text-ink-2">誤って作ったイベント用です。購入・出演応募があるイベントは削除できないので、「非公開にする」を使ってください。</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => remove(ev)}
+                        disabled={deleteBusy}
+                        className="rounded-lg bg-danger px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        {deleteBusy ? '削除しています…' : '削除する'}
+                      </button>
+                      <button
+                        onClick={() => setDeleting(null)}
+                        className="rounded-lg border border-line-strong bg-paper px-4 py-2.5 text-sm font-semibold text-ink hover:bg-surface"
+                      >
+                        やめる
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {ordersOf === ev.id && (
                   <div className="mt-4 border-t border-line pt-4 overflow-x-auto">

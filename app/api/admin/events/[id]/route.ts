@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { HttpError } from '@/lib/sponsorCoupons';
 import { requireAdminEmail } from '@/lib/adminAuth';
@@ -6,7 +7,7 @@ import { parseEventInput, checkEventTimeline, errorJson } from '@/lib/adminValid
 
 export const dynamic = 'force-dynamic';
 
-// イベント編集（送られた項目だけ）。削除はできない：販売をやめるときは非公開にする
+// イベント編集（送られた項目だけ）。誤って作ったイベントは DELETE で削除できる（購入・応募があるものは非公開に）
 export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
   try {
     await requireAdminEmail(req);
@@ -40,6 +41,65 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
     if (error) throw new HttpError(500, `イベントの更新に失敗しました（${error.message}）`);
     if (!data) throw new HttpError(404, 'イベントが見つかりません');
     return NextResponse.json({ id: data.id });
+  } catch (err) {
+    const { status, body } = errorJson(err);
+    return NextResponse.json(body, { status });
+  }
+}
+
+// イベント削除（誤って作ったイベント用）
+// - 支払い済み・入場済みのチケットがある、または出演応募があるイベントは消せない（非公開にする）
+// - 支払い途中（決済画面を開いただけ）の注文は、Stripeの決済画面を閉じてから注文ごと消す
+//   （消したあとに支払われて、チケットのないまま請求される事故を防ぐ）
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+  try {
+    await requireAdminEmail(req);
+    const id = context.params.id;
+
+    const { data: ev, error: evError } = await supabaseAdmin.from('live_events').select('id, title').eq('id', id).maybeSingle();
+    if (evError) throw new HttpError(500, `イベントの取得に失敗しました（${evError.message}）`);
+    if (!ev) throw new HttpError(404, 'イベントが見つかりません');
+
+    const { data: orders, error: ordersError } = await supabaseAdmin
+      .from('ticket_orders')
+      .select('id, status, stripe_session_id')
+      .eq('event_id', id);
+    if (ordersError) throw new HttpError(500, `注文の取得に失敗しました（${ordersError.message}）`);
+    if ((orders ?? []).some((o) => o.status !== 'pending')) {
+      throw new HttpError(409, '購入済みのチケットがあるため削除できません。販売をやめるときは「非公開にする」を使ってください');
+    }
+
+    const { count: apps, error: appsError } = await supabaseAdmin
+      .from('performer_applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', id);
+    if (appsError) throw new HttpError(500, `出演応募の確認に失敗しました（${appsError.message}）`);
+    if ((apps ?? 0) > 0) {
+      throw new HttpError(409, '出演応募があるため削除できません。「非公開にする」を使ってください');
+    }
+
+    // 支払い途中の注文：決済画面がまだ開いていれば閉じる。すでに支払われていたら消さない
+    const pending = (orders ?? []).filter((o) => o.stripe_session_id);
+    if (pending.length > 0) {
+      const key = process.env.STRIPE_SECRET_KEY;
+      if (!key) throw new HttpError(500, 'STRIPE_SECRET_KEY が未設定です');
+      const stripe = new Stripe(key, { apiVersion: '2025-02-24.acacia' });
+      for (const o of pending) {
+        const session = await stripe.checkout.sessions.retrieve(o.stripe_session_id as string);
+        if (session.payment_status === 'paid') {
+          throw new HttpError(409, '支払い済みの注文があるため削除できません。「非公開にする」を使ってください');
+        }
+        if (session.status === 'open') await stripe.checkout.sessions.expire(session.id);
+      }
+    }
+
+    if ((orders ?? []).length > 0) {
+      const { error } = await supabaseAdmin.from('ticket_orders').delete().eq('event_id', id).eq('status', 'pending');
+      if (error) throw new HttpError(500, `支払い途中の注文の削除に失敗しました（${error.message}）`);
+    }
+    const { error: delError } = await supabaseAdmin.from('live_events').delete().eq('id', id);
+    if (delError) throw new HttpError(500, `イベントの削除に失敗しました（${delError.message}）`);
+    return NextResponse.json({ deleted: true });
   } catch (err) {
     const { status, body } = errorJson(err);
     return NextResponse.json(body, { status });
