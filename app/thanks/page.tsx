@@ -7,7 +7,8 @@ import { buttonClass, Notice, Wordmark } from '@/components/ui';
 
 function ThanksContent() {
   const searchParams = useSearchParams();
-  const name = searchParams.get('name') || 'サポーター';
+  // URLの name は表示だけに使う。長い文章を表示させられないよう30文字までにする
+  const name = (searchParams.get('name') || 'サポーター').replace(/[\r\n]+/g, ' ').slice(0, 30);
   const method = searchParams.get('method');
   const lineUrl = process.env.NEXT_PUBLIC_LINE_ADD_URL || '#';
   const isInvoice = method === 'invoice';
