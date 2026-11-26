@@ -46,6 +46,7 @@ type EventForm = {
   title: string;
   venue: string;
   starts_at: string; // datetime-local（日本時間）
+  orig_starts_at?: string; // 編集前の開演日時（過去の日時への変更を止めるため）
   price_jpy: string;
   capacity: string;
   description: string;
@@ -148,6 +149,10 @@ export default function AdminEventsPage() {
   const save = async () => {
     if (!form) return;
     if (!form.starts_at) return setError('開演日時を入力してください');
+    // スマホの日時入力は、触ると「いまの時刻」が入ることがある。過去の開演はLINEに出ず販売もできないので止める
+    const startMs = new Date(localToIso(form.starts_at) as string).getTime();
+    if (startMs <= Date.now() && (!form.id || form.starts_at !== form.orig_starts_at))
+      return setError(`開演日時が過去になっています（${fmt(localToIso(form.starts_at))}）。日付と時刻を確かめてください`);
     if (form.recruit_performers && !form.recruit_deadline) return setError('出演者募集の締切を入力してください');
     if (form.recruit_performers && form.recruit_act_types.length === 0)
       return setError('募集する出演形態を1つ以上選んでください');
@@ -253,6 +258,12 @@ export default function AdminEventsPage() {
             <div>
               <label className={labelClass}>開演日時（日本時間） *</label>
               <input type="datetime-local" className={inputClass} value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} />
+              {form.starts_at && (
+                <p className={`mt-1 text-sm ${new Date(localToIso(form.starts_at) as string).getTime() <= Date.now() ? 'text-danger' : 'text-ink-2'}`}>
+                  {fmt(localToIso(form.starts_at))} 開演
+                  {new Date(localToIso(form.starts_at) as string).getTime() <= Date.now() ? '（過去の日時です）' : ''}
+                </p>
+              )}
             </div>
             <div>
               <label className={labelClass}>価格（円） *</label>
@@ -498,6 +509,7 @@ export default function AdminEventsPage() {
                         title: ev.title,
                         venue: ev.venue,
                         starts_at: isoToLocal(ev.starts_at),
+                        orig_starts_at: isoToLocal(ev.starts_at),
                         price_jpy: String(ev.price_jpy),
                         capacity: ev.capacity === null ? '' : String(ev.capacity),
                         description: ev.description,

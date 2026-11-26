@@ -22,6 +22,14 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
     if (currentError) throw new HttpError(500, `イベントの取得に失敗しました（${currentError.message}）`);
     if (!current) throw new HttpError(404, 'イベントが見つかりません');
     checkEventTimeline({ ...current, ...input });
+    // 開演日時を過去の日時に変えるのは止める（過去のイベントの説明などの修正はできる）
+    if (
+      input.starts_at !== undefined &&
+      new Date(String(input.starts_at)).getTime() !== new Date(String(current.starts_at)).getTime() &&
+      new Date(String(input.starts_at)).getTime() <= Date.now()
+    ) {
+      throw new HttpError(400, '開演日時が過去になっています。日付と時刻を確かめてください');
+    }
 
     const { data, error } = await supabaseAdmin
       .from('live_events')
