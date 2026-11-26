@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, RefreshCw, Mic2 } from 'lucide-react';
+import { Plus, RefreshCw, Mic2, MoreHorizontal } from 'lucide-react';
 import { useAdmin } from '../AdminShell';
 
 type EventStats = { sold: number; entered: number; revenue: number; sent: number; applications: number; refunded: number; refundedAmount: number; unnotified: number };
@@ -32,6 +32,7 @@ type AdminEvent = {
   stream_url: string | null;
   cancelled_at: string | null;
   cancel_reason: string | null;
+  cancel_notify: boolean;
   stats: EventStats;
 };
 
@@ -117,6 +118,24 @@ export default function AdminEventsPage() {
   const [cancelling, setCancelling] = useState<string | null>(null); // 中止の確認を出しているイベント
   const [cancelReason, setCancelReason] = useState('');
   const [cancelBusy, setCancelBusy] = useState(false);
+  const [cancelNotify, setCancelNotify] = useState(true); // 購入者にLINEで知らせるか
+  const [menuOf, setMenuOf] = useState<string | null>(null); // 「…」メニューを開いているイベント
+
+  // 「…」メニューは、外側を押すか Esc で閉じる
+  useEffect(() => {
+    if (!menuOf) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent && e.key !== 'Escape') return;
+      if (e instanceof MouseEvent && (e.target as HTMLElement).closest('[data-event-menu]')) return;
+      setMenuOf(null);
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [menuOf]);
 
   const api = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -236,11 +255,11 @@ export default function AdminEventsPage() {
   const cancelEvent = async (ev: AdminEvent) => {
     setCancelBusy(true);
     try {
-      const r = await api(`/api/admin/events/${ev.id}/cancel`, { method: 'POST', body: JSON.stringify({ reason: cancelReason }) });
+      const r = await api(`/api/admin/events/${ev.id}/cancel`, { method: 'POST', body: JSON.stringify({ reason: cancelReason, notify: cancelNotify }) });
       setCancelling(null);
       setCancelReason('');
       const rest = r.failed > 0 || r.remaining > 0 ? `（${r.failed + r.remaining}件が残っています。もう一度「返金・お知らせを再実行」を押してください）` : '';
-      flash(`「${ev.title}」を中止にしました。返金 ${r.refunded}件 ${yen(r.refundedAmount)}・LINEでお知らせ ${r.notified}件${rest}`);
+      flash(`「${ev.title}」を中止にしました。返金 ${r.refunded}件 ${yen(r.refundedAmount)}${cancelNotify ? `・LINEでお知らせ ${r.notified}件` : '（LINEのお知らせは送っていません）'}${rest}`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : '中止の処理に失敗しました');
@@ -529,7 +548,7 @@ export default function AdminEventsPage() {
                   <p className="mb-3 text-sm text-danger">
                     {fmt(ev.cancelled_at)} に中止{ev.cancel_reason ? `（${ev.cancel_reason}）` : ''}。返金 {ev.stats.refunded}件 {yen(ev.stats.refundedAmount)}
                     {ev.stats.sold > 0 && `・未返金 ${ev.stats.sold}件`}
-                    {ev.stats.unnotified > 0 && `・LINE未通知 ${ev.stats.unnotified}件`}
+                    {!ev.cancel_notify ? '・LINEのお知らせなし' : ev.stats.unnotified > 0 ? `・LINE未通知 ${ev.stats.unnotified}件` : ''}
                   </p>
                 )}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
@@ -599,22 +618,57 @@ export default function AdminEventsPage() {
                   >
                     {ordersOf === ev.id ? '購入者を閉じる' : '購入者一覧'}
                   </button>
-                  {(!ev.cancelled_at || ev.stats.sold > 0 || ev.stats.unnotified > 0) && (
-                    <button
-                      onClick={() => setCancelling(cancelling === ev.id ? null : ev.id)}
-                      className="rounded-lg border border-danger-line bg-paper px-4 py-2.5 text-sm font-semibold text-danger hover:bg-danger-soft"
-                    >
-                      {ev.cancelled_at ? '返金・お知らせを再実行' : '公演中止・全額返金'}
-                    </button>
-                  )}
-                  {ev.stats.sold === 0 && ev.stats.applications === 0 && ev.stats.refunded === 0 && (
-                    <button
-                      onClick={() => setDeleting(deleting === ev.id ? null : ev.id)}
-                      className="rounded-lg px-4 py-2.5 text-sm font-semibold text-danger hover:bg-danger-soft"
-                    >
-                      削除
-                    </button>
-                  )}
+                  {(() => {
+                    // めったに使わない操作は「…」メニューにまとめる
+                    const canCancel = !ev.cancelled_at || ev.stats.sold > 0 || ev.stats.unnotified > 0;
+                    const canDelete = ev.stats.sold === 0 && ev.stats.applications === 0 && ev.stats.refunded === 0;
+                    if (!canCancel && !canDelete) return null;
+                    const open = menuOf === ev.id;
+                    return (
+                      <div className="relative ml-auto" data-event-menu>
+                        <button
+                          onClick={() => setMenuOf(open ? null : ev.id)}
+                          aria-label={`「${ev.title}」のその他の操作`}
+                          aria-haspopup="menu"
+                          aria-expanded={open}
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-paper text-ink hover:bg-surface"
+                        >
+                          <MoreHorizontal className="h-5 w-5" />
+                        </button>
+                        {open && (
+                          <div role="menu" className="absolute right-0 z-20 mt-2 w-60 overflow-hidden rounded-panel bg-paper py-1 shadow-card-hover">
+                            {canCancel && (
+                              <button
+                                role="menuitem"
+                                onClick={() => {
+                                  setMenuOf(null);
+                                  setDeleting(null);
+                                  setCancelNotify(ev.cancelled_at ? ev.cancel_notify || ev.stats.unnotified > 0 : true);
+                                  setCancelling(ev.id);
+                                }}
+                                className="block w-full px-4 py-3 text-left text-sm font-semibold text-danger hover:bg-danger-soft"
+                              >
+                                {ev.cancelled_at ? '返金・お知らせを再実行' : '公演中止・全額返金'}
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                role="menuitem"
+                                onClick={() => {
+                                  setMenuOf(null);
+                                  setCancelling(null);
+                                  setDeleting(ev.id);
+                                }}
+                                className="block w-full px-4 py-3 text-left text-sm font-semibold text-danger hover:bg-danger-soft"
+                              >
+                                削除（誤って作ったイベント）
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {cancelling === ev.id && (
@@ -626,7 +680,7 @@ export default function AdminEventsPage() {
                     </p>
                     <ul className="mt-2 list-disc pl-5 text-sm text-ink-2">
                       <li>LINEの画面に「公演中止」と出て、販売・入場・出演応募が止まります</li>
-                      <li>購入者にLINEで中止と返金を知らせます（無料枠の月200通に数えます）</li>
+                      {cancelNotify && <li>購入者にLINEで中止と返金を知らせます（無料枠の月200通に数えます）</li>}
                       <li>Stripeの決済手数料は戻りません。返金がカードに反映されるまで5〜10営業日</li>
                     </ul>
                     {!ev.cancelled_at && (
@@ -642,6 +696,20 @@ export default function AdminEventsPage() {
                         />
                       </div>
                     )}
+                    <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-ctl bg-paper p-3">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 h-5 w-5 accent-brand"
+                        checked={cancelNotify}
+                        onChange={(e) => setCancelNotify(e.target.checked)}
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold text-ink">購入者にLINEでお知らせする</span>
+                        <span className="block text-sm text-ink-2">
+                          中止と返金を1人ずつ送ります（{ev.cancelled_at ? `未通知 ${ev.stats.unnotified}件` : `${ev.stats.sold}件`}・月200通の無料枠に数えます）。外せば送りません。あとから再実行で送れます
+                        </span>
+                      </span>
+                    </label>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button
                         onClick={() => cancelEvent(ev)}

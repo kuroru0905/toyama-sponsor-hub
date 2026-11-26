@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const [eventsRes, ordersRes, usesRes, appsRes] = await Promise.all([
       supabaseAdmin
         .from('live_events')
-        .select('id, title, venue, starts_at, price_jpy, capacity, description, is_published, recruit_performers, recruit_deadline, recruit_act_types, recruit_note, presale_start, general_sale_start, stream_enabled, stream_url, cancelled_at, cancel_reason, created_at')
+        .select('id, title, venue, starts_at, price_jpy, capacity, description, is_published, recruit_performers, recruit_deadline, recruit_act_types, recruit_note, presale_start, general_sale_start, stream_enabled, stream_url, cancelled_at, cancel_reason, cancel_notify, created_at')
         .order('starts_at', { ascending: true }),
       supabaseAdmin.from('ticket_orders').select('event_id, status, amount_jpy, refund_notified_at').in('status', ['paid', 'used', 'refunded']),
       // 入場特典クーポンの利用（イベント別の店舗送客数）

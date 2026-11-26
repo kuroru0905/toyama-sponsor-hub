@@ -13,7 +13,7 @@ export const maxDuration = 60;
 // 1. イベントを「中止」にする（LINEで販売・入場が止まり、「公演中止」と表示される）
 // 2. 決済画面を開いただけの注文は、決済画面を閉じて取り消す
 // 3. 支払い済み・入場済みのチケットを、Stripeで全額返金する（入場済みも含む）
-// 4. 購入者にLINEで中止と返金を知らせる
+// 4. 購入者にLINEで中止と返金を知らせる（送るかどうかは選べる。送らなかった分は、あとから再実行で送れる）
 // 途中で止まっても、もう一度押せば残りだけを続ける（返金・お知らせは二重にならない）
 const TIME_BUDGET_MS = 45_000;
 
@@ -32,8 +32,9 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
   try {
     await requireAdminEmail(req);
     const id = context.params.id;
-    const body = (await req.json().catch(() => ({}))) as { reason?: unknown };
+    const body = (await req.json().catch(() => ({}))) as { reason?: unknown; notify?: unknown };
     const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 200) : '';
+    const notify = body.notify !== false; // 省略時は送る
 
     const { data: ev, error: evError } = await supabaseAdmin
       .from('live_events')
@@ -47,10 +48,13 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
     if (!ev.cancelled_at) {
       const { error } = await supabaseAdmin
         .from('live_events')
-        .update({ cancelled_at: new Date().toISOString(), cancel_reason: reason || null })
+        .update({ cancelled_at: new Date().toISOString(), cancel_reason: reason || null, cancel_notify: notify })
         .eq('id', id)
         .is('cancelled_at', null);
       if (error) throw new HttpError(500, `中止の記録に失敗しました（${error.message}）`);
+    } else {
+      // 再実行：お知らせを送るかどうかの選択だけ更新する
+      await supabaseAdmin.from('live_events').update({ cancel_notify: notify }).eq('id', id);
     }
     const cancelReason = ev.cancelled_at ? ev.cancel_reason : reason || null;
 
@@ -113,7 +117,7 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
         }
 
         // 4. LINEでお知らせ（1人1回）
-        if (status === 'refunded' && !o.refund_notified_at && o.line_user_id) {
+        if (notify && status === 'refunded' && !o.refund_notified_at && o.line_user_id) {
           const text = [
             `【公演中止のお知らせ】${ev.title}`,
             `${fmt(ev.starts_at)} 開演の公演は中止になりました。`,
