@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { TIER_CAPS } from '@/lib/tierCaps';
+import { sendMail, adminEmails } from '@/lib/mailer';
 import { sendActivatedMails, type SponsorForMail } from '@/lib/sponsorMails';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -29,7 +31,28 @@ async function activate(match: { column: 'id' | 'stripe_subscription_id'; value:
     .in('status', ['pending', 'past_due'])
     .select(MAIL_FIELDS);
   if (error) throw error;
-  return (data ?? []) as SponsorForMail[];
+  const rows = (data ?? []) as SponsorForMail[];
+  for (const s of rows) await warnIfOverCap(s.tier);
+  return rows;
+}
+
+// 同時に申し込んだ人が両方支払うと、枠の上限（企業6社・店舗20店）を超えることがある。
+// 支払い済みの人を止めることはせず、管理者にメールで知らせる
+async function warnIfOverCap(tier: string) {
+  const cap = TIER_CAPS[tier];
+  if (cap === undefined) return;
+  const { count } = await supabaseAdmin
+    .from('sponsors')
+    .select('id', { count: 'exact', head: true })
+    .eq('tier', tier)
+    .eq('status', 'active');
+  if ((count ?? 0) > cap) {
+    await sendMail({
+      to: adminEmails(),
+      subject: `【要確認】${tier === 'corporate' ? '企業' : '店舗'}枠が上限を超えました（${count}/${cap}）`,
+      text: `同時のお申し込みが重なり、${tier === 'corporate' ? '企業プレミアム枠' : '店舗ローカル枠'}の契約数が上限（${cap}）を超えて ${count} 件になりました。\n管理画面のスポンサー一覧で確認してください。`,
+    }).catch((e) => console.error('[webhook] 上限超過の通知に失敗', e));
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -82,8 +105,24 @@ export async function POST(req: NextRequest) {
             .eq('id', orderId)
             .eq('stripe_session_id', session.id)
             .eq('status', 'pending');
-          // 23505 = 同じ公演をすでに購入済み（二重購入）。ほかのエラーはStripeに再送してもらう
-          if (error && error.code !== '23505') throw new Error(`チケット注文の確定に失敗しました（${error.message}）`);
+          if (error && error.code === '23505') {
+            // 二重購入（決済画面を2つ開いて両方払った等）：同じ公演のチケットはもう持っているので、2回目の支払いを自動で全額返金する
+            const pi = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
+            if (pi) {
+              await stripe.refunds.create(
+                { payment_intent: pi, reason: 'duplicate', metadata: { order_id: orderId, cause: 'duplicate_ticket' } },
+                { idempotencyKey: `duplicate-ticket-refund-${orderId}` }
+              );
+            }
+            await supabaseAdmin
+              .from('ticket_orders')
+              .update({ status: 'canceled' })
+              .eq('id', orderId)
+              .eq('status', 'pending');
+          } else if (error) {
+            // ほかのエラーはStripeに再送してもらう
+            throw new Error(`チケット注文の確定に失敗しました（${error.message}）`);
+          }
         }
         break;
       }

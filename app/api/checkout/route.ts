@@ -29,7 +29,9 @@ function text(body: Record<string, unknown>, key: string, label: string, max: nu
 }
 class InputError extends Error {}
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// 半角の英数字と記号だけ（引用符・全角・国際化ドメインは受け付けない：メール送信ライブラリの誤配送の脆弱性対策）
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+const ALL_HOURLY_LIMIT = 30; // 申込は全体で1時間に30件まで（大量の仮登録を防ぐ）
 const SAME_EMAIL_WINDOW_MS = 10 * 60 * 1000; // 同じメールアドレスからの申込は10分に1回まで
 const INVOICE_HOURLY_LIMIT = 10; // 請求書払いの申込は全体で1時間に10件まで（請求書メールの悪用を防ぐ）
 
@@ -74,6 +76,17 @@ export async function POST(req: NextRequest) {
           { error: '同じメールアドレスでのお申し込みを受け付けたばかりです。届いたメールをご確認ください（10分ほどあけて再度お試しいただけます）' },
           { status: 429 }
         );
+      }
+    }
+    // 全体：1時間あたりの申込件数を制限
+    {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await supabaseAdmin
+        .from('sponsors')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', since);
+      if ((count ?? 0) >= ALL_HOURLY_LIMIT) {
+        return NextResponse.json({ error: 'ただいまお申し込みが混み合っています。時間をおいてもう一度お試しください' }, { status: 429 });
       }
     }
     // 請求書払い：全体で1時間あたりの件数を制限（他人のメールアドレスに請求書を送りつける悪用を防ぐ）

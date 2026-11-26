@@ -9,11 +9,13 @@ function str(body: Json, key: string, label: string, required: boolean, max = 40
     return undefined;
   }
   if (typeof v !== 'string') throw new HttpError(400, `${label}の形式が不正です`);
-  const s = v.trim();
+  // 公演名・会場などの1行の項目は改行を空白に（メールの件名やLINEの見出しに使うため）
+  const s = (SINGLE_LINE.indexOf(key) >= 0 ? v.replace(/[\r\n]+/g, ' ') : v).trim();
   if (required && !s) throw new HttpError(400, `${label}を入力してください`);
   if (s.length > max) throw new HttpError(400, `${label}は${max}文字以内で入力してください`);
   return s;
 }
+const SINGLE_LINE = ['title', 'venue', 'shop_name', 'benefit_title'];
 
 function bool(body: Json, key: string): boolean | undefined {
   const v = body[key];
