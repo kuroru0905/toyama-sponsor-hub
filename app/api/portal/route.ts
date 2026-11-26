@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error('POST /api/portal error:', err);
     return NextResponse.json(
-      { error: err.message || 'ポータル画面の作成に失敗しました' },
+      { error: 'お支払い管理の画面を開けませんでした。時間をおいてもう一度お試しください' },
       { status: 500 }
     );
   }
