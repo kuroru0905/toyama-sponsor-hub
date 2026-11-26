@@ -100,6 +100,7 @@ async function run(req: NextRequest) {
       'id, title, venue, starts_at, price_jpy, is_published, recruit_performers, recruit_deadline, recruit_act_types, recruit_note, presale_start, general_sale_start, recruit_notified_at, sale_notified_at'
     )
     .gt('starts_at', nowIso)
+    .is('cancelled_at', null)
     .or('recruit_notified_at.is.null,sale_notified_at.is.null');
   if (error) {
     console.error('[sponsor-notices]', error);

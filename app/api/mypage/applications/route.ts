@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
       .select('id, title, starts_at, recruit_deadline, recruit_act_types, recruit_note')
       // チケット公開前（先行販売より前）でも、募集をかけたイベントは応募できる
       .eq('recruit_performers', true)
+      .is('cancelled_at', null)
       .gt('recruit_deadline', new Date().toISOString())
       .order('starts_at', { ascending: true });
     if (eventsError) throw new HttpError(500, 'イベントの取得に失敗しました');
@@ -163,10 +164,11 @@ export async function POST(req: NextRequest) {
     if (!body.eventId) throw new HttpError(400, '出演するイベントを選んでください');
     const { data: ev } = await supabaseAdmin
       .from('live_events')
-      .select('id, title, recruit_performers, recruit_deadline, recruit_act_types')
+      .select('id, title, recruit_performers, recruit_deadline, recruit_act_types, cancelled_at')
       .eq('id', String(body.eventId))
       .maybeSingle();
     if (!ev) throw new HttpError(400, 'イベントが見つかりません');
+    if (ev.cancelled_at) throw new HttpError(400, 'このイベントは中止になりました');
     if (!ev.recruit_performers || !ev.recruit_deadline || new Date(ev.recruit_deadline).getTime() <= Date.now()) {
       throw new HttpError(400, 'このイベントの出演者募集は締め切りました');
     }

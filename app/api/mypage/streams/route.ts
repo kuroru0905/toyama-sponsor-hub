@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       .eq('is_published', true)
       .eq('stream_enabled', true)
       .gte('starts_at', since)
+      .is('cancelled_at', null)
       .order('starts_at', { ascending: true })
       .limit(5);
     if (error) throw new HttpError(500, '配信情報の取得に失敗しました');
