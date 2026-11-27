@@ -119,7 +119,7 @@ export default function CouponManager({ sponsorId, defaultShopName, accessToken,
     <Section
       id="coupons"
       title="LINEクーポン"
-      description="ライブに入場したお客さんのLINEに、入場特典として出るお店のクーポンです。お客さんは入場1回につき、掲載中のお店のクーポンを各店1回ずつ（ライブの翌日23:59まで）使えます。はしごしてもらう仕組みです。"
+      description="ライブに入場したお客さんのLINEに、入場特典として出るお店のクーポンです。お客さんは、協賛していただいたライブに入場すると、お店のクーポンを入場1回につき1回、ライブの3か月後まで使えます。ライブ帰りのはしごにも、後日の来店にも使われます。"
       action={
         isActive && !form ? (
           <Button
