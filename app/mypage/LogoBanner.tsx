@@ -9,7 +9,7 @@ interface Props {
   accessToken: string;
 }
 
-type State = { bannerName: string; displayName: string; logoUrl: string | null; isPublic: boolean; isActive: boolean };
+type State = { bannerName: string; displayName: string; logoAllowed: boolean; logoUrl: string | null; isPublic: boolean; isActive: boolean };
 
 export default function LogoBanner({ sponsorId, accessToken }: Props) {
   const [state, setState] = useState<State | null>(null);
@@ -74,8 +74,12 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
   return (
     <Section
       id="banner"
-      title="ロゴの掲示"
-      description="サイトの一番上を流れる「まちきっぷ パートナーズ」の列に、ロゴか名前を掲示します。ロゴがあればロゴ、なければ名前が出ます。"
+      title={state && !state.logoAllowed ? '名前の掲示' : 'ロゴの掲示'}
+      description={
+        state && !state.logoAllowed
+          ? 'サイトの一番上を流れる「まちきっぷ パートナーズ」の列に、お名前を掲示します（ファンサポーター枠は名前のみ）。'
+          : 'サイトの一番上を流れる「まちきっぷ パートナーズ」の列に、ロゴか名前を掲示します。ロゴがあればロゴ、なければ名前が出ます。'
+      }
     >
       {!state ? (
         <p className="text-ink-2">読み込んでいます…</p>
@@ -100,7 +104,8 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
             </div>
           </div>
 
-          {/* ロゴ */}
+          {/* ロゴ（企業・店舗枠のみ） */}
+          {state.logoAllowed && (
           <div>
             <p className="text-[15px] font-semibold text-ink">ロゴ画像</p>
             <p className="mt-1 text-sm text-ink-2">PNG・JPEG・WebP、1MBまで。横長で、背景が透明か白の画像がきれいに見えます（高さ28pxで表示）。</p>
@@ -123,9 +128,10 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
               )}
             </div>
           </div>
+          )}
 
           {/* 名前 */}
-          <Field htmlFor="bannerName" label="掲示する名前" hint={`ロゴがないときに表示します。空なら掲載名（${state.displayName}）を使います。40文字まで。`}>
+          <Field htmlFor="bannerName" label="掲示する名前" hint={`${state.logoAllowed ? 'ロゴがないときに表示します。' : ''}空なら掲載名（${state.displayName}）を使います。40文字まで。`}>
             <input id="bannerName" type="text" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} className="field-input" placeholder={state.displayName} />
           </Field>
           <Button onClick={saveName} disabled={busy !== null}>

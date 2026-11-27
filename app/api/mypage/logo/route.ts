@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const MAX_BYTES = 1024 * 1024; // 1MB
-const BANNER_TIERS = ['corporate', 'store'];
+const BANNER_TIERS = ['corporate', 'store', 'fan'];
+const LOGO_TIERS = ['corporate', 'store']; // ファン枠は名前だけ
 
 function handleError(err: unknown) {
   if (err instanceof HttpError) return NextResponse.json({ error: err.message }, { status: err.status });
@@ -29,7 +30,7 @@ async function ownSponsor(req: NextRequest) {
     .maybeSingle();
   if (error) throw new HttpError(500, 'データの取得に失敗しました');
   if (!data) throw new HttpError(403, '権限がありません');
-  if (BANNER_TIERS.indexOf(data.tier) === -1) throw new HttpError(403, 'ロゴの掲示は企業プレミアム枠・店舗ローカル枠の特典です');
+  if (BANNER_TIERS.indexOf(data.tier) === -1) throw new HttpError(403, '権限がありません');
   return data;
 }
 
@@ -48,7 +49,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       bannerName: s.banner_name ?? '',
       displayName: s.display_name,
-      logoUrl: logoPublicUrl(s.logo_path),
+      logoAllowed: LOGO_TIERS.indexOf(s.tier) !== -1,
+      logoUrl: LOGO_TIERS.indexOf(s.tier) !== -1 ? logoPublicUrl(s.logo_path) : null,
       isPublic: s.is_public,
       isActive: s.status === 'active',
     });
@@ -61,6 +63,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const s = await ownSponsor(req);
+    if (LOGO_TIERS.indexOf(s.tier) === -1) throw new HttpError(403, 'ファンサポーター枠は名前での掲示になります（ロゴは企業・店舗枠の特典です）');
     const form = await req.formData().catch(() => null);
     const file = form?.get('file');
     if (!file || typeof file === 'string') throw new HttpError(400, '画像ファイルを選んでください');

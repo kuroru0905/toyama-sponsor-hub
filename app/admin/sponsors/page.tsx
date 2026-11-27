@@ -34,6 +34,8 @@ interface AdminSponsor {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   created_at: string;
+  banner_name?: string | null;
+  logo_url?: string | null;
   sponsor_assets?: SponsorAsset[];
 }
 
@@ -67,6 +69,8 @@ export default function AdminSponsorsPage() {
   const [forbiddenError, setForbiddenError] = useState('');
   const [toastMsg, setToastMsg] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<{ id: string; target: 'logo' | 'name' } | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [tierFilter, setTierFilter] = useState<'all' | TierType>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'past_due' | 'canceled'>('all');
@@ -154,6 +158,32 @@ export default function AdminSponsorsPage() {
     }
   };
 
+  // 上部の横スクロールに出るロゴ・掲示名を外す
+  const handleRemoveBanner = async (sponsorId: string, target: 'logo' | 'name') => {
+    if (!token) return;
+    setUpdatingId(sponsorId);
+    setToastMsg('');
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/admin/sponsors/${sponsorId}/banner?target=${target}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setSponsors((prev) =>
+          prev.map((s) => (s.id === sponsorId ? (target === 'logo' ? { ...s, logo_url: null } : { ...s, banner_name: null }) : s))
+        );
+        setToastMsg(target === 'logo' ? 'ロゴを外しました。1分ほどで掲示が名前に変わります。' : '掲示名を掲載名に戻しました。');
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setErrorMsg(d.error || '外せませんでした');
+      }
+    } finally {
+      setUpdatingId(null);
+      setConfirmRemove(null);
+    }
+  };
+
   const stats = useMemo(() => {
     const activeList = sponsors.filter((s) => s.status === 'active');
     const monthlyRevenue = activeList.reduce(
@@ -209,6 +239,9 @@ export default function AdminSponsorsPage() {
         </button>
       </div>
 
+      {errorMsg && (
+        <div role="alert" className="mb-6 rounded-ctl border border-danger-line bg-danger-soft p-3.5 text-sm text-danger">{errorMsg}</div>
+      )}
       {forbiddenError && (
         <div className="mb-6 rounded-ctl border border-danger-line bg-danger-soft p-3.5 text-sm text-danger">{forbiddenError}</div>
       )}
@@ -350,6 +383,39 @@ export default function AdminSponsorsPage() {
                           </span>
                         </div>
 
+                        {/* 上部の横スクロールに出る内容 */}
+                        <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
+                          <span className="text-ink-2">掲示：</span>
+                          {s.tier !== 'fan' && s.logo_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={s.logo_url} alt={`${s.display_name}のロゴ`} className="h-7 w-auto max-w-[140px] rounded border border-line bg-paper object-contain p-0.5" />
+                          ) : (
+                            <span className="font-semibold text-ink">{s.banner_name || s.display_name}</span>
+                          )}
+                          {s.tier !== 'fan' && s.logo_url && (
+                            <BannerRemove
+                              label="ロゴを外す"
+                              confirmText="ロゴを消して名前の掲示にします"
+                              open={confirmRemove?.id === s.id && confirmRemove.target === 'logo'}
+                              busy={updatingId === s.id}
+                              onOpen={() => setConfirmRemove({ id: s.id, target: 'logo' })}
+                              onCancel={() => setConfirmRemove(null)}
+                              onConfirm={() => handleRemoveBanner(s.id, 'logo')}
+                            />
+                          )}
+                          {s.banner_name && (
+                            <BannerRemove
+                              label="掲示名を戻す"
+                              confirmText={`掲載名（${s.display_name}）に戻します`}
+                              open={confirmRemove?.id === s.id && confirmRemove.target === 'name'}
+                              busy={updatingId === s.id}
+                              onOpen={() => setConfirmRemove({ id: s.id, target: 'name' })}
+                              onCancel={() => setConfirmRemove(null)}
+                              onConfirm={() => handleRemoveBanner(s.id, 'name')}
+                            />
+                          )}
+                        </div>
+
                         {(asset?.industry || asset?.address) && (
                           <div className="flex flex-wrap gap-3 text-sm text-brand pt-0.5">
                             {asset?.industry && <span>業種：{asset.industry}</span>}
@@ -389,5 +455,53 @@ export default function AdminSponsorsPage() {
               </div>
             )}
     </div>
+  );
+}
+
+// 外すボタン（押すと、その場で確認を出す）
+function BannerRemove({
+  label,
+  confirmText,
+  open,
+  busy,
+  onOpen,
+  onCancel,
+  onConfirm,
+}: {
+  label: string;
+  confirmText: string;
+  open: boolean;
+  busy: boolean;
+  onOpen: () => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={busy}
+        className="rounded-full border border-danger-line bg-paper px-3 py-1 text-xs font-semibold text-danger hover:bg-danger-soft cursor-pointer"
+      >
+        {label}
+      </button>
+    );
+  }
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2 rounded-ctl border border-danger-line bg-danger-soft px-2.5 py-1 text-xs text-ink">
+      {confirmText}。よろしいですか？
+      <button
+        type="button"
+        onClick={onConfirm}
+        disabled={busy}
+        className="rounded-full bg-danger px-3 py-1 font-semibold text-white cursor-pointer"
+      >
+        {busy ? '処理中…' : label}
+      </button>
+      <button type="button" onClick={onCancel} className="rounded-full px-2 py-1 font-semibold text-ink-2 hover:underline cursor-pointer">
+        やめる
+      </button>
+    </span>
   );
 }
