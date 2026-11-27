@@ -1,11 +1,11 @@
 'use client';
 
-// サイト上部の横スクロール：まちきっぷ パートナーズ（企業・店舗）のロゴまたは名前を流す
+// サイト上部の横スクロール：まちきっぷ パートナーズのロゴまたは名前を流す（ファン枠は名前だけ）
 // DeepL のロゴ列と同じく、ロゴは灰色で静かに流れ、触れると色が戻って止まる。管理画面には出さない
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
-type Partner = { id: string; name: string; logoUrl: string | null; tier: 'corporate' | 'store' };
+type Partner = { id: string; name: string; logoUrl: string | null; tier: 'corporate' | 'store' | 'fan' };
 
 export default function PartnerMarquee() {
   const pathname = usePathname();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { logoPublicUrl } from '@/lib/partnerBanner';
 
 function getAllowedAdminEmails(): string[] {
   const raw = process.env.ADMIN_EMAILS || '';
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       adminEmail: auth.user.email,
-      sponsors: data || [],
+      sponsors: (data || []).map((s: any) => ({ ...s, logo_url: logoPublicUrl(s.logo_path ?? null) })),
     });
   } catch (err: any) {
     console.error('GET /api/admin error:', err);

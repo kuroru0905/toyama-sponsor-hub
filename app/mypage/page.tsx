@@ -362,7 +362,7 @@ function SponsorView({
     { id: 'profile', label: '掲載情報' },
     sponsor.status !== 'canceled' ? { id: 'line', label: 'LINE連携' } : null,
     isActive ? { id: 'stream', label: 'ライブ配信' } : null,
-    isBusiness ? { id: 'banner', label: 'ロゴ掲示' } : null,
+    sponsor.status !== 'canceled' ? { id: 'banner', label: isBusiness ? 'ロゴ掲示' : '名前の掲示' } : null,
     isBusiness ? { id: 'coupons', label: 'クーポン' } : null,
     { id: 'perform', label: '出演応募' },
     isActive && sponsor.tier === 'corporate' ? { id: 'inquiry', label: 'CM・動画の相談' } : null,
@@ -482,7 +482,7 @@ function SponsorView({
 
           {isActive && <LiveStreams sponsorId={sponsor.id} accessToken={session.access_token} />}
 
-          {isBusiness && <LogoBanner sponsorId={sponsor.id} accessToken={session.access_token} />}
+          {sponsor.status !== 'canceled' && <LogoBanner sponsorId={sponsor.id} accessToken={session.access_token} />}
 
           {isBusiness && (
             <CouponManager
