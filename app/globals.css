@@ -467,9 +467,9 @@ input[type='radio'] {
 .marquee-track {
   display: flex;
   align-items: center;
-  gap: 56px;
+  gap: 44px;
   width: max-content;
-  padding-right: 56px; /* 2本目の先頭との間隔を、項目どうしの間隔と同じにする */
+  padding-right: 44px; /* 2本目の先頭との間隔を、項目どうしの間隔と同じにする */
   margin: 0;
   list-style: none;
   animation: marquee-scroll var(--marquee-duration, 30s) linear infinite;

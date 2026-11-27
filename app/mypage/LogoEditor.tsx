@@ -59,19 +59,19 @@ export default function LogoEditor({ file, name, saving, onSave, onCancel, onErr
         <p className="mt-1 text-sm text-ink-2">周りの余白を切り取り、ほかのロゴと見た目の大きさがそろうように自動で整えました。気になるときはスライダーで調整してください。</p>
       </div>
 
-      {/* 拡大表示：点線が掲示される枠 */}
+      {/* 拡大表示（点線は掲示される高さ） */}
       <div className="flex justify-center rounded-ctl bg-surface p-4">
         <canvas
           ref={canvasRef}
           aria-label="調整中のロゴ（拡大表示）"
-          className="block h-auto w-full max-w-[420px] rounded-sm bg-paper outline-dashed outline-1 outline-line-strong"
+          className="block h-[84px] w-auto max-w-full rounded-sm bg-paper outline-dashed outline-1 outline-line-strong"
         />
       </div>
 
       {/* 実際の大きさ：ほかのパートナーと並べたとき */}
       <div>
         <p className="text-sm font-semibold text-ink">実際の大きさ（サイト上部での並び）</p>
-        <div className="mt-2 flex h-14 items-center gap-8 overflow-hidden rounded-ctl border border-line bg-paper px-5">
+        <div className="mt-2 flex h-14 items-center gap-11 overflow-hidden rounded-ctl border border-line bg-paper px-5">
           <span className="whitespace-nowrap text-[15px] font-semibold text-ink-2">まちの企業</span>
           {preview && (
             // eslint-disable-next-line @next/next/no-img-element
