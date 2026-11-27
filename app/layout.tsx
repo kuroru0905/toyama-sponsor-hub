@@ -19,8 +19,8 @@ const jp = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: '外山企画 | 登別地域還元型スポンサー＆サポーター募集',
-  description: '音楽×ITで若者と地元企業を結ぶ「地域還元型」エコシステム',
+  title: 'まちきっぷ｜ライブの入場券を、お店へのきっぷに。｜外山企画',
+  description: 'まちきっぷは、登別のライブの入場券がそのまま街のお店のクーポンになる、音楽とまちのスポンサー制度です。地元の企業・お店・ファンが月額で支え、若い人が主役のライブを続けて開きます。',
 };
 
 export const viewport: Viewport = {
