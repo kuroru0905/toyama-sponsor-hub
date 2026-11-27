@@ -3,6 +3,7 @@
 // マイページ：サイト上部の横スクロールに出すロゴ・名前（企業・店舗の特典）
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Field, Notice, Section } from '@/components/ui';
+import LogoEditor from './LogoEditor';
 
 interface Props {
   sponsorId: string;
@@ -17,6 +18,7 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
   const [busy, setBusy] = useState<'upload' | 'name' | 'remove' | null>(null);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'danger'; text: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [pending, setPending] = useState<File | null>(null); // 大きさ調整中の画像
   const url = `/api/mypage/logo?sponsorId=${encodeURIComponent(sponsorId)}`;
   const auth = { Authorization: `Bearer ${accessToken}` };
 
@@ -33,9 +35,18 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
     load();
   }, [load]);
 
+  // 画像を選んだら、まず大きさ調整の画面を出す（元画像は10MBまで受け付け、整えたPNGを送る）
+  const pick = (file: File) => {
+    setMsg(null);
+    if (fileRef.current) fileRef.current.value = '';
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return setMsg({ tone: 'danger', text: '画像は PNG・JPEG・WebP のいずれかにしてください' });
+    if (file.size > 10 * 1024 * 1024) return setMsg({ tone: 'danger', text: '画像は10MB以内にしてください' });
+    setPending(file);
+  };
+
   const upload = async (file: File) => {
     setMsg(null);
-    if (file.size > 1024 * 1024) return setMsg({ tone: 'danger', text: '画像は1MB以内にしてください' });
+    if (file.size > 1024 * 1024) return setMsg({ tone: 'danger', text: '整えた画像が1MBを超えました。別の画像でお試しください' });
     setBusy('upload');
     const fd = new FormData();
     fd.append('file', file);
@@ -44,6 +55,7 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
     setBusy(null);
     if (fileRef.current) fileRef.current.value = '';
     if (!res.ok) return setMsg({ tone: 'danger', text: j.error || 'ロゴの保存に失敗しました' });
+    setPending(null);
     setState((s) => (s ? { ...s, logoUrl: j.logoUrl } : s));
     setMsg({ tone: 'ok', text: 'ロゴを保存しました。1分ほどでサイト上部に反映されます。' });
   };
@@ -108,7 +120,22 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
           {state.logoAllowed && (
           <div>
             <p className="text-[15px] font-semibold text-ink">ロゴ画像</p>
-            <p className="mt-1 text-sm text-ink-2">PNG・JPEG・WebP、1MBまで。横長で、背景が透明か白の画像がきれいに見えます（高さ28pxで表示）。</p>
+            <p className="mt-1 text-sm text-ink-2">PNG・JPEG・WebP、10MBまで。余白の切り取りと大きさは自動で整え、保存前に拡大・縮小もできます。背景が透明か白の画像がきれいに見えます。</p>
+            {pending ? (
+              <div className="mt-3">
+                <LogoEditor
+                  file={pending}
+                  name={shownName}
+                  saving={busy === 'upload'}
+                  onSave={upload}
+                  onCancel={() => setPending(null)}
+                  onError={(text) => {
+                    setPending(null);
+                    setMsg({ tone: 'danger', text });
+                  }}
+                />
+              </div>
+            ) : (
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <label className="inline-flex min-h-[48px] cursor-pointer items-center rounded-full border border-brand bg-brand px-6 text-[17px] font-medium text-brand-ink hover:bg-brand-hover focus-within:ring-2 focus-within:ring-brand focus-within:ring-offset-2">
                 <input
@@ -117,7 +144,7 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
                   accept="image/png,image/jpeg,image/webp"
                   className="sr-only"
                   disabled={busy !== null}
-                  onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
+                  onChange={(e) => e.target.files?.[0] && pick(e.target.files[0])}
                 />
                 {busy === 'upload' ? 'アップロードしています…' : state.logoUrl ? 'ロゴを変える' : 'ロゴを選ぶ'}
               </label>
@@ -127,6 +154,7 @@ export default function LogoBanner({ sponsorId, accessToken }: Props) {
                 </Button>
               )}
             </div>
+            )}
           </div>
           )}
 
