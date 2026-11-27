@@ -16,13 +16,14 @@ export const isEventTier = (tier: string): tier is 'corporate' | 'store' => tier
 
 export type SponsorableEvent = { id: string; title: string; venue: string; starts_at: string; deadline: string };
 
-// 協賛を受け付けているイベント：公開中・中止されていない・締切（開催7日前）より前
+// 協賛を受け付けているイベント：公開中・協賛を募集する・中止されていない・締切（開催7日前）より前
 export async function sponsorableEvents(): Promise<SponsorableEvent[]> {
   const deadlineFloor = new Date(Date.now() + SPONSOR_DEADLINE_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabaseAdmin
     .from('live_events')
     .select('id, title, venue, starts_at')
     .eq('is_published', true)
+    .eq('recruit_sponsors', true)
     .is('cancelled_at', null)
     .gt('starts_at', deadlineFloor)
     .order('starts_at', { ascending: true });
