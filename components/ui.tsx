@@ -206,14 +206,11 @@ export function Panel({ children, className = '' }: { children: React.ReactNode;
   return <div className={`card ${className}`}>{children}</div>;
 }
 
-// 外山企画のロゴ文字
+// サービスのロゴ「まちきっぷ」（かみ合う2枚の半券＋丸ゴシックの文字。文字は図形にしてあるのでフォントに左右されない）
 export function Wordmark({ className = '' }: { className?: string }) {
-  // サービス名「まちきっぷ」のワードマーク（青い点＋ひらがな）
   return (
-    <span className={`wordmark inline-flex items-center gap-2.5 text-ink ${className}`}>
-      <span aria-hidden className="wordmark-dot inline-block" />
-      <span className="font-semibold">まちきっぷ</span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/machikippu-logo.svg" alt="まちきっぷ" width={186} height={24} className={`block h-6 w-auto ${className}`} />
   );
 }
 

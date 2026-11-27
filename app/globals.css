@@ -389,21 +389,6 @@ input[type='radio'] {
   }
 }
 
-/* ロゴ：ローマ字のワードマーク */
-.wordmark {
-  font-size: 18px;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  white-space: nowrap;
-}
-.wordmark-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--brand-glow), var(--brand) 60%);
-  box-shadow: 0 0 0 3px var(--brand-soft);
-}
-
 /* 色の丸（Apple Store のカラーの丸と同じ大きさ感） */
 .metal-dot {
   display: inline-block;
