@@ -77,7 +77,7 @@ async function claim(id: string, column: 'recruit_notified_at' | 'sale_notified_
 const footer = [
   '',
   '――',
-  '外山企画のスポンサー（サポーター）としてご契約中の方にお送りしています。',
+  'まちきっぷ（外山企画）のスポンサー（サポーター）としてご契約中の方にお送りしています。',
   `マイページ：${SITE_URL}/mypage`,
   '外山企画',
 ].join('\n');

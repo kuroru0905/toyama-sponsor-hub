@@ -262,13 +262,16 @@ export default function SponsorHubPage() {
         <section className="overflow-hidden">
           <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pt-14 pb-20 sm:pt-20 lg:grid-cols-[1.25fr_1fr] lg:pt-24 lg:pb-28">
             <div>
-              <p className="text-[17px] font-semibold text-brand">登別の、音楽とまちのスポンサー制度「まちきっぷ」</p>
+              <p className="text-[17px] font-semibold">
+                <span className="text-brand">まちきっぷ</span>
+                <span className="ml-3 text-ink-2">若者と地元企業をつなぐ、登別のスポンサー制度</span>
+              </p>
               <h1 className="mt-4 text-[40px] font-semibold leading-[1.15] tracking-tight sm:text-[64px] sm:leading-[1.08]">
                 <span className="inline-block">ライブの入場券を、</span>
                 <span className="inline-block">お店へのきっぷに。</span>
               </h1>
               <p className="mt-6 max-w-[34rem] text-[19px] leading-[1.6] text-ink-2 sm:text-[21px]">
-                地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開く。入場したお客さんのLINEには、<Em>スポンサー店のクーポン</Em>が届く。
+                地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開く。ライブに来た若者は、LINEに届く<Em>スポンサーのクーポン</Em>で、地元のお店や企業と出会う。
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <a href="#plans" className={buttonClass('primary', 'md')}>
