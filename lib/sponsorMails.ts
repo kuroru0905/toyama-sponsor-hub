@@ -87,7 +87,7 @@ export async function sendActivatedMails(s: SponsorForMail) {
         '',
         `マイページ（${SITE_URL}/mypage）では次のことができます。`,
         '・LINEと連携する（スポンサー先行販売でチケットを購入するために必要です）',
-        '・出演応募（募集中のイベントがあるとき）',
+        '・出演応募（募集の開始は一般告知より先に、メールと、LINE連携済みならLINEでもお知らせします）',
         '・当日のライブ配信（YouTube限定公開）のリンク確認',
         canCoupon ? '・ライブ入場者向けLINEクーポンの掲載申請' : '',
         isCorporate ? '・CM放映・企業PR動画の制作のお問い合わせ' : '',
