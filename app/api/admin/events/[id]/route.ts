@@ -91,6 +91,15 @@ export async function DELETE(req: NextRequest, context: { params: { id: string }
     if ((apps ?? 0) > 0) {
       throw new HttpError(409, '出演応募があるため削除できません。「非公開にする」を使ってください');
     }
+    // 協賛（企業・お店）の申込があるイベントは消せない（返金・フォローの記録を残すため）
+    const { count: sps, error: spsError } = await supabaseAdmin
+      .from('event_sponsorships')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', id);
+    if (spsError) throw new HttpError(500, `協賛の確認に失敗しました（${spsError.message}）`);
+    if ((sps ?? 0) > 0) {
+      throw new HttpError(409, '協賛の申込があるため削除できません。「非公開にする」か「公演中止・全額返金」を使ってください');
+    }
 
     // 支払い途中の注文：決済画面がまだ開いていれば閉じる。すでに支払われていたら消さない
     const pending = (orders ?? []).filter((o) => o.stripe_session_id);

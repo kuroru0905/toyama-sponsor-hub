@@ -79,7 +79,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: '対象IDが指定されていません' }, { status: 400 });
     }
 
-    const allowedStatuses = ['active', 'pending', 'past_due', 'canceled'];
+    const allowedStatuses = ['active', 'pending', 'past_due', 'canceled', 'ended'];
     const updatePayload: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };

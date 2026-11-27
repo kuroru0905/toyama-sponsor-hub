@@ -46,16 +46,16 @@ export default function TokushohoPage() {
           </table>
         </div>
 
-        <h2 className="text-lg font-semibold text-ink mt-10 mb-4">まちきっぷ パートナーズ（スポンサー・サポーターの月額プラン）</h2>
+        <h2 className="text-lg font-semibold text-ink mt-10 mb-4">まちきっぷ パートナーズ（企業・お店のイベント協賛／ファンサポーターの月額プラン）</h2>
         <div className="rounded-panel bg-paper shadow-card overflow-hidden">
           <table className="w-full text-left text-sm">
             <tbody className="divide-y divide-line">
               <tr>
                 <th className="block sm:table-cell align-top bg-surface px-5 pt-3 pb-3 sm:px-6 sm:py-4 font-semibold text-ink">販売価格</th>
                 <td className="block sm:table-cell px-5 pt-3 pb-3 sm:px-6 sm:py-4 text-ink-2">
-                  ・企業プレミアム枠：月額 10,000円（税込）
+                  ・企業プレミアム枠：1イベントにつき 30,000円（税込）
                   <br />
-                  ・店舗ローカル枠：月額 3,000円（税込）
+                  ・店舗ローカル枠：1イベントにつき 10,000円（税込）
                   <br />
                   ・ファンサポーター枠：月額 500円（税込）
                 </td>
@@ -73,7 +73,9 @@ export default function TokushohoPage() {
                   お支払い方法・時期
                 </th>
                 <td className="block sm:table-cell px-5 pt-3 pb-3 sm:px-6 sm:py-4 text-ink-2">
-                  クレジットカード決済（初回申込時に決済、以降毎月同日に自動課金）または請求書払い（発行日より14日以内にお支払い）
+                  企業・お店の協賛：お申し込みのイベント1回分を、クレジットカード決済（お申し込み時）または請求書払い（発行日より14日以内）でお支払いいただきます。自動で継続する請求はありません。
+                  <br />
+                  ファンサポーター枠：クレジットカード決済（初回申込時に決済、以降毎月同日に自動課金）
                 </td>
               </tr>
               <tr>
@@ -81,7 +83,7 @@ export default function TokushohoPage() {
                   サービスの提供時期
                 </th>
                 <td className="block sm:table-cell px-5 pt-3 pb-3 sm:px-6 sm:py-4 text-ink-2">
-                  クレジットカード決済は決済完了後直ちに、請求書払いはお支払いの確認後に、サポーター権利およびWeb掲載が有効となります。CM放映・企業PR動画の制作は、マイページのお問い合わせフォームからのご相談後、ご登録のメールアドレス宛にご連絡のうえ順次提供いたします。
+                  クレジットカード決済は決済完了後直ちに、請求書払いはお支払いの確認後に、特典およびWeb掲載が有効となります。企業・お店の協賛の特典は、お支払いの確認からフォロー終了日（協賛したイベントの開催日の3か月後）まで提供し、開催後3か月間は公式LINE等でご紹介します。CM放映・企業PR動画の制作は、マイページのお問い合わせフォームからのご相談後、ご登録のメールアドレス宛にご連絡のうえ順次提供いたします。
                 </td>
               </tr>
               <tr>
@@ -89,7 +91,7 @@ export default function TokushohoPage() {
                   解約・返金について
                 </th>
                 <td className="block sm:table-cell px-5 pt-3 pb-3 sm:px-6 sm:py-4 text-ink-2">
-                  デジタルサービスおよびスポンサー性質上、決済完了後の返金は原則お受けしておりません。サブスクリプションの解約は次回更新日の前日までに所定の手続きを行うことでいつでも可能であり、次回以降の請求は発生いたしません。
+                  デジタルサービスおよびスポンサー性質上、決済完了後の返金は原則お受けしておりません。ただし、主催者の都合により協賛したイベントが中止となった場合は、協賛金の全額を返金いたします。ファンサポーター枠の解約は、次回更新日の前日までに所定の手続きを行うことでいつでも可能であり、次回以降の請求は発生いたしません。
                 </td>
               </tr>
             </tbody>

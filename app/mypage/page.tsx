@@ -8,6 +8,7 @@ import PerformerApplication from './PerformerApplication';
 import LineLink from './LineLink';
 import LiveStreams from './LiveStreams';
 import CorporateInquiry from './CorporateInquiry';
+import SponsorshipHistory from './SponsorshipHistory';
 import LogoBanner from './LogoBanner';
 import { Badge, Button, Em, Field, Notice, Section, TIER_METAL, Wordmark, buttonClass } from '@/components/ui';
 
@@ -32,10 +33,10 @@ interface SponsorRecord {
   sponsor_assets?: SponsorAsset[];
 }
 
-const TIER: Record<string, { name: string; price: string }> = {
-  corporate: { name: '企業プレミアム枠', price: '10,000' },
-  store: { name: '店舗ローカル枠', price: '3,000' },
-  fan: { name: 'ファンサポーター枠', price: '500' },
+const TIER: Record<string, { name: string; price: string; per: string }> = {
+  corporate: { name: '企業プレミアム枠', price: '30,000', per: '1イベント' },
+  store: { name: '店舗ローカル枠', price: '10,000', per: '1イベント' },
+  fan: { name: 'ファンサポーター枠', price: '500', per: '月額' },
 };
 
 const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'danger' | 'neutral' }> = {
@@ -43,6 +44,7 @@ const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'danger' | '
   pending: { label: 'お支払い待ち', tone: 'warn' },
   past_due: { label: 'お支払いが確認できていません', tone: 'danger' },
   canceled: { label: '解約済み', tone: 'neutral' },
+  ended: { label: '協賛期間終了', tone: 'neutral' },
 };
 
 type EditForm = { displayName: string; isPublic: boolean; industry: string; address: string };
@@ -351,8 +353,10 @@ function SponsorView({
   portalError: string;
   onOpenPortal: () => void;
 }) {
-  const tier = TIER[sponsor.tier] ?? { name: sponsor.tier, price: '' };
-  const status = STATUS[sponsor.status] ?? { label: sponsor.status, tone: 'neutral' as const };
+  const tier = TIER[sponsor.tier] ?? { name: sponsor.tier, price: '', per: '' };
+  const status0 = STATUS[sponsor.status] ?? { label: sponsor.status, tone: 'neutral' as const };
+  // 企業・お店は、フォロー終了日までを「協賛中」と表示する
+  const status = (sponsor.tier === 'corporate' || sponsor.tier === 'store') && sponsor.status === 'active' ? { label: '協賛中', tone: 'ok' as const } : status0;
   const isBusiness = sponsor.tier === 'corporate' || sponsor.tier === 'store';
   const isActive = sponsor.status === 'active';
 
@@ -365,7 +369,7 @@ function SponsorView({
     isBusiness ? { id: 'coupons', label: 'クーポン' } : null,
     { id: 'perform', label: '出演応募' },
     isActive && sponsor.tier === 'corporate' ? { id: 'inquiry', label: 'CM・動画の相談' } : null,
-    { id: 'billing', label: 'お支払い・解約' },
+    { id: 'billing', label: isBusiness ? '協賛の履歴' : 'お支払い・解約' },
   ].filter((x): x is { id: string; label: string } => x !== null);
 
   return (
@@ -399,7 +403,7 @@ function SponsorView({
         </div>
         <h2 className="mt-4 text-[28px] font-semibold leading-tight tracking-tight">{sponsor.display_name}</h2>
         <p className="mt-1 text-ink-2">
-          月額 <span className="num text-[19px] font-semibold text-ink">¥{tier.price}</span>（税込）
+          {tier.per} <span className="num text-[19px] font-semibold text-ink">¥{tier.price}</span>（税込）
         </p>
       </div>
       <div>
@@ -503,16 +507,35 @@ function SponsorView({
             <CorporateInquiry sponsorId={sponsor.id} accessToken={session.access_token} defaultName={sponsor.applicant_name} />
           )}
 
-          <Section
-            id="billing"
-            title="お支払い・解約"
-            description="カードの変更、請求書・領収書のダウンロード、解約は、決済会社Stripeの管理画面で行います。"
-          >
-            {portalError && <Notice tone="danger" className="mb-4">{portalError}</Notice>}
-            <Button variant="secondary" onClick={onOpenPortal} disabled={portalLoading || !sponsor.stripe_customer_id} className="w-full sm:w-auto">
-              {portalLoading ? '管理画面を開いています…' : 'お支払いの管理画面を開く'}
-            </Button>
-          </Section>
+          {isBusiness ? (
+            <Section
+              id="billing"
+              title="協賛の履歴"
+              description="イベントごとの協賛と、開催後のフォロー期間です。協賛はイベント1回ごとのお支払いで、自動で続くことはありません。"
+            >
+              <SponsorshipHistory sponsorId={sponsor.id} accessToken={session.access_token} />
+              {sponsor.stripe_customer_id && (
+                <div className="mt-6 border-t border-line pt-6">
+                  <p className="text-sm text-ink-2">請求書・領収書のダウンロードは、決済会社Stripeの管理画面で行えます。</p>
+                  {portalError && <Notice tone="danger" className="mt-3">{portalError}</Notice>}
+                  <Button variant="secondary" onClick={onOpenPortal} disabled={portalLoading} className="mt-3 w-full sm:w-auto">
+                    {portalLoading ? '管理画面を開いています…' : 'お支払いの管理画面を開く'}
+                  </Button>
+                </div>
+              )}
+            </Section>
+          ) : (
+            <Section
+              id="billing"
+              title="お支払い・解約"
+              description="カードの変更、請求書・領収書のダウンロード、解約は、決済会社Stripeの管理画面で行います。"
+            >
+              {portalError && <Notice tone="danger" className="mb-4">{portalError}</Notice>}
+              <Button variant="secondary" onClick={onOpenPortal} disabled={portalLoading || !sponsor.stripe_customer_id} className="w-full sm:w-auto">
+                {portalLoading ? '管理画面を開いています…' : 'お支払いの管理画面を開く'}
+              </Button>
+            </Section>
+          )}
         </div>
       </div>
     </div>
