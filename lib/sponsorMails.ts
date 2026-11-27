@@ -52,7 +52,7 @@ export async function sendInvoiceAppliedMails(s: SponsorForMail, invoiceUrl: str
         `プラン：${tierLabel(s.tier)}`,
         ...sponsorshipLines(ev),
         `掲載名：${s.display_name}`,
-        'お支払い方法：請求書払い（発行日より14日以内）',
+        'お支払い方法：請求書払い（請求書に書かれた期限まで。発行日より14日以内、開催が近いときは開催の前日まで）',
         '',
         '請求書は Stripe から別のメールでお送りしています。',
         invoiceUrl ? `請求書のお支払いページ：${invoiceUrl}` : '',
