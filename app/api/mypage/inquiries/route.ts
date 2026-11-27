@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       }),
       sendMail({
         to: email,
-        subject: `【外山企画】お問い合わせを受け付けました（${INQUIRY_KINDS[kind]}）`,
+        subject: `【まちきっぷ パートナーズ】お問い合わせを受け付けました（${INQUIRY_KINDS[kind]}）`,
         text: [
           `${sponsor.display_name} ご担当者様`,
           '',
