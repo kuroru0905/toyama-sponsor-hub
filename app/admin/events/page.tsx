@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, RefreshCw, Mic2, MoreHorizontal } from 'lucide-react';
+import { Plus, RefreshCw, Mic2, MoreHorizontal, Handshake } from 'lucide-react';
 import { useAdmin } from '../AdminShell';
 
 type EventStats = { sold: number; entered: number; revenue: number; sent: number; applications: number; refunded: number; refundedAmount: number; unnotified: number };
@@ -22,6 +22,7 @@ type AdminEvent = {
   capacity: number | null;
   description: string;
   is_published: boolean;
+  recruit_sponsors: boolean;
   recruit_performers: boolean;
   recruit_deadline: string | null;
   recruit_act_types: string[];
@@ -56,6 +57,7 @@ type EventForm = {
   capacity: string;
   description: string;
   is_published: boolean;
+  recruit_sponsors: boolean; // 企業・お店の協賛を募集するか
   recruit_performers: boolean;
   recruit_deadline: string; // datetime-local（日本時間）
   recruit_act_types: string[]; // 募集する出演形態
@@ -75,6 +77,7 @@ const EMPTY: EventForm = {
   capacity: '',
   description: '',
   is_published: true,
+  recruit_sponsors: true,
   recruit_performers: false,
   recruit_deadline: '',
   recruit_act_types: ['band', 'dj', 'performance', 'other'],
@@ -206,6 +209,7 @@ export default function AdminEventsPage() {
       capacity: form.capacity === '' ? null : Number(form.capacity),
       description: form.description,
       is_published: form.is_published,
+      recruit_sponsors: form.recruit_sponsors,
       recruit_performers: form.recruit_performers,
       recruit_deadline: form.recruit_performers ? localToIso(form.recruit_deadline) : null,
       recruit_act_types: form.recruit_act_types.length > 0 ? form.recruit_act_types : ['band', 'dj', 'performance', 'other'],
@@ -343,6 +347,24 @@ export default function AdminEventsPage() {
           <div>
             <label className={labelClass}>説明</label>
             <textarea className={`${inputClass} min-h-[90px]`} value={form.description} maxLength={2000} placeholder="出演者、開場時間、注意事項など" onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+
+          <div className="rounded-ctl border border-brand-line bg-brand-soft p-4">
+            <label className="flex items-start gap-2.5 text-sm text-ink cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={form.recruit_sponsors}
+                onChange={(e) => setForm({ ...form, recruit_sponsors: e.target.checked })}
+              />
+              <span>
+                <Handshake className="inline h-4 w-4 text-brand mr-1" />
+                企業・お店の協賛を募集する
+                <span className="block text-sm text-ink-2">
+                  オンにすると、公開中のあいだ、サイトの協賛の申込画面でこのイベントを選べます（受付は開催の7日前まで。企業6社・お店20店まで）。
+                </span>
+              </span>
+            </label>
           </div>
 
           <div className="rounded-ctl border border-warn-line bg-warn-soft p-4 space-y-3">
@@ -515,6 +537,9 @@ export default function AdminEventsPage() {
                   <span className="flex flex-wrap gap-1.5">
                     {ev.cancelled_at && <span className="rounded-full border border-danger-line bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">公演中止</span>}
                     {soldOut && <span className="rounded-full border border-line-strong bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">完売</span>}
+                    {ev.recruit_sponsors && !ev.cancelled_at && (
+                      <span className="rounded-full border border-brand-line bg-brand-soft px-2.5 py-0.5 text-xs font-semibold text-brand">協賛募集</span>
+                    )}
                     {ev.recruit_performers && (
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
@@ -590,6 +615,7 @@ export default function AdminEventsPage() {
                         capacity: ev.capacity === null ? '' : String(ev.capacity),
                         description: ev.description,
                         is_published: ev.is_published,
+                        recruit_sponsors: ev.recruit_sponsors,
                         recruit_performers: ev.recruit_performers,
                         recruit_deadline: isoToLocal(ev.recruit_deadline),
                         recruit_act_types: ev.recruit_act_types ?? ['band', 'dj', 'performance', 'other'],

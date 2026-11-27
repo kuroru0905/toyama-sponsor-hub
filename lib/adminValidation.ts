@@ -77,6 +77,10 @@ export function parseEventInput(body: Json, partial: boolean) {
   const published = bool(body, 'is_published');
   if (published !== undefined) out.is_published = published;
 
+  // 企業・お店の協賛を募集するか
+  const sponsors = bool(body, 'recruit_sponsors');
+  if (sponsors !== undefined) out.recruit_sponsors = sponsors;
+
   // 出演者募集：募集するなら締切が必須
   const recruit = bool(body, 'recruit_performers');
   if (recruit !== undefined) out.recruit_performers = recruit;
