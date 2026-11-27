@@ -46,7 +46,8 @@ export default function PartnerMarquee() {
 
   return (
     <aside className="marquee" aria-label="まちきっぷ パートナーズ">
-      <p className="marquee-label">まちきっぷ パートナーズ</p>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="marquee-label" src="/brand/machikippu-partners-logo.svg" alt="まちきっぷ パートナーズ" width={195} height={16} />
       <div className="marquee-viewport">
         <ul className="marquee-track" style={{ ['--marquee-duration' as string]: `${duration}s` } as React.CSSProperties}>
           {[...row, ...row].map((p, i) => (
