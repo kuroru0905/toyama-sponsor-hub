@@ -241,7 +241,7 @@ export default function SponsorHubPage() {
             {[
               ['#how', '仕組み'],
               ['#plans', '料金プラン'],
-              ['#supporters', 'サポーター'],
+              ['#supporters', 'パートナー'],
             ].map(([href, label]) => (
               <a key={href} href={href} className="hidden px-2 py-2 text-[13px] text-ink-2 hover:text-ink md:inline-block">
                 {label}
