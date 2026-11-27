@@ -66,7 +66,8 @@ export async function POST(req: NextRequest) {
     if (typeof body.website === 'string' && body.website.trim() !== '') return NextResponse.json({ ok: true });
 
     const actType = String(body.actType ?? '');
-    if (!ACT_TYPES[actType]) throw new HttpError(400, '出演形態を選んでください');
+    // 決まった4種類だけ（"__proto__" などの名前で通り抜けないよう、自分のキーか確かめる）
+    if (!Object.prototype.hasOwnProperty.call(ACT_TYPES, actType)) throw new HttpError(400, '出演形態を選んでください');
     const actName = field(body, 'actName', '出演名義', 60, true);
     const representativeName = field(body, 'representativeName', '代表者のお名前', 60, true);
     const email = clean(body.email).toLowerCase();

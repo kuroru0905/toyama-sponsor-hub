@@ -96,7 +96,8 @@ export async function POST(req: NextRequest) {
     const sponsor = await requireActiveSponsor(email, String(body.sponsorId ?? ''));
 
     const actType = String(body.actType ?? '');
-    if (!ACT_TYPES[actType]) throw new HttpError(400, '出演形態を選んでください');
+    // 決まった4種類だけ（"__proto__" などの名前で通り抜けないよう、自分のキーか確かめる）
+    if (!Object.prototype.hasOwnProperty.call(ACT_TYPES, actType)) throw new HttpError(400, '出演形態を選んでください');
 
     const actName = str(body, 'actName', '出演名義', 60, true);
     const representativeName = str(body, 'representativeName', '代表者名', 60, true);
