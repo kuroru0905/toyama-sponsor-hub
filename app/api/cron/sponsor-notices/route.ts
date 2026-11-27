@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { sendMail } from '@/lib/mailer';
-import { broadcastLine, retryKeyFor } from '@/lib/lineMessaging';
+import { broadcastLine, pushLine, retryKeyFor, retryKeyFromSeed } from '@/lib/lineMessaging';
 import { actTypesLabel } from '@/lib/performerApplications';
 
 export const dynamic = 'force-dynamic';
@@ -24,8 +24,12 @@ type EventRow = {
   presale_start: string | null;
   general_sale_start: string | null;
   recruit_notified_at: string | null;
+  recruit_public_notified_at: string | null;
   sale_notified_at: string | null;
 };
+
+// 出演者募集は、スポンサーに先に知らせてから、この時間のあとに公式LINEの友だち全員へ一般告知する
+const RECRUIT_PUBLIC_DELAY_MS = 24 * 60 * 60 * 1000;
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString('ja-JP', {
@@ -54,6 +58,25 @@ async function activeSponsorEmails(): Promise<string[]> {
   return out;
 }
 
+// LINEと連携済みの、有効なスポンサーのLINEユーザーID（重複なし）
+async function activeSponsorLineIds(): Promise<string[]> {
+  const { data, error } = await supabaseAdmin
+    .from('sponsor_line_links')
+    .select('line_user_id, sponsors!inner(status)')
+    .eq('sponsors.status', 'active');
+  if (error) throw error;
+  const seen: Record<string, true> = {};
+  const out: string[] = [];
+  (data ?? []).forEach((r) => {
+    const id = String(r.line_user_id ?? '');
+    if (/^U[0-9a-f]{32}$/.test(id) && !seen[id]) {
+      seen[id] = true;
+      out.push(id);
+    }
+  });
+  return out;
+}
+
 // BCCで一斉送信（スポンサー同士にアドレスが見えないように）
 async function broadcast(emails: string[], subject: string, text: string) {
   const from = process.env.GMAIL_USER || '';
@@ -63,7 +86,7 @@ async function broadcast(emails: string[], subject: string, text: string) {
 }
 
 // 1イベント1回だけ送るために、先に「送信済み」にできたかを確認する
-async function claim(id: string, column: 'recruit_notified_at' | 'sale_notified_at') {
+async function claim(id: string, column: 'recruit_notified_at' | 'recruit_public_notified_at' | 'sale_notified_at') {
   const { data } = await supabaseAdmin
     .from('live_events')
     .update({ [column]: new Date().toISOString() })
@@ -84,7 +107,7 @@ const footer = [
 
 // お知らせ：スポンサーにはメール、LINE公式アカウントの友だち全員にはLINEで一斉配信
 // （Supabase の pg_cron から5分おきに呼ばれる）
-// ・出演者募集が始まった
+// ・出演者募集が始まった（スポンサーにメール＋LINE連携済みの人にLINE → 24時間後に友だち全員へ一般告知）
 // ・チケットが買えるようになった（先行販売があれば先行販売の開始、なければ販売開始）
 async function run(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -97,11 +120,11 @@ async function run(req: NextRequest) {
   const { data, error } = await supabaseAdmin
     .from('live_events')
     .select(
-      'id, title, venue, starts_at, price_jpy, is_published, recruit_performers, recruit_deadline, recruit_act_types, recruit_note, presale_start, general_sale_start, recruit_notified_at, sale_notified_at'
+      'id, title, venue, starts_at, price_jpy, is_published, recruit_performers, recruit_deadline, recruit_act_types, recruit_note, presale_start, general_sale_start, recruit_notified_at, recruit_public_notified_at, sale_notified_at'
     )
     .gt('starts_at', nowIso)
     .is('cancelled_at', null)
-    .or('recruit_notified_at.is.null,sale_notified_at.is.null');
+    .or('recruit_notified_at.is.null,recruit_public_notified_at.is.null,sale_notified_at.is.null');
   if (error) {
     console.error('[sponsor-notices]', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -143,6 +166,37 @@ async function run(req: NextRequest) {
           .filter((l): l is string => l !== null)
           .join('\n')
       );
+      // LINEと連携済みのスポンサーには、一般告知より先にLINEでもお知らせ
+      const recruitLine = [
+        `🎤 出演者募集（サポーター先行のお知らせ）｜${ev.title}`,
+        '',
+        `開演：${fmt(ev.starts_at)}`,
+        `会場：${ev.venue}`,
+        `募集する出演形態：${actTypesLabel(ev.recruit_act_types)}`,
+        ev.recruit_note ? `ジャンル・条件：${ev.recruit_note}` : null,
+        `応募締切：${fmt(ev.recruit_deadline as string)}`,
+        '',
+        '一般の告知より先にお知らせしています。マイページの「出演応募」から応募できます。',
+        `▶ ${SITE_URL}/mypage`,
+      ]
+        .filter((l): l is string => l !== null)
+        .join('\n');
+      for (const to of await activeSponsorLineIds()) {
+        await pushLine(to, recruitLine, retryKeyFromSeed(`recruit-sponsor:${ev.id}:${to}`));
+      }
+      sent.push(`recruit:${ev.id}`);
+    }
+
+    // 出演者募集の一般告知（スポンサーへのお知らせから24時間後。締切前のときだけ）
+    if (
+      ev.recruit_notified_at &&
+      !ev.recruit_public_notified_at &&
+      ev.recruit_performers &&
+      ev.recruit_deadline &&
+      new Date(ev.recruit_deadline).getTime() > now &&
+      now >= new Date(ev.recruit_notified_at).getTime() + RECRUIT_PUBLIC_DELAY_MS &&
+      (await claim(ev.id, 'recruit_public_notified_at'))
+    ) {
       await broadcastLine(
         [
           `🎤 出演者募集｜${ev.title}`,
@@ -163,7 +217,7 @@ async function run(req: NextRequest) {
           .join('\n'),
         retryKeyFor(ev.id, 'recruit')
       );
-      sent.push(`recruit:${ev.id}`);
+      sent.push(`recruit-public:${ev.id}`);
     }
 
     // チケットが買えるようになった

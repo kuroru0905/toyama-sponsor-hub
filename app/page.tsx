@@ -67,10 +67,10 @@ const PLANS: Plan[] = [
     lead: '登別に、若い人が主役になれる場所をつくり続けるための応援枠です。',
     includes: '',
     features: [
-      '**スポンサー先行販売**でチケットを先に買える・限定エリアの案内',
+      '**スポンサー先行販売**でチケットを先に買える',
       '当日の**ライブ配信**（YouTube限定公開のリンクをマイページでお知らせ）',
-      'バンド・DJ・パフォーマンスの**出演応募**',
-      '公式サイトと会場エンドロールに**お名前を掲示**',
+      '出演募集の開始を**LINEでいち早くお知らせ**（一般告知より先に応募できます）',
+      '公式サイトに**お名前を掲示**',
     ],
   },
 ];
@@ -393,7 +393,7 @@ export default function SponsorHubPage() {
               {[
                 { tier: 'corporate' as TierType, title: '企業スポンサー', unit: '社', empty: '第1号の企業スポンサーを募集しています。' },
                 { tier: 'store' as TierType, title: '店舗スポンサー・クーポン加盟店', unit: '店', empty: '加盟店を募集しています。' },
-                { tier: 'fan' as TierType, title: 'ファンサポーター', unit: '名', empty: '月300円から、お名前が会場のエンドロールに載ります。' },
+                { tier: 'fan' as TierType, title: 'ファンサポーター', unit: '名', empty: '月300円から、お名前が公式サイトに載ります。' },
               ].map((g) => {
                 const list = byTier(g.tier);
                 return (
