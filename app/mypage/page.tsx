@@ -280,8 +280,6 @@ export default function MyPage() {
       {header}
 
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:pt-10">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/machikippu-partners-logo.svg" alt="まちきっぷ パートナーズ" width={268} height={22} className="mb-2 block h-[22px] w-auto" />
         <h1 className="text-[32px] font-semibold tracking-tight sm:text-[40px]">マイページ</h1>
 
         {dataLoading && sponsors.length === 0 ? (
