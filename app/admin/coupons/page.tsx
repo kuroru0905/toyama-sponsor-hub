@@ -157,7 +157,7 @@ export default function AdminCouponsPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-ink">クーポン</h1>
           <p className="text-sm text-ink-2 mt-1">
-            承認済み・公開中のクーポンが、ライブ入場者のLINEに入場特典として表示されます（入場1回につき各店1回ずつ・ライブの翌日23:59まで）。
+            承認済み・公開中のクーポンが、ライブ入場者のLINEに入場特典として表示されます（そのライブに協賛したお店のクーポンを、入場1回につき各店1回ずつ・ライブの3か月後の23:59まで）。
           </p>
         </div>
         <button
