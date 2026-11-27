@@ -13,7 +13,8 @@ export function trimLogo(url: string): Promise<string> {
       try {
         const w = img.naturalWidth;
         const h = img.naturalHeight;
-        if (!w || !h) return resolve(url);
+        // 大きすぎる画像は解析しない（閲覧者の端末を重くしないため）
+        if (!w || !h || w * h > 4000000) return resolve(url);
         const c = document.createElement('canvas');
         c.width = w;
         c.height = h;

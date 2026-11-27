@@ -12,6 +12,7 @@ export default function PartnerMarquee() {
   const pathname = usePathname();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [trimmed, setTrimmed] = useState<Record<string, string>>({}); // 余白を切り落としたロゴ
+  const [broken, setBroken] = useState<Record<string, true>>({}); // 読み込めなかったロゴ（名前で出す）
 
   useEffect(() => {
     let alive = true;
@@ -51,9 +52,15 @@ export default function PartnerMarquee() {
         <ul className="marquee-track" style={{ ['--marquee-duration' as string]: `${duration}s` } as React.CSSProperties}>
           {[...row, ...row].map((p, i) => (
             <li key={`${p.id}-${i}`} className="marquee-item" aria-hidden={i >= partners.length ? true : undefined}>
-              {p.logoUrl ? (
+              {p.logoUrl && !broken[p.logoUrl] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={trimmed[p.logoUrl] ?? p.logoUrl} alt={p.name} className="marquee-logo" decoding="async" />
+                <img
+                  src={trimmed[p.logoUrl] ?? p.logoUrl}
+                  alt={p.name}
+                  className="marquee-logo"
+                  decoding="async"
+                  onError={() => setBroken((b) => ({ ...b, [p.logoUrl as string]: true }))}
+                />
               ) : (
                 <span className="marquee-name">{p.name}</span>
               )}
