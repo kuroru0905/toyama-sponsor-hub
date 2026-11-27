@@ -208,15 +208,11 @@ export function Panel({ children, className = '' }: { children: React.ReactNode;
 
 // 外山企画のロゴ文字
 export function Wordmark({ className = '' }: { className?: string }) {
-  // ローマ字のワードマーク：TOYAMA は太く、KIKAKU は標準の太さで灰色に。字間を広くとる
+  // サービス名「まちきっぷ」のワードマーク（青い点＋ひらがな）
   return (
     <span className={`wordmark inline-flex items-center gap-2.5 text-ink ${className}`}>
-      <span className="sr-only">外山企画</span>
       <span aria-hidden className="wordmark-dot inline-block" />
-      <span aria-hidden>
-        <span className="font-semibold">TOYAMA</span>
-        <span className="ml-[0.22em] font-normal text-ink-2">KIKAKU</span>
-      </span>
+      <span className="font-semibold">まちきっぷ</span>
     </span>
   );
 }
