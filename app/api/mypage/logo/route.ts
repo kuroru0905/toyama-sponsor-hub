@@ -42,6 +42,45 @@ function detectImage(buf: Buffer): { ext: string; mime: string } | null {
   return null;
 }
 
+// 画像の縦横のピクセル数をファイルの先頭から読む（巨大な画像で閲覧者の端末を重くさせないため）
+const MAX_SIDE = 2000;
+function imageSize(buf: Buffer, ext: string): { w: number; h: number } | null {
+  try {
+    if (ext === 'png') return buf.length >= 24 ? { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) } : null;
+    if (ext === 'webp') {
+      const kind = buf.toString('ascii', 12, 16);
+      if (kind === 'VP8X') return { w: 1 + buf.readUIntLE(24, 3), h: 1 + buf.readUIntLE(27, 3) };
+      if (kind === 'VP8 ') return { w: buf.readUInt16LE(26) & 0x3fff, h: buf.readUInt16LE(28) & 0x3fff };
+      if (kind === 'VP8L') {
+        const b = buf.readUInt32LE(21);
+        return { w: (b & 0x3fff) + 1, h: ((b >> 14) & 0x3fff) + 1 };
+      }
+      return null;
+    }
+    // JPEG：SOF（フレームの始まり）の印を探す
+    let i = 2;
+    while (i + 9 < buf.length) {
+      if (buf[i] !== 0xff) return null;
+      const m = buf[i + 1];
+      const len = buf.readUInt16BE(i + 2);
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { w: buf.readUInt16BE(i + 7), h: buf.readUInt16BE(i + 5) };
+      i += 2 + len;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// 名前に紛れ込ませやすい見えない文字・文字の向きを変える制御文字を取り除く
+function cleanName(v: unknown): string {
+  if (typeof v !== 'string') return '';
+  return v
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '')
+    .trim();
+}
+
 // 今の掲示内容
 export async function GET(req: NextRequest) {
   try {
@@ -71,6 +110,9 @@ export async function POST(req: NextRequest) {
     const buf = Buffer.from(await file.arrayBuffer());
     const kind = detectImage(buf);
     if (!kind) throw new HttpError(400, '画像は PNG・JPEG・WebP のいずれかにしてください');
+    const size = imageSize(buf, kind.ext);
+    if (!size || size.w < 1 || size.h < 1) throw new HttpError(400, '画像を読み取れませんでした');
+    if (size.w > MAX_SIDE || size.h > MAX_SIDE) throw new HttpError(400, `画像は縦横${MAX_SIDE}px以内にしてください`);
 
     const path = `${s.id}/${randomBytes(8).toString('hex')}.${kind.ext}`;
     const { error: upError } = await supabaseAdmin.storage
@@ -95,7 +137,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const s = await ownSponsor(req);
     const body = (await req.json().catch(() => ({}))) as { bannerName?: unknown };
-    const raw = typeof body.bannerName === 'string' ? body.bannerName.replace(/[\r\n]+/g, ' ').trim() : '';
+    const raw = cleanName(body.bannerName);
     if (raw.length > 40) throw new HttpError(400, '掲示する名前は40文字以内で入力してください');
     const { error } = await supabaseAdmin.from('sponsors').update({ banner_name: raw || null }).eq('id', s.id);
     if (error) throw new HttpError(500, '保存に失敗しました');
