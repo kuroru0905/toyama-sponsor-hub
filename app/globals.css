@@ -429,8 +429,11 @@ input[type='radio'] {
 .marquee-label {
   display: none;
   flex: none;
-  height: 16px;
-  width: auto;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
 }
 @media (min-width: 640px) {
   .marquee {
