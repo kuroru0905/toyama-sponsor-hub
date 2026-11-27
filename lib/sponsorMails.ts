@@ -27,7 +27,7 @@ export async function sendInvoiceAppliedMails(s: SponsorForMail, invoiceUrl: str
   await Promise.all([
     sendMail({
       to: s.email,
-      subject: '【外山企画】スポンサーお申し込みを受け付けました（請求書払い）',
+      subject: '【まちきっぷ パートナーズ】お申し込みを受け付けました（請求書払い）',
       text: [
         `${s.applicant_name} 様`,
         '',
@@ -75,7 +75,7 @@ export async function sendActivatedMails(s: SponsorForMail) {
   await Promise.all([
     sendMail({
       to: s.email,
-      subject: '【外山企画】スポンサー契約が有効になりました',
+      subject: '【まちきっぷ パートナーズ】ご契約が有効になりました',
       text: [
         `${s.applicant_name} 様`,
         '',

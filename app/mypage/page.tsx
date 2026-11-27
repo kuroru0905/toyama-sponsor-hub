@@ -279,6 +279,7 @@ export default function MyPage() {
       {header}
 
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:pt-10">
+        <p className="text-[15px] font-semibold text-brand">まちきっぷ パートナーズ</p>
         <h1 className="text-[32px] font-semibold tracking-tight sm:text-[40px]">マイページ</h1>
 
         {dataLoading && sponsors.length === 0 ? (

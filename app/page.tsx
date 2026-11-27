@@ -264,7 +264,7 @@ export default function SponsorHubPage() {
             <div>
               <p className="text-[17px] font-semibold">
                 <span className="text-brand">まちきっぷ</span>
-                <span className="ml-3 text-ink-2">若者と地元企業をつなぐ、登別のスポンサー制度</span>
+                <span className="ml-3 text-ink-2">若者と地元企業をつなぐ、登別のライブとまち</span>
               </p>
               <h1 className="mt-4 text-[40px] font-semibold leading-[1.15] tracking-tight sm:text-[64px] sm:leading-[1.08]">
                 <span className="inline-block">ライブの入場券を、</span>
@@ -310,7 +310,7 @@ export default function SponsorHubPage() {
         {/* 料金プラン */}
         <section id="plans" className="scroll-mt-16 pb-16 sm:pb-24">
           <div className="mx-auto max-w-6xl px-4">
-            <Headline lead="料金プラン。" rest="月300円から、登別のライブを支えられます。" />
+            <Headline lead="まちきっぷ パートナーズ。" rest="月300円から、若者のライブと街を支えるスポンサーに。" />
           </div>
           <div className="mt-8" style={{ ['--notch-bg' as string]: 'var(--surface)' }}>
             <Shelf ariaLabel="料金プラン">
@@ -387,7 +387,7 @@ export default function SponsorHubPage() {
         {/* サポーター一覧 */}
         <section id="supporters" className="scroll-mt-16 pb-24">
           <div className="mx-auto max-w-6xl px-4">
-            <Headline lead="サポーター。" rest="登別を一緒に支えている皆さん。" />
+            <Headline lead="パートナーの皆さん。" rest="登別を一緒に支えています。" />
             <p className="mt-3 text-[15px] text-ink-2">お名前の掲載に同意いただいた方だけを載せています。</p>
             <div className="mt-8 grid gap-5 lg:grid-cols-3">
               {[

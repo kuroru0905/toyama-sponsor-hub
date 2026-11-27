@@ -46,7 +46,7 @@ export default function TokushohoPage() {
           </table>
         </div>
 
-        <h2 className="text-lg font-semibold text-ink mt-10 mb-4">スポンサー・サポーター（月額プラン）</h2>
+        <h2 className="text-lg font-semibold text-ink mt-10 mb-4">まちきっぷ パートナーズ（スポンサー・サポーターの月額プラン）</h2>
         <div className="rounded-panel bg-paper shadow-card overflow-hidden">
           <table className="w-full text-left text-sm">
             <tbody className="divide-y divide-line">
