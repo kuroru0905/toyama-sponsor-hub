@@ -8,6 +8,7 @@ import PerformerApplication from './PerformerApplication';
 import LineLink from './LineLink';
 import LiveStreams from './LiveStreams';
 import CorporateInquiry from './CorporateInquiry';
+import LogoBanner from './LogoBanner';
 import { Badge, Button, Em, Field, Notice, Section, TIER_METAL, Wordmark, buttonClass } from '@/components/ui';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -361,6 +362,7 @@ function SponsorView({
     { id: 'profile', label: '掲載情報' },
     sponsor.status !== 'canceled' ? { id: 'line', label: 'LINE連携' } : null,
     isActive ? { id: 'stream', label: 'ライブ配信' } : null,
+    isBusiness ? { id: 'banner', label: 'ロゴ掲示' } : null,
     isBusiness ? { id: 'coupons', label: 'クーポン' } : null,
     { id: 'perform', label: '出演応募' },
     isActive && sponsor.tier === 'corporate' ? { id: 'inquiry', label: 'CM・動画の相談' } : null,
@@ -479,6 +481,8 @@ function SponsorView({
           {sponsor.status !== 'canceled' && <LineLink sponsorId={sponsor.id} accessToken={session.access_token} isActive={isActive} />}
 
           {isActive && <LiveStreams sponsorId={sponsor.id} accessToken={session.access_token} />}
+
+          {isBusiness && <LogoBanner sponsorId={sponsor.id} accessToken={session.access_token} />}
 
           {isBusiness && (
             <CouponManager

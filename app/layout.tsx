@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
+import PartnerMarquee from '@/components/PartnerMarquee';
 
 // Apple端末では SF Pro / ヒラギノ（システム書体）を優先。
 // それ以外（Windows・Android）では、近い印象の Inter（英数字）と Noto Sans JP（日本語）を使う
@@ -33,7 +34,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja" className={`${latin.variable} ${jp.variable}`}>
-      <body>{children}</body>
+      <body>
+        {/* まちきっぷ パートナーズの横スクロール（管理画面では出さない） */}
+        <PartnerMarquee />
+        {children}
+      </body>
     </html>
   );
 }
