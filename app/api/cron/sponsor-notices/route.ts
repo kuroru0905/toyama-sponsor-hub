@@ -160,7 +160,6 @@ async function run(req: NextRequest) {
           `応募締切：${fmt(ev.recruit_deadline as string)}`,
           '',
           `応募はマイページの「出演応募」からどうぞ：${SITE_URL}/mypage`,
-          '※ グループで応募する場合は、出演メンバー全員（未成年はその保護者）がスポンサーとしてご契約中である必要があります。',
           footer,
         ]
           .filter((l): l is string => l !== null)
@@ -208,10 +207,10 @@ async function run(req: NextRequest) {
           ev.recruit_note ? `ジャンル・条件：${ev.recruit_note}` : null,
           `応募締切：${fmt(ev.recruit_deadline as string)}`,
           '',
-          'スポンサー（サポーター）の方は、マイページの「出演応募」から応募できます。',
-          `▶ ${SITE_URL}/mypage`,
+          'どなたでも応募できます。',
+          `▶ ${SITE_URL}/perform`,
           '',
-          `スポンサーは月300円のファンサポーター枠から：${SITE_URL}`,
+          `募集の開始をいち早く知るには、月500円のファンサポーター枠から：${SITE_URL}`,
         ]
           .filter((l): l is string => l !== null)
           .join('\n'),
@@ -267,7 +266,7 @@ async function run(req: NextRequest) {
               ? 'スポンサー（サポーター）の方は、マイページで「LINEと連携する」を済ませると先行購入できます。'
               : 'このトークのメニュー「チケット」から購入できます。',
             `▶ ${LIFF_URL}`,
-            isPresale ? `\nスポンサーは月300円のファンサポーター枠から：${SITE_URL}` : '',
+            isPresale ? `\nスポンサーは月500円のファンサポーター枠から：${SITE_URL}` : '',
           ]
             .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
             .join('\n'),

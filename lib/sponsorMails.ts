@@ -5,7 +5,7 @@ import { sendMail, adminEmails } from '@/lib/mailer';
 const TIER_LABELS: Record<string, string> = {
   corporate: '企業プレミアム枠（月額 ¥10,000）',
   store: '店舗ローカル枠（月額 ¥3,000）',
-  fan: 'ファンサポーター枠（月額 ¥300）',
+  fan: 'ファンサポーター枠（月額 ¥500）',
 };
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://toyama-sponsor-hub.vercel.app';

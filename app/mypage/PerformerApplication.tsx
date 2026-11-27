@@ -17,9 +17,6 @@ const STATUS: Record<string, { label: string; tone: 'neutral' | 'warn' | 'ok' | 
   declined: { label: '今回は見送り', tone: 'danger' },
 };
 
-const GROUP_RULE =
-  'グループで応募する場合は、出演メンバー全員（未成年のメンバーはその保護者）が外山企画のスポンサー（どの枠でも可）としてご契約中である必要があります。';
-
 interface EventOption {
   id: string;
   title: string;
@@ -55,7 +52,7 @@ interface FormState {
   representativeName: string;
   memberCount: string;
   // グループの2人目以降（代表者はログイン中の本人）
-  others: { name: string; email: string; guardian: boolean }[];
+  others: { name: string }[];
   eventId: string;
   genre: string;
   links: string;
@@ -136,9 +133,9 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
     setError('');
     setMessage('');
     if (isGroup) {
-      const blank = form.others.findIndex((m) => !m.name.trim() || !m.email.trim());
+      const blank = form.others.findIndex((m) => !m.name.trim());
       if (blank !== -1) {
-        setError(`${blank + 2}人目の名前と、スポンサー登録のメールアドレスを入れてください`);
+        setError(`${blank + 2}人目の名前を入れてください`);
         return;
       }
     }
@@ -153,8 +150,8 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
           actName: form.actName,
           representativeName: form.representativeName,
           memberCount,
-          // 1人目は代表者（ログイン中の本人）。メールはサーバー側でログイン中のアドレスに置き換える
-          members: isGroup ? [{ name: form.representativeName, email: loginEmail, guardian: false }, ...form.others] : [],
+          // 1人目は代表者（ログイン中の本人）
+          members: isGroup ? [{ name: form.representativeName }, ...form.others] : [],
           eventId: form.eventId || null,
           genre: form.genre,
           links: form.links,
@@ -198,7 +195,13 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
               <div>
                 <h3 className="text-[15px] font-semibold">出演者を募集しているライブ</h3>
                 {!isActive ? (
-                  <p className="mt-2 text-ink-2">ご契約が有効になると、出演の応募ができます。</p>
+                  <p className="mt-2 text-ink-2">
+                    出演応募は、
+                    <a href="/perform" className="font-semibold text-brand hover:underline">
+                      公開の応募ページ
+                    </a>
+                    からどなたでもできます。
+                  </p>
                 ) : events.length === 0 ? (
                   <p className="mt-2 text-ink-2">いま募集しているライブはありません。募集が始まったら、メールと公式LINEでお知らせします。</p>
                 ) : (
@@ -288,7 +291,7 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                     />
                   </Field>
 
-                  <Field label="出演する人数" htmlFor="p-count" required hint="1人なら1。グループの場合はメンバー全員の確認が必要です。">
+                  <Field label="出演する人数" htmlFor="p-count" required hint="1人なら1。">
                     <input
                       id="p-count"
                       type="number"
@@ -301,7 +304,7 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                       onChange={(e) => {
                         const n = Math.min(30, Math.max(1, Number(e.target.value) || 1));
                         const others = form.others.slice(0, n - 1);
-                        while (others.length < n - 1) others.push({ name: '', email: '', guardian: false });
+                        while (others.length < n - 1) others.push({ name: '' });
                         setForm({ ...form, memberCount: e.target.value, others });
                       }}
                     />
@@ -310,10 +313,7 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                   {isGroup && (
                     <fieldset className="space-y-4">
                       <legend className="text-[15px] font-semibold">メンバー</legend>
-                      <Notice tone="warn">{GROUP_RULE}</Notice>
-                      <p className="text-sm leading-relaxed text-ink-2">
-                        メンバー全員のお名前と、スポンサー登録しているメールアドレスを入れてください。応募のときに、全員が契約中のスポンサーかを確認します。
-                      </p>
+                      <p className="text-sm leading-relaxed text-ink-2">メンバー全員のお名前を入れてください。メンバーにスポンサー契約は必要ありません。</p>
                       <div className="rounded-ctl border border-line bg-surface px-4 py-3">
                         <p className="text-sm font-semibold text-ink-2">1人目（代表者・あなた）</p>
                         <p className="font-semibold">{form.representativeName || '代表者のお名前を入れてください'}</p>
@@ -325,22 +325,6 @@ export default function PerformerApplication({ sponsorId, accessToken, defaultNa
                           <Field label="お名前" htmlFor={`p-m${i}-name`} required hint="記入例：佐藤 花子（ギター）">
                             <input id={`p-m${i}-name`} className="field-input" value={m.name} maxLength={40} required onChange={(e) => setOther(i, { name: e.target.value })} />
                           </Field>
-                          <Field label="スポンサー登録のメールアドレス" htmlFor={`p-m${i}-mail`} required>
-                            <input
-                              id={`p-m${i}-mail`}
-                              type="email"
-                              inputMode="email"
-                              autoComplete="off"
-                              className="field-input"
-                              value={m.email}
-                              required
-                              onChange={(e) => setOther(i, { email: e.target.value })}
-                            />
-                          </Field>
-                          <label className="flex min-h-[44px] cursor-pointer items-center gap-3 text-[15px]">
-                            <input type="checkbox" checked={m.guardian} onChange={(e) => setOther(i, { guardian: e.target.checked })} />
-                            未成年なので、保護者のスポンサー登録アドレスを入れる
-                          </label>
                         </div>
                       ))}
                     </fieldset>
