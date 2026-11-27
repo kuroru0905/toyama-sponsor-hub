@@ -56,6 +56,13 @@ async function warnIfOverCap(tier: string) {
   }
 }
 
+// イベントの協賛（支払い済み）でフォロー終了日がまだ来ていない会社・お店
+async function sponsorsInFollow(): Promise<Set<string>> {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+  const { data } = await supabaseAdmin.from('event_sponsorships').select('sponsor_id').eq('status', 'paid').gte('follow_end_date', today);
+  return new Set((data ?? []).map((r) => r.sponsor_id as string));
+}
+
 export async function POST(req: NextRequest) {
   const payload = await req.text();
   const signature = req.headers.get('stripe-signature');
@@ -183,13 +190,19 @@ export async function POST(req: NextRequest) {
         const { subscriptionId } = invoiceSubscription(invoice);
 
         if (subscriptionId) {
-          await supabaseAdmin
-            .from('sponsors')
-            .update({
-              status: 'past_due',
-              updated_at: new Date().toISOString(),
-            })
-            .eq('stripe_subscription_id', subscriptionId);
+          // イベントの協賛でフォロー期間中の会社・お店は、昔の月額の未払いで止めない
+          const keep = await sponsorsInFollow();
+          const { data: rows } = await supabaseAdmin.from('sponsors').select('id').eq('stripe_subscription_id', subscriptionId);
+          const ids = (rows ?? []).map((r) => r.id as string).filter((id) => !keep.has(id));
+          if (ids.length > 0) {
+            await supabaseAdmin
+              .from('sponsors')
+              .update({
+                status: 'past_due',
+                updated_at: new Date().toISOString(),
+              })
+              .in('id', ids);
+          }
         }
         break;
       }
@@ -197,13 +210,16 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
 
-        await supabaseAdmin
-          .from('sponsors')
-          .update({
-            status: 'canceled',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('stripe_subscription_id', subscription.id);
+        // 月額の契約が終わった。イベントの協賛でフォロー期間中の会社・お店は「協賛中」のまま残す
+        const keep = await sponsorsInFollow();
+        const { data: rows } = await supabaseAdmin.from('sponsors').select('id').eq('stripe_subscription_id', subscription.id);
+        for (const r of rows ?? []) {
+          const id = r.id as string;
+          await supabaseAdmin
+            .from('sponsors')
+            .update(keep.has(id) ? { stripe_subscription_id: null, updated_at: new Date().toISOString() } : { status: 'canceled', updated_at: new Date().toISOString() })
+            .eq('id', id);
+        }
         break;
       }
 
