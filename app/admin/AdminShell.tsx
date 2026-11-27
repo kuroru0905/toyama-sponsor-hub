@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient, Session } from '@supabase/supabase-js';
-import { Users, CalendarDays, Ticket, Mic2 } from 'lucide-react';
+import { Users, CalendarDays, Ticket, Mic2, Megaphone } from 'lucide-react';
 import { Button, Field, Notice, Wordmark } from '@/components/ui';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -20,6 +20,7 @@ export function useAdmin(): AdminContextValue {
 
 export const ADMIN_TABS = [
   { href: '/admin/sponsors', label: 'スポンサー', icon: Users },
+  { href: '/admin/banner', label: '横スクロール', icon: Megaphone },
   { href: '/admin/events', label: 'イベント・チケット', icon: CalendarDays },
   { href: '/admin/coupons', label: 'クーポン', icon: Ticket },
   { href: '/admin/applications', label: '出演応募', icon: Mic2 },

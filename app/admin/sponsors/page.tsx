@@ -383,7 +383,8 @@ export default function AdminSponsorsPage() {
                           </span>
                         </div>
 
-                        {/* 上部の横スクロールに出る内容 */}
+                        {/* 上部の横スクロールに出る内容（企業・店舗枠のみ） */}
+                        {s.tier !== 'fan' && (
                         <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
                           <span className="text-ink-2">掲示：</span>
                           {s.tier !== 'fan' && s.logo_url ? (
@@ -415,6 +416,7 @@ export default function AdminSponsorsPage() {
                             />
                           )}
                         </div>
+                        )}
 
                         {(asset?.industry || asset?.address) && (
                           <div className="flex flex-wrap gap-3 text-sm text-brand pt-0.5">
