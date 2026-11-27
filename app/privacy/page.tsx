@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
           プライバシーポリシー（個人情報保護方針）
         </h1>
         <p className="text-sm text-ink-2 mb-10 leading-relaxed">
-          外山企画（以下「当企画」といいます）は、本サービス（スポンサー募集サイトおよびLINE公式アカウントのライブチケット＆クーポン）におけるスポンサー・サポーター・チケット購入者の皆様の個人情報の取り扱いについて、以下の通りプライバシーポリシーを定め、適切な管理と保護に努めます。
+          外山企画（以下「当企画」といいます）は、本サービス「まちきっぷ」（スポンサー募集サイトおよびLINE公式アカウントのライブチケット＆クーポン）におけるスポンサー・サポーター・チケット購入者の皆様の個人情報の取り扱いについて、以下の通りプライバシーポリシーを定め、適切な管理と保護に努めます。
         </p>
 
         <div className="space-y-8 rounded-panel bg-paper shadow-card p-6 sm:p-8 text-[15px] leading-[1.9] text-ink">

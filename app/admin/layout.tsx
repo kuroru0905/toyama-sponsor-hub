@@ -1,7 +1,7 @@
 import AdminShell from './AdminShell';
 
 export const metadata = {
-  title: '外山企画 管理画面',
+  title: 'まちきっぷ 管理画面｜外山企画',
   robots: { index: false, follow: false },
 };
 

@@ -17,6 +17,7 @@ export default function TokushohoPage() {
         <h1 className="text-2xl sm:text-3xl font-semibold text-ink mb-8">
           特定商取引法に基づく表記
         </h1>
+        <p className="-mt-4 mb-8 text-ink-2">サービス名：まちきっぷ（運営：外山企画）</p>
 
         <div className="rounded-panel bg-paper shadow-card overflow-hidden">
           <table className="w-full text-left text-sm">
