@@ -1,7 +1,8 @@
 // ロゴの大きさを自動でそろえる（ブラウザ内で処理。サーバーには仕上がったPNGだけ送る）
 // 1. 周りの余白（透明、または四隅と同じ色）を切り取る
 // 2. 「見た目の面積」がそろうように縮める（正方形のロゴは高さいっぱい、横長は少し小さめ）
-// 3. 横5:縦1の枠（600×120px）の中央に置いたPNGにする → 掲示では 140×28px で表示
+// 3. 高さ120pxのPNGにする（横幅はロゴの幅ぴったり。左右に余白を残さず、並べたときの間隔をそろえる）
+//    → 掲示では高さ28px（横は最大140px）で表示
 
 export const BOX_W = 600;
 export const BOX_H = 120;
@@ -86,18 +87,19 @@ export async function prepareLogo(file: File): Promise<Prepared> {
 
 // percent：枠に収まる最大の大きさを100としたときの大きさ
 export function renderLogo(p: Prepared, percent: number, out: HTMLCanvasElement) {
-  out.width = BOX_W;
-  out.height = BOX_H;
-  const ctx = out.getContext('2d');
-  if (!ctx) return;
-  ctx.clearRect(0, 0, BOX_W, BOX_H);
   const fit = Math.min(BOX_W / p.w, BOX_H / p.h);
   const s = fit * Math.min(100, Math.max(10, percent)) / 100;
   const dw = p.w * s;
   const dh = p.h * s;
+  const outW = Math.max(1, Math.ceil(dw));
+  out.width = outW;
+  out.height = BOX_H;
+  const ctx = out.getContext('2d');
+  if (!ctx) return;
+  ctx.clearRect(0, 0, outW, BOX_H);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(p.canvas, (BOX_W - dw) / 2, (BOX_H - dh) / 2, dw, dh);
+  ctx.drawImage(p.canvas, (outW - dw) / 2, (BOX_H - dh) / 2, dw, dh);
 }
 
 export function canvasToPngFile(c: HTMLCanvasElement): Promise<File> {
