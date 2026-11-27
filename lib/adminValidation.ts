@@ -80,6 +80,16 @@ export function parseEventInput(body: Json, partial: boolean) {
   // 企業・お店の協賛を募集するか
   const sponsors = bool(body, 'recruit_sponsors');
   if (sponsors !== undefined) out.recruit_sponsors = sponsors;
+  // 協賛の上限（企業・お店それぞれ0〜100。0＝その枠は募集しない）
+  for (const [key, label] of [
+    ['sponsor_cap_corporate', '企業の協賛の上限'],
+    ['sponsor_cap_store', 'お店の協賛の上限'],
+  ] as const) {
+    if (body[key] === undefined) continue;
+    const n = Number(body[key]);
+    if (!Number.isInteger(n) || n < 0 || n > 100) throw new HttpError(400, `${label}は0〜100の整数で入力してください`);
+    out[key] = n;
+  }
 
   // 出演者募集：募集するなら締切が必須
   const recruit = bool(body, 'recruit_performers');

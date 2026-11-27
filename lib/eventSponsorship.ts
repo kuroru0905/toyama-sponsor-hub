@@ -1,5 +1,4 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { TIER_CAPS } from '@/lib/tierCaps';
 import { sendMail, adminEmails } from '@/lib/mailer';
 import { sendActivatedMails, type SponsorForMail } from '@/lib/sponsorMails';
 
@@ -14,14 +13,15 @@ export const SPONSOR_DEADLINE_DAYS = 7;
 
 export const isEventTier = (tier: string): tier is 'corporate' | 'store' => tier === 'corporate' || tier === 'store';
 
-export type SponsorableEvent = { id: string; title: string; venue: string; starts_at: string; deadline: string };
+// caps：このイベントの協賛の上限（イベント作成時に決める。0＝その枠は募集しない）
+export type SponsorableEvent = { id: string; title: string; venue: string; starts_at: string; deadline: string; caps: { corporate: number; store: number } };
 
 // 協賛を受け付けているイベント：公開中・協賛を募集する・中止されていない・締切（開催7日前）より前
 export async function sponsorableEvents(): Promise<SponsorableEvent[]> {
   const deadlineFloor = new Date(Date.now() + SPONSOR_DEADLINE_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabaseAdmin
     .from('live_events')
-    .select('id, title, venue, starts_at')
+    .select('id, title, venue, starts_at, sponsor_cap_corporate, sponsor_cap_store')
     .eq('is_published', true)
     .eq('recruit_sponsors', true)
     .is('cancelled_at', null)
@@ -29,8 +29,12 @@ export async function sponsorableEvents(): Promise<SponsorableEvent[]> {
     .order('starts_at', { ascending: true });
   if (error) throw error;
   return (data ?? []).map((e) => ({
-    ...(e as { id: string; title: string; venue: string; starts_at: string }),
+    id: e.id as string,
+    title: e.title as string,
+    venue: e.venue as string,
+    starts_at: e.starts_at as string,
     deadline: new Date(new Date(e.starts_at as string).getTime() - SPONSOR_DEADLINE_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+    caps: { corporate: Number(e.sponsor_cap_corporate ?? 0), store: Number(e.sponsor_cap_store ?? 0) },
   }));
 }
 
@@ -88,8 +92,9 @@ export async function markSponsorshipPaid(
 
 // 同時に申し込んだ人が両方支払うと、イベントごとの枠の上限を超えることがある。支払い済みの人は止めず、管理者に知らせる
 async function warnIfOverCap(eventId: string, tier: string, title: string) {
-  const cap = TIER_CAPS[tier];
-  if (cap === undefined) return;
+  const { data: ev } = await supabaseAdmin.from('live_events').select('sponsor_cap_corporate, sponsor_cap_store').eq('id', eventId).maybeSingle();
+  if (!ev) return;
+  const cap = tier === 'corporate' ? Number(ev.sponsor_cap_corporate) : Number(ev.sponsor_cap_store);
   const n = await paidCount(eventId, tier);
   if (n > cap) {
     await sendMail({

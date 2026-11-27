@@ -18,7 +18,17 @@ type Row = {
   applicantName: string;
   email: string;
 };
-type Ev = { id: string; title: string; venue: string; starts_at: string; is_published: boolean; cancelled_at: string | null; sponsorships: Row[] };
+type Ev = {
+  id: string;
+  title: string;
+  venue: string;
+  starts_at: string;
+  is_published: boolean;
+  cancelled_at: string | null;
+  sponsor_cap_corporate: number;
+  sponsor_cap_store: number;
+  sponsorships: Row[];
+};
 
 const jst = (v: string) =>
   new Date(v.length === 10 ? `${v}T00:00:00+09:00` : v).toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' });
@@ -27,7 +37,6 @@ const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 export default function AdminSponsorshipsPage() {
   const { token } = useAdmin();
   const [events, setEvents] = useState<Ev[]>([]);
-  const [caps, setCaps] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [onlyWith, setOnlyWith] = useState(true);
@@ -41,7 +50,6 @@ export default function AdminSponsorshipsPage() {
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || '読み込めませんでした');
       setEvents(j.events ?? []);
-      setCaps(j.caps ?? {});
     } catch (e) {
       setError(e instanceof Error ? e.message : '読み込めませんでした');
     } finally {
@@ -120,7 +128,7 @@ export default function AdminSponsorshipsPage() {
                   {e.cancelled_at && <span className="ml-2 rounded-full border border-danger-line bg-danger-soft px-2 py-0.5 text-xs text-danger">中止</span>}
                 </h2>
                 <p className="text-sm text-ink-2">
-                  {jst(e.starts_at)} ／ 企業 {nC}/{caps.corporate ?? '-'} ・ お店 {nS}/{caps.store ?? '-'} ／ 合計 {yen(paid.reduce((a, r) => a + r.amount, 0))}
+                  {jst(e.starts_at)} ／ 企業 {nC}/{e.sponsor_cap_corporate} ・ お店 {nS}/{e.sponsor_cap_store} ／ 合計 {yen(paid.reduce((a, r) => a + r.amount, 0))}
                 </p>
               </div>
               {e.sponsorships.length === 0 ? (

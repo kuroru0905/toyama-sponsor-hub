@@ -23,6 +23,8 @@ type AdminEvent = {
   description: string;
   is_published: boolean;
   recruit_sponsors: boolean;
+  sponsor_cap_corporate: number;
+  sponsor_cap_store: number;
   recruit_performers: boolean;
   recruit_deadline: string | null;
   recruit_act_types: string[];
@@ -58,6 +60,8 @@ type EventForm = {
   description: string;
   is_published: boolean;
   recruit_sponsors: boolean; // 企業・お店の協賛を募集するか
+  sponsor_cap_corporate: string; // 企業の協賛の上限（0＝募集しない）
+  sponsor_cap_store: string; // お店の協賛の上限（0＝募集しない）
   recruit_performers: boolean;
   recruit_deadline: string; // datetime-local（日本時間）
   recruit_act_types: string[]; // 募集する出演形態
@@ -78,6 +82,8 @@ const EMPTY: EventForm = {
   description: '',
   is_published: true,
   recruit_sponsors: true,
+  sponsor_cap_corporate: '6',
+  sponsor_cap_store: '20',
   recruit_performers: false,
   recruit_deadline: '',
   recruit_act_types: ['band', 'dj', 'performance', 'other'],
@@ -201,6 +207,13 @@ export default function AdminEventsPage() {
       return setError('スポンサー先行販売の開始は、一般販売の開始より前にしてください');
     if (form.general_sale_start && form.general_sale_start >= form.starts_at)
       return setError('一般販売の開始は、開演日時より前にしてください');
+    for (const [v, label] of [
+      [form.sponsor_cap_corporate, '企業の上限'],
+      [form.sponsor_cap_store, 'お店の上限'],
+    ] as const) {
+      const n = Number(v);
+      if (form.recruit_sponsors && (v === '' || !Number.isInteger(n) || n < 0 || n > 100)) return setError(`${label}は0〜100の整数で入力してください`);
+    }
     const payload = {
       title: form.title,
       venue: form.venue,
@@ -210,6 +223,8 @@ export default function AdminEventsPage() {
       description: form.description,
       is_published: form.is_published,
       recruit_sponsors: form.recruit_sponsors,
+      sponsor_cap_corporate: Number(form.sponsor_cap_corporate),
+      sponsor_cap_store: Number(form.sponsor_cap_store),
       recruit_performers: form.recruit_performers,
       recruit_deadline: form.recruit_performers ? localToIso(form.recruit_deadline) : null,
       recruit_act_types: form.recruit_act_types.length > 0 ? form.recruit_act_types : ['band', 'dj', 'performance', 'other'],
@@ -361,10 +376,45 @@ export default function AdminEventsPage() {
                 <Handshake className="inline h-4 w-4 text-brand mr-1" />
                 企業・お店の協賛を募集する
                 <span className="block text-sm text-ink-2">
-                  オンにすると、公開中のあいだ、サイトの協賛の申込画面でこのイベントを選べます（受付は開催の7日前まで。企業6社・お店20店まで）。
+                  オンにすると、公開中のあいだ、サイトの協賛の申込画面でこのイベントを選べます（受付は開催の7日前まで）。
                 </span>
               </span>
             </label>
+            {form.recruit_sponsors && (
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="cap-corporate" className={labelClass}>
+                    企業の上限（社）
+                  </label>
+                  <input
+                    id="cap-corporate"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={100}
+                    className={inputClass}
+                    value={form.sponsor_cap_corporate}
+                    onChange={(e) => setForm({ ...form, sponsor_cap_corporate: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="cap-store" className={labelClass}>
+                    お店の上限（店）
+                  </label>
+                  <input
+                    id="cap-store"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={100}
+                    className={inputClass}
+                    value={form.sponsor_cap_store}
+                    onChange={(e) => setForm({ ...form, sponsor_cap_store: e.target.value })}
+                  />
+                </div>
+                <p className="text-sm text-ink-2 sm:col-span-2">0にすると、その枠は募集しません。支払い済みの協賛が上限に達すると、申込画面で「満枠」になります。</p>
+              </div>
+            )}
           </div>
 
           <div className="rounded-ctl border border-warn-line bg-warn-soft p-4 space-y-3">
@@ -538,7 +588,9 @@ export default function AdminEventsPage() {
                     {ev.cancelled_at && <span className="rounded-full border border-danger-line bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger">公演中止</span>}
                     {soldOut && <span className="rounded-full border border-line-strong bg-surface px-2.5 py-0.5 text-xs font-semibold text-ink">完売</span>}
                     {ev.recruit_sponsors && !ev.cancelled_at && (
-                      <span className="rounded-full border border-brand-line bg-brand-soft px-2.5 py-0.5 text-xs font-semibold text-brand">協賛募集</span>
+                      <span className="rounded-full border border-brand-line bg-brand-soft px-2.5 py-0.5 text-xs font-semibold text-brand">
+                        協賛募集（企業{ev.sponsor_cap_corporate}・お店{ev.sponsor_cap_store}）
+                      </span>
                     )}
                     {ev.recruit_performers && (
                       <span
@@ -616,6 +668,8 @@ export default function AdminEventsPage() {
                         description: ev.description,
                         is_published: ev.is_published,
                         recruit_sponsors: ev.recruit_sponsors,
+                        sponsor_cap_corporate: String(ev.sponsor_cap_corporate ?? 6),
+                        sponsor_cap_store: String(ev.sponsor_cap_store ?? 20),
                         recruit_performers: ev.recruit_performers,
                         recruit_deadline: isoToLocal(ev.recruit_deadline),
                         recruit_act_types: ev.recruit_act_types ?? ['band', 'dj', 'performance', 'other'],

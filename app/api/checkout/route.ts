@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { TIER_CAPS } from '@/lib/tierCaps';
 import { sendInvoiceAppliedMails } from '@/lib/sponsorMails';
 import { EVENT_PRICES, isEventTier, paidCount, sponsorableEvents } from '@/lib/eventSponsorship';
 
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
     const paymentMethod = business && body.paymentMethod === 'invoice' ? 'invoice' : 'card';
 
     // 企業・お店：協賛するイベント（公開中・中止なし・開催7日前まで）
-    let event: { id: string; title: string; venue: string; starts_at: string } | null = null;
+    let event: { id: string; title: string; venue: string; starts_at: string; caps: { corporate: number; store: number } } | null = null;
     if (business) {
       const eventId = typeof body.eventId === 'string' ? body.eventId : '';
       event = (await sponsorableEvents()).find((e) => e.id === eventId) ?? null;
@@ -124,10 +123,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 枠の上限（企業6社・お店20店）はイベントごと
+    // 枠の上限はイベントごと（イベント作成時に決める。0＝その枠は募集しない）
     if (business && event) {
-      const cap = TIER_CAPS[tier];
-      if (cap !== undefined && (await paidCount(event.id, tier)) >= cap) {
+      const cap = event.caps[tier as 'corporate' | 'store'];
+      if (cap <= 0) {
+        return NextResponse.json({ error: `このイベントでは${tier === 'corporate' ? '企業' : 'お店'}の協賛を募集していません` }, { status: 400 });
+      }
+      if ((await paidCount(event.id, tier)) >= cap) {
         return NextResponse.json(
           { error: `このイベントの${tier === 'corporate' ? '企業' : 'お店'}の協賛は満枠（${cap}${tier === 'corporate' ? '社' : '店'}）です` },
           { status: 409 }
