@@ -1,7 +1,7 @@
 'use client';
 
 // サイト上部の横スクロール：まちきっぷ パートナーズのロゴまたは名前を流す（ファン枠は名前だけ）
-// DeepL のロゴ列と同じく、ロゴは灰色で静かに流れ、触れると色が戻って止まる。管理画面には出さない
+// ロゴは本来の色のまま流れ、触れると止まる。管理画面には出さない
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { trimLogo } from '@/lib/trimLogo';
