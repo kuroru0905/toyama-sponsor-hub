@@ -6,7 +6,7 @@ import { sendMail } from '@/lib/mailer';
 import {
   ACT_TYPES,
   APPLICATION_STATUS,
-  GROUP_RULE,
+  PERFORM_URL,
   SPONSOR_MYPAGE_URL,
 } from '@/lib/performerApplications';
 
@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest) {
       .from('performer_applications')
       .update({ status, admin_note: adminNote || null, updated_at: new Date().toISOString() })
       .eq('id', id)
-      .select('id, applicant_email, act_type, act_name, representative_name, member_count, live_events(title)')
+      .select('id, applicant_email, act_type, act_name, representative_name, member_count, source, live_events(title)')
       .maybeSingle();
     if (error) throw new HttpError(500, '更新に失敗しました');
     if (!app) throw new HttpError(404, '応募が見つかりません');
@@ -96,12 +96,12 @@ export async function PATCH(req: NextRequest) {
           `希望イベント：${eventTitle ?? '指定なし'}`,
           ...(adminNote ? ['', '外山企画からのメッセージ：', adminNote] : []),
           '',
-          ...(accepted && app.member_count > 1 ? ['【ご確認ください】', GROUP_RULE, ''] : []),
           accepted
             ? '今後の詳細（出演日時・リハーサル・機材など）は、外山企画からこのメールアドレス宛にご連絡します。'
             : '次回以降のイベントでも出演応募を受け付けています。またのご応募をお待ちしています。',
           '',
-          SPONSOR_MYPAGE_URL,
+          PERFORM_URL,
+  SPONSOR_MYPAGE_URL,
           '',
           '外山企画 スポンサー事務局',
         ].join('\n'),

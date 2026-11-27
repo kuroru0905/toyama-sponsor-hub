@@ -42,7 +42,7 @@ interface AdminSponsor {
 const TIER_PRICE: Record<TierType, number> = {
   corporate: 10000,
   store: 3000,
-  fan: 300,
+  fan: 500,
 };
 
 const TIER_META: Record<TierType, { label: string; badgeClass: string }> = {
@@ -55,7 +55,7 @@ const TIER_META: Record<TierType, { label: string; badgeClass: string }> = {
     badgeClass: 'border-brand-line bg-brand-soft text-brand',
   },
   fan: {
-    label: 'ファン枠 (¥300)',
+    label: 'ファン枠 (¥500)',
     badgeClass: 'border-warn-line bg-warn-soft text-warn',
   },
 };
@@ -323,7 +323,7 @@ export default function AdminSponsorsPage() {
                 <option value="all">すべてのプラン枠</option>
                 <option value="corporate">企業プレミアム枠 (¥10,000)</option>
                 <option value="store">店舗ローカル枠 (¥3,000)</option>
-                <option value="fan">ファンサポーター枠 (¥300)</option>
+                <option value="fan">ファンサポーター枠 (¥500)</option>
               </select>
 
               <select

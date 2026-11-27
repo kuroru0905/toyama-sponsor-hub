@@ -28,7 +28,8 @@ interface Application {
   member_count: number;
   member_names: string;
   all_members_sponsor_confirmed: boolean;
-  members: { name: string; email: string; guardian?: boolean; verified?: boolean }[] | null;
+  members: { name: string; email?: string; guardian?: boolean; verified?: boolean }[] | null;
+  source?: 'mypage' | 'public';
   genre: string;
   links: string;
   message: string;
@@ -162,7 +163,7 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
           {shown.map((a) => {
             const st = STATUS[a.status] ?? STATUS.submitted;
             const expanded = openId === a.id;
-            const sponsorInactive = a.sponsor_status !== 'active';
+            const sponsorInactive = a.sponsor_name !== null && a.sponsor_status !== 'active';
             return (
               <div key={a.id} className="rounded-panel bg-paper shadow-card p-4 sm:p-5">
                 <button type="button" onClick={() => setOpenId(expanded ? null : a.id)} className="w-full text-left">
@@ -176,8 +177,8 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                     <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${st.color}`}>{st.label}</span>
                   </div>
                   <div className="mt-1 text-sm text-ink-2">
-                    {a.event_title ?? '希望イベント指定なし'} ／ {formatDateTime(a.created_at)} 応募 ／ 契約：{a.sponsor_name}
-                    （{TIER_LABEL[a.sponsor_tier ?? ''] ?? '-'}）
+                    {a.event_title ?? '希望イベント指定なし'} ／ {formatDateTime(a.created_at)} 応募 ／{' '}
+                    {a.sponsor_name ? `契約：${a.sponsor_name}（${TIER_LABEL[a.sponsor_tier ?? ''] ?? '-'}）` : '一般応募（スポンサー契約なし）'}
                   </div>
                 </button>
 
@@ -199,22 +200,20 @@ export default function ApplicationsPanel({ accessToken }: { accessToken: string
                               <ul className="space-y-1">
                                 {a.members.map((m, i) => (
                                   <li key={i} className="text-sm">
-                                    <span className={m.verified ? 'text-brand' : 'text-danger'}>{m.verified ? '✓' : '✗'}</span>{' '}
                                     {m.name}
-                                    <span className="text-sm text-ink-2">
-                                      （{m.email}
-                                      {m.guardian ? '・保護者' : ''}）
-                                    </span>
+                                    {m.email && (
+                                      <span className="text-sm text-ink-2">
+                                        （{m.email}
+                                        {m.guardian ? '・保護者' : ''}）
+                                      </span>
+                                    )}
                                   </li>
                                 ))}
-                                <li className="text-sm text-ink-3">✓ = 応募時に契約中のスポンサーとしてシステムで確認済み</li>
                               </ul>
                             ) : (
                               <span className="whitespace-pre-wrap">
                                 {a.member_names}
-                                <span className="block text-sm text-ink-3">
-                                  ※ メール確認の導入前の応募です（{a.all_members_sponsor_confirmed ? '応募者が確認済みと回答' : '未確認'}）
-                                </span>
+
                               </span>
                             )}
                           </dd>

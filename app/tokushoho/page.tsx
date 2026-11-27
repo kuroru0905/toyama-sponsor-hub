@@ -57,7 +57,7 @@ export default function TokushohoPage() {
                   <br />
                   ・店舗ローカル枠：月額 3,000円（税込）
                   <br />
-                  ・ファンサポーター枠：月額 300円（税込）
+                  ・ファンサポーター枠：月額 500円（税込）
                 </td>
               </tr>
               <tr>

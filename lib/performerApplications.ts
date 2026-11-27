@@ -27,12 +27,12 @@ export const APPLICATION_STATUS: Record<string, string> = {
   declined: '見送り',
 };
 
-// 応募ページ・メールに必ず載せる注意書き
-export const GROUP_RULE =
-  'グループで応募する場合は、出演メンバー全員（未成年のメンバーはその保護者）が外山企画のスポンサー（どの枠でも可）としてご契約中である必要があります。';
-
 export const SPONSOR_MYPAGE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/mypage` : 'https://toyama-sponsor-hub.vercel.app/mypage';
+
+// 公開の出演応募ページ（誰でも応募できる）
+export const PERFORM_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/perform` : 'https://toyama-sponsor-hub.vercel.app/perform';
 
 // 統合管理画面の出演応募タブ
 export const SPONSOR_ADMIN_URL =

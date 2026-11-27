@@ -61,7 +61,7 @@ const PLANS: Plan[] = [
     id: 'fan',
     name: 'ファンサポーター枠',
     short: 'ファン',
-    price: '300',
+    price: '500',
     target: '200人が目標',
     unit: '人',
     lead: '登別に、若い人が主役になれる場所をつくり続けるための応援枠です。',
@@ -310,7 +310,7 @@ export default function SponsorHubPage() {
         {/* 料金プラン */}
         <section id="plans" className="scroll-mt-16 pb-16 sm:pb-24">
           <div className="mx-auto max-w-6xl px-4">
-            <Headline lead="まちきっぷ パートナーズ。" rest="月300円から、若者のライブと街を支えるスポンサーに。" />
+            <Headline lead="まちきっぷ パートナーズ。" rest="月500円から、若者のライブと街を支えるスポンサーに。" />
           </div>
           <div className="mt-8" style={{ ['--notch-bg' as string]: 'var(--surface)' }}>
             <Shelf ariaLabel="料金プラン">
@@ -393,7 +393,7 @@ export default function SponsorHubPage() {
               {[
                 { tier: 'corporate' as TierType, title: '企業スポンサー', unit: '社', empty: '第1号の企業スポンサーを募集しています。' },
                 { tier: 'store' as TierType, title: '店舗スポンサー・クーポン加盟店', unit: '店', empty: '加盟店を募集しています。' },
-                { tier: 'fan' as TierType, title: 'ファンサポーター', unit: '名', empty: '月300円から、お名前が公式サイトに載ります。' },
+                { tier: 'fan' as TierType, title: 'ファンサポーター', unit: '名', empty: '月500円から、お名前が公式サイトに載ります。' },
               ].map((g) => {
                 const list = byTier(g.tier);
                 return (
@@ -429,6 +429,9 @@ export default function SponsorHubPage() {
           <div className="mt-4 flex flex-col gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p>Copyright © {new Date().getFullYear()} 外山企画（北海道登別市）</p>
             <nav aria-label="フッター" className="flex flex-wrap gap-x-5 gap-y-1">
+              <Link href="/perform" className="py-1 hover:underline">
+                出演応募
+              </Link>
               <Link href="/mypage" className="py-1 hover:underline">
                 マイページ・解約
               </Link>

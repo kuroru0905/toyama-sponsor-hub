@@ -35,7 +35,7 @@ interface SponsorRecord {
 const TIER: Record<string, { name: string; price: string }> = {
   corporate: { name: '企業プレミアム枠', price: '10,000' },
   store: { name: '店舗ローカル枠', price: '3,000' },
-  fan: { name: 'ファンサポーター枠', price: '300' },
+  fan: { name: 'ファンサポーター枠', price: '500' },
 };
 
 const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'danger' | 'neutral' }> = {
