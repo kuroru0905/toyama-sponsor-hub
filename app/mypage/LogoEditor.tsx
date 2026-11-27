@@ -75,7 +75,7 @@ export default function LogoEditor({ file, name, saving, onSave, onCancel, onErr
           <span className="whitespace-nowrap text-[15px] font-semibold text-ink-2">まちの企業</span>
           {preview && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt={name} className="marquee-logo" style={{ filter: 'grayscale(1)', opacity: 0.6 }} />
+            <img src={preview} alt={name} className="marquee-logo" />
           )}
           <span className="whitespace-nowrap text-[15px] font-semibold text-ink-2">まちのお店</span>
         </div>
