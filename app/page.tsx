@@ -517,31 +517,68 @@ export default function SponsorHubPage() {
             <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
               <div className="flex-1 space-y-7 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
                 {selectedPlan.per === 'event' && (
-                  <Field label="協賛するイベント" htmlFor="eventId" required hint={`受付は開催の${SPONSOR_DEADLINE_DAYS}日前までです。`}>
-                    <select id="eventId" required value={eventId} onChange={(e) => setEventId(e.target.value)} className="field-input">
-                      <option value="" disabled>
-                        選んでください
-                      </option>
+                  <fieldset>
+                    <legend className="text-[15px] font-semibold text-ink">
+                      どのライブに協賛しますか<span className="ml-1 text-danger">*</span>
+                    </legend>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-2">
+                      協賛はライブ1回ごとです。選んだライブの会場とLINEで紹介し、開催後3か月は公式LINEなどで紹介を続けます。
+                    </p>
+                    <div className="mt-3 space-y-3">
                       {(sponsorEvents ?? [])
                         .filter((ev) => ev.caps[selectedPlan.id as 'corporate' | 'store'] > 0)
                         .map((ev) => {
                           const t = selectedPlan.id as 'corporate' | 'store';
                           const left = ev.remaining[t];
+                          const full = left === 0;
+                          const checked = eventId === ev.id;
                           return (
-                            <option key={ev.id} value={ev.id} disabled={left === 0}>
-                              {fmtEventDate(ev.starts_at)} {ev.title}
-                              {left === 0 ? `（満枠：${ev.caps[t]}${selectedPlan.unit}）` : `（残り${left}${selectedPlan.unit}／${ev.caps[t]}${selectedPlan.unit}まで）`}
-                            </option>
+                            <label
+                              key={ev.id}
+                              className={`block rounded-ctl border-2 p-4 transition-colors ${
+                                full
+                                  ? 'cursor-not-allowed border-line bg-surface opacity-60'
+                                  : checked
+                                    ? 'cursor-pointer border-brand bg-brand-soft'
+                                    : 'cursor-pointer border-line bg-paper hover:border-line-strong'
+                              } has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand has-[:focus-visible]:ring-offset-2`}
+                            >
+                              <input
+                                type="radio"
+                                name="eventId"
+                                value={ev.id}
+                                checked={checked}
+                                disabled={full}
+                                required
+                                onChange={() => setEventId(ev.id)}
+                                className="sr-only"
+                              />
+                              <span className="flex items-start justify-between gap-3">
+                                <span className="min-w-0">
+                                  <span className="block text-[13px] font-semibold text-brand">{fmtEventDate(ev.starts_at)} 開催</span>
+                                  <span className="mt-0.5 block text-[17px] font-semibold leading-snug text-ink">{ev.title}</span>
+                                  <span className="mt-1 block text-sm text-ink-2">{ev.venue}</span>
+                                </span>
+                                <span
+                                  aria-hidden
+                                  className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
+                                    checked ? 'border-brand bg-brand text-white' : 'border-line-strong bg-paper'
+                                  }`}
+                                >
+                                  {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                                </span>
+                              </span>
+                              <span className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-2">
+                                <span>{full ? <span className="font-semibold text-danger">満枠</span> : <>残り <span className="num font-semibold text-ink">{left}</span>{selectedPlan.unit}（{ev.caps[t]}{selectedPlan.unit}まで）</>}</span>
+                                <span>申込締切 {fmtEventDate(ev.deadline)}</span>
+                                <span>フォロー {fmtFollowEnd(ev.starts_at)}まで</span>
+                              </span>
+                            </label>
                           );
                         })}
-                    </select>
-                    {selectedEvent && (
-                      <p className="mt-2 text-sm leading-relaxed text-ink-2">
-                        会場：{selectedEvent.venue}。開催後のフォローは<Em>{fmtFollowEnd(selectedEvent.starts_at)}まで</Em>
-                        （公式LINEなどでご紹介します）。お支払いは1回だけで、自動で続くことはありません。
-                      </p>
-                    )}
-                  </Field>
+                    </div>
+                    {!eventId && <p className="mt-2 text-sm text-ink-2">ライブを1つ選んでください。お支払いは1回だけで、自動で続くことはありません。</p>}
+                  </fieldset>
                 )}
 
                 <Field
@@ -613,7 +650,7 @@ export default function SponsorHubPage() {
                       <div className="mt-2 grid gap-3">
                         {[
                           { v: 'card' as const, t: 'クレジットカード', d: 'このイベント1回分のお支払い。すぐに特典が使えます。' },
-                          { v: 'invoice' as const, t: '請求書払い', d: '1回分の請求書をメールでお送りします（14日以内にお支払い）。お支払いの確認後に特典が使えます。' },
+                          { v: 'invoice' as const, t: '請求書払い', d: '1回分の請求書をメールでお送りします（14日以内、開催が近いときは開催の前日までにお支払い）。お支払いの確認後に特典が使えます。' },
                         ].map((o) => (
                           <label
                             key={o.v}

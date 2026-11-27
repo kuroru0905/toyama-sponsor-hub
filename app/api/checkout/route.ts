@@ -270,7 +270,8 @@ export async function POST(req: NextRequest) {
       const invoice = await stripe.invoices.create({
         customer: customerId,
         collection_method: 'send_invoice',
-        days_until_due: 14,
+        // 支払期限は発行から14日。ただし開催の前日を越えないようにする（開催後の入金にならないように）
+        days_until_due: Math.max(1, Math.min(14, Math.floor((new Date(ev.starts_at).getTime() - Date.now()) / (24 * 60 * 60 * 1000)) - 1)),
         pending_invoice_items_behavior: 'exclude',
         description: `${itemName}／開催後3か月のフォロー付き`,
         metadata,
