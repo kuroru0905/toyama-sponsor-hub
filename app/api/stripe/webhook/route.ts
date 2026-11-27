@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { TIER_CAPS } from '@/lib/tierCaps';
 import { sendMail, adminEmails } from '@/lib/mailer';
 import { sendActivatedMails, type SponsorForMail } from '@/lib/sponsorMails';
+import { cancelPendingSponsorship, markSponsorshipPaid } from '@/lib/eventSponsorship';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
@@ -81,8 +82,15 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const sponsorId = session.metadata?.sponsorId;
+        const isEventSponsorship = session.metadata?.kind === 'event_sponsorship';
 
-        if (sponsorId) {
+        // 企業・お店のイベント協賛（単発払い）：支払い済みなら協賛を確定する
+        if (isEventSponsorship) {
+          if (session.payment_status === 'paid') {
+            const pi = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null;
+            await markSponsorshipPaid({ column: 'stripe_session_id', value: session.id }, { stripe_payment_intent_id: pi });
+          }
+        } else if (sponsorId) {
           const ids = {
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
@@ -127,9 +135,36 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      // 決済画面の期限切れ：未払いの協賛を取り消す（同じイベントにまた申し込めるように）
+      case 'checkout.session.expired': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.metadata?.kind === 'event_sponsorship') {
+          await cancelPendingSponsorship({ column: 'stripe_session_id', value: session.id });
+        }
+        break;
+      }
+
+      // 協賛の請求書を無効にした・回収不能にした：未払いの協賛を取り消す
+      case 'invoice.voided':
+      case 'invoice.marked_uncollectible': {
+        const invoice = event.data.object as Stripe.Invoice;
+        if (invoice.metadata?.kind === 'event_sponsorship' && invoice.id) {
+          await cancelPendingSponsorship({ column: 'stripe_invoice_id', value: invoice.id });
+        }
+        break;
+      }
+
       // 請求書払い：入金が確認できたら有効化（カード払いの毎月の更新でも届く。未払い→支払い済みの復帰にも使う）
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
+
+        // 企業・お店のイベント協賛の請求書（1回分）
+        if (invoice.metadata?.kind === 'event_sponsorship' && invoice.id) {
+          const inv = invoice as any;
+          const pi = typeof inv.payment_intent === 'string' ? inv.payment_intent : inv.payment_intent?.id ?? null;
+          await markSponsorshipPaid({ column: 'stripe_invoice_id', value: invoice.id }, { stripe_payment_intent_id: pi });
+          break;
+        }
         const { subscriptionId, sponsorId } = invoiceSubscription(invoice);
 
         let activated: SponsorForMail[] = [];

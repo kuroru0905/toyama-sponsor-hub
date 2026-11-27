@@ -12,6 +12,8 @@ function ThanksContent() {
   const method = searchParams.get('method');
   const lineUrl = process.env.NEXT_PUBLIC_LINE_ADD_URL || '#';
   const isInvoice = method === 'invoice';
+  // 企業・お店のイベント協賛のとき：協賛したイベント名（表示だけ。60文字まで）
+  const eventTitle = (searchParams.get('event') || '').replace(/[\r\n]+/g, ' ').slice(0, 60);
 
   const steps = [
     {
@@ -59,7 +61,9 @@ function ThanksContent() {
           </Notice>
         ) : (
           <p className="mt-4 max-w-prose leading-[1.9] text-ink-2">
-            まちきっぷ パートナーズとしてのご契約が有効になり、サイトのパートナー一覧にお名前が載りました。登別のライブとお店を、一緒に支えてくださることに感謝します。
+            {eventTitle
+              ? `「${eventTitle}」へのご協賛が確定しました。開催後3か月は、公式LINEなどでご紹介します。登別のライブとお店を、一緒に支えてくださることに感謝します。`
+              : 'まちきっぷ パートナーズとしてのご契約が有効になり、サイトのパートナー一覧にお名前が載りました。登別のライブとお店を、一緒に支えてくださることに感謝します。'}
           </p>
         )}
 

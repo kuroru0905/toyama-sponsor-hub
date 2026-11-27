@@ -39,19 +39,16 @@ interface AdminSponsor {
   sponsor_assets?: SponsorAsset[];
 }
 
-const TIER_PRICE: Record<TierType, number> = {
-  corporate: 10000,
-  store: 3000,
-  fan: 500,
-};
+// ファン枠だけ月額。企業・お店はイベント1回ごと（金額と一覧は「協賛」ページ）
+const FAN_MONTHLY = 500;
 
 const TIER_META: Record<TierType, { label: string; badgeClass: string }> = {
   corporate: {
-    label: '企業枠 (¥10,000)',
+    label: '企業枠 (1イベント ¥30,000)',
     badgeClass: 'border-warn-line bg-warn-soft text-warn',
   },
   store: {
-    label: '店舗枠 (¥3,000)',
+    label: '店舗枠 (1イベント ¥10,000)',
     badgeClass: 'border-brand-line bg-brand-soft text-brand',
   },
   fan: {
@@ -73,7 +70,7 @@ export default function AdminSponsorsPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const [tierFilter, setTierFilter] = useState<'all' | TierType>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'past_due' | 'canceled'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'past_due' | 'canceled' | 'ended'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchAllSponsors = async () => {
@@ -186,10 +183,7 @@ export default function AdminSponsorsPage() {
 
   const stats = useMemo(() => {
     const activeList = sponsors.filter((s) => s.status === 'active');
-    const monthlyRevenue = activeList.reduce(
-      (sum, s) => sum + (TIER_PRICE[s.tier] || 0),
-      0
-    );
+    const monthlyRevenue = activeList.filter((s) => s.tier === 'fan').length * FAN_MONTHLY;
     const corporateCount = activeList.filter((s) => s.tier === 'corporate').length;
     const storeCount = activeList.filter((s) => s.tier === 'store').length;
     const fanCount = activeList.filter((s) => s.tier === 'fan').length;
@@ -258,7 +252,7 @@ export default function AdminSponsorsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="rounded-panel bg-paper shadow-card p-5">
                 <div className="flex items-center justify-between text-sm text-brand font-semibold mb-2">
-                  <span>月間見込み収益（有効契約）</span>
+                  <span>ファン枠の月額（有効）</span>
                   <TrendingUp className="h-4 w-4" />
                 </div>
                 <p className="text-2xl sm:text-3xl font-semibold text-ink">
@@ -321,8 +315,8 @@ export default function AdminSponsorsPage() {
                 className="rounded-ctl border border-line-strong bg-paper px-3.5 py-2 text-sm font-semibold text-ink focus:border-brand focus:outline-none"
               >
                 <option value="all">すべてのプラン枠</option>
-                <option value="corporate">企業プレミアム枠 (¥10,000)</option>
-                <option value="store">店舗ローカル枠 (¥3,000)</option>
+                <option value="corporate">企業プレミアム枠 (1イベント ¥30,000)</option>
+                <option value="store">店舗ローカル枠 (1イベント ¥10,000)</option>
                 <option value="fan">ファンサポーター枠 (¥500)</option>
               </select>
 
@@ -336,8 +330,12 @@ export default function AdminSponsorsPage() {
                 <option value="pending">pending（決済待ち）</option>
                 <option value="past_due">past_due（支払確認中）</option>
                 <option value="canceled">canceled（解約済み）</option>
+                <option value="ended">ended（協賛期間終了）</option>
               </select>
             </div>
+            <p className="-mt-3 mb-6 text-sm text-ink-2">
+              企業・お店の協賛金とフォロー期間は、左のメニューの「協賛」でイベントごとに確認できます。
+            </p>
 
             {/* 申込者・契約一覧テーブル */}
             {loadingList ? (
@@ -449,6 +447,7 @@ export default function AdminSponsorsPage() {
                           <option value="pending">pending（決済待ち）</option>
                           <option value="past_due">past_due（支払確認中）</option>
                           <option value="canceled">canceled（解約済み）</option>
+                          <option value="ended">ended（協賛期間終了）</option>
                         </select>
                       </div>
                     </div>

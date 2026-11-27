@@ -23,6 +23,7 @@ type Plan = {
   name: string;
   short: string;
   price: string;
+  per: 'event' | 'month'; // 企業・お店はイベント1回ごと、ファンは月額
   target: string;
   unit: string;
   lead: string;
@@ -30,17 +31,43 @@ type Plan = {
   features: string[];
 };
 
+type SponsorEvent = {
+  id: string;
+  title: string;
+  venue: string;
+  starts_at: string;
+  deadline: string;
+  remaining: { corporate: number; store: number };
+};
+
+// 協賛の受付は開催の何日前まで（サーバーの lib/eventSponsorship.ts と同じ）
+const SPONSOR_DEADLINE_DAYS = 7;
+
+const fmtEventDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', weekday: 'short' });
+
+// フォロー終了日＝開催日（日本時間）の3か月後の同じ日。その日がない月は月末（DBの計算と同じ）
+function fmtFollowEnd(iso: string): string {
+  const [y, m, d] = new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' }).split('-').map(Number);
+  const ty = y + Math.floor((m - 1 + 3) / 12);
+  const tm = ((m - 1 + 3) % 12) + 1;
+  const last = new Date(Date.UTC(ty, tm, 0)).getUTCDate();
+  return `${ty}年${tm}月${Math.min(d, last)}日`;
+}
+
 const PLANS: Plan[] = [
   {
     id: 'corporate',
     name: '企業プレミアム枠',
     short: '企業',
-    price: '10,000',
-    target: '6社まで',
+    price: '30,000',
+    per: 'event',
+    target: '1イベント6社まで',
     unit: '社',
     lead: '地元企業の本気を、同世代の目線で若者のスマホと会場に届けます。採用や認知づくりに。',
     includes: '店舗ローカル枠・ファンサポーター枠の特典もすべて含みます',
     features: [
+      '開催後3か月、**公式LINEなどで紹介**',
       'イベント会場メインビジョンでの**CM放映**（マイページから相談）',
       '企業PR**ショート動画の制作**（採用活動にも使えます・マイページから相談）',
       'Webサイト・会場パンフレットへの**企業ロゴ／名称の掲載**',
@@ -50,18 +77,24 @@ const PLANS: Plan[] = [
     id: 'store',
     name: '店舗ローカル枠',
     short: '店舗',
-    price: '3,000',
-    target: '20店まで',
+    price: '10,000',
+    per: 'event',
+    target: '1イベント20店まで',
     unit: '店',
     lead: 'ライブに入場したお客さんのLINEに、お店のクーポンが届きます。終演後の一軒目に。',
     includes: 'ファンサポーター枠の特典もすべて含みます',
-    features: ['ライブ入場者向け**LINEクーポン**の掲載（マイページから申請）', '会場メインビジョンでの**店名掲載**'],
+    features: [
+      '開催後3か月、**公式LINEなどで紹介**',
+      '協賛したライブの入場者向け**LINEクーポン**の掲載（マイページから申請）',
+      '会場メインビジョンでの**店名掲載**',
+    ],
   },
   {
     id: 'fan',
     name: 'ファンサポーター枠',
     short: 'ファン',
     price: '500',
+    per: 'month',
     target: '200人が目標',
     unit: '人',
     lead: '登別に、若い人が主役になれる場所をつくり続けるための応援枠です。',
@@ -76,7 +109,7 @@ const PLANS: Plan[] = [
 ];
 
 const STEPS = [
-  { title: 'スポンサーが月額で支える', body: '地元の企業・お店・ファンが、それぞれ**無理のない金額で毎月**支えます。' },
+  { title: 'スポンサーが支える', body: '地元の企業・お店は**イベントごとの協賛**で、ファンは**月500円から**支えます。' },
   { title: 'ライブを開く', body: '集まったお金で、若い人が主役のライブを登別で続けて開きます。' },
   { title: '入場するとクーポンが届く', body: 'LINEで買ったチケットで入場すると、**スポンサー店のクーポンが各店1回ずつ**使えるようになります。' },
   { title: '終演後、お店をはしご', body: '**ライブの翌日まで**、何軒でも回れるので、街のお店に人が流れます。' },
@@ -126,7 +159,9 @@ export default function SponsorHubPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [availability, setAvailability] = useState<Record<string, { cap: number; remaining: number }>>({});
+  // 協賛を受け付けているイベント（企業・お店の枠の残りはイベントごと）。null＝読み込み中
+  const [sponsorEvents, setSponsorEvents] = useState<SponsorEvent[] | null>(null);
+  const [eventId, setEventId] = useState('');
 
   const [applicantName, setApplicantName] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -153,8 +188,8 @@ export default function SponsorHubPage() {
   useEffect(() => {
     fetch('/api/availability', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((j) => setAvailability(j.availability ?? {}))
-      .catch(() => {});
+      .then((j) => setSponsorEvents(j.events ?? []))
+      .catch(() => setSponsorEvents([]));
   }, []);
 
   useEffect(() => {
@@ -191,6 +226,9 @@ export default function SponsorHubPage() {
     setSelectedPlan(plan);
     setPaymentMethod('card');
     setErrorMsg('');
+    // 企業・お店：残りのあるイベントが1つだけなら、最初から選んでおく
+    const open = (sponsorEvents ?? []).filter((e) => plan.per === 'event' && e.remaining[plan.id as 'corporate' | 'store'] > 0);
+    setEventId(open.length === 1 ? open[0].id : '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,6 +242,7 @@ export default function SponsorHubPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tier: selectedPlan.id,
+          eventId: selectedPlan.per === 'event' ? eventId : undefined,
           applicantName,
           displayName,
           isPublic,
@@ -225,6 +264,7 @@ export default function SponsorHubPage() {
 
   const byTier = (t: TierType) => sponsors.filter((s) => s.tier === t);
   const isBusiness = selectedPlan?.id === 'corporate' || selectedPlan?.id === 'store';
+  const selectedEvent = sponsorEvents?.find((e) => e.id === eventId);
 
   return (
     <div className="min-h-screen text-ink">
@@ -271,7 +311,7 @@ export default function SponsorHubPage() {
                 <span className="inline-block">お店へのきっぷに。</span>
               </h1>
               <p className="mt-6 max-w-[34rem] text-[19px] leading-[1.6] text-ink-2 sm:text-[21px]">
-                地元の企業・お店・ファンが月額で少しずつ支え、若い人が主役のライブを続けて開く。ライブに来た若者は、LINEに届く<Em>スポンサーのクーポン</Em>で、地元のお店や企業と出会う。
+                地元の企業・お店がイベントごとに協賛し、ファンが毎月少しずつ応援して、若い人が主役のライブを続けて開く。ライブに来た若者は、LINEに届く<Em>スポンサーのクーポン</Em>で、地元のお店や企業と出会う。
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <a href="#plans" className={buttonClass('primary', 'md')}>
@@ -310,13 +350,14 @@ export default function SponsorHubPage() {
         {/* 料金プラン */}
         <section id="plans" className="scroll-mt-16 pb-16 sm:pb-24">
           <div className="mx-auto max-w-6xl px-4">
-            <Headline lead="まちきっぷ パートナーズ。" rest="月500円から、若者のライブと街を支えるスポンサーに。" />
+            <Headline lead="まちきっぷ パートナーズ。" rest="企業・お店はイベントごとに協賛、個人は月500円から。" />
           </div>
           <div className="mt-8" style={{ ['--notch-bg' as string]: 'var(--surface)' }}>
             <Shelf ariaLabel="料金プラン">
               {PLANS.map((plan) => {
-                const avail = availability[plan.id];
-                const full = avail?.remaining === 0;
+                const bizTier = plan.per === 'event' ? (plan.id as 'corporate' | 'store') : null;
+                const noEvents = bizTier !== null && sponsorEvents !== null && sponsorEvents.length === 0;
+                const full = bizTier !== null && !!sponsorEvents && sponsorEvents.length > 0 && sponsorEvents.every((e) => e.remaining[bizTier] === 0);
                 return (
                   <Tilt
                     as="article"
@@ -332,22 +373,11 @@ export default function SponsorHubPage() {
                         <h3 id={`plan-${plan.id}-name`} className="text-[24px] font-semibold">
                           {plan.name}
                         </h3>
-                        {avail ? (
-                          full ? (
-                            <Badge tone="danger">満枠</Badge>
-                          ) : (
-                            <Badge tone="neutral">
-                              残り <span className="num mx-0.5">{avail.remaining}</span>
-                              {plan.unit}
-                            </Badge>
-                          )
-                        ) : (
-                          <Badge tone="neutral">{plan.target}</Badge>
-                        )}
+                        {full ? <Badge tone="danger">満枠</Badge> : <Badge tone="neutral">{plan.target}</Badge>}
                       </div>
                       <p className="mt-5 flex items-baseline gap-1.5">
                         <span className="num text-[40px] font-semibold leading-none tracking-tight sm:text-[48px]">¥{plan.price}</span>
-                        <span className="whitespace-nowrap text-[15px] text-ink-2">／月（税込）</span>
+                        <span className="whitespace-nowrap text-[15px] text-ink-2">{plan.per === 'event' ? '／1イベント（税込）' : '／月（税込）'}</span>
                       </p>
                       <p className="mt-5 text-[17px] leading-relaxed text-ink-2">{plan.lead}</p>
                     </div>
@@ -365,7 +395,11 @@ export default function SponsorHubPage() {
                         ))}
                       </ul>
                       <div className="mt-auto pt-8">
-                        {full ? (
+                        {noEvents ? (
+                          <p className="rounded-ctl bg-surface px-4 py-3 text-center text-[15px] leading-relaxed text-ink-2">
+                            いま協賛を受け付けているイベントはありません。次のイベントが決まったら、ここから申し込めます。
+                          </p>
+                        ) : full ? (
                           <p className="rounded-full bg-surface px-4 py-3 text-center text-[15px] text-ink-2">満枠のため、受付を止めています</p>
                         ) : (
                           <Button block onClick={() => openModal(plan)}>
@@ -379,7 +413,7 @@ export default function SponsorHubPage() {
               })}
             </Shelf>
             <p className="mx-auto max-w-6xl px-4 text-[15px] leading-relaxed text-ink-2">
-              上の枠は、下の枠の特典もすべて使えます。どのプランもマイページから<Em>いつでも解約</Em>できます。企業・お店は<Em>請求書払い</Em>も選べます。
+              企業・お店の協賛は<Em>イベント1回ごとのお支払い</Em>で、自動で続くことはありません。特典は、お支払いからフォロー終了日（開催日の3か月後）まで使えます。上の枠は、下の枠の特典もすべて使えます。企業・お店は<Em>請求書払い</Em>も選べます。ファンサポーター枠は、マイページから<Em>いつでも解約</Em>できます。
             </p>
           </div>
         </section>
@@ -425,7 +459,7 @@ export default function SponsorHubPage() {
 
       <footer className="border-t border-line">
         <div className="mx-auto max-w-6xl px-4 py-8 text-[12px] leading-relaxed text-ink-2">
-          <p>まちきっぷは外山企画が運営しています。スポンサー・サポーターの月額料金はすべて税込です。チケットの購入と入場特典クーポンは、外山企画の公式LINEから利用できます。</p>
+          <p>まちきっぷは外山企画が運営しています。料金はすべて税込です。チケットの購入と入場特典クーポンは、外山企画の公式LINEから利用できます。</p>
           <div className="mt-4 flex flex-col gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p>Copyright © {new Date().getFullYear()} 外山企画（北海道登別市）</p>
             <nav aria-label="フッター" className="flex flex-wrap gap-x-5 gap-y-1">
@@ -458,11 +492,11 @@ export default function SponsorHubPage() {
           >
             <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-8 sm:py-6">
               <div>
-                <p className="text-[13px] text-ink-2">スポンサーのお申し込み</p>
+                <p className="text-[13px] text-ink-2">{selectedPlan.per === 'event' ? 'イベントへの協賛のお申し込み' : 'スポンサーのお申し込み'}</p>
                 <h2 id="apply-title" className="text-[24px] font-semibold">
                   {selectedPlan.name}
                   <span className="ml-2 text-base font-normal text-ink-2">
-                    月額 <span className="num text-lg font-semibold text-ink">¥{selectedPlan.price}</span>（税込）
+                    {selectedPlan.per === 'event' ? '1イベント' : '月額'} <span className="num text-lg font-semibold text-ink">¥{selectedPlan.price}</span>（税込）
                   </span>
                 </h2>
               </div>
@@ -478,6 +512,31 @@ export default function SponsorHubPage() {
 
             <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
               <div className="flex-1 space-y-7 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
+                {selectedPlan.per === 'event' && (
+                  <Field label="協賛するイベント" htmlFor="eventId" required hint={`受付は開催の${SPONSOR_DEADLINE_DAYS}日前までです。`}>
+                    <select id="eventId" required value={eventId} onChange={(e) => setEventId(e.target.value)} className="field-input">
+                      <option value="" disabled>
+                        選んでください
+                      </option>
+                      {(sponsorEvents ?? []).map((ev) => {
+                        const left = ev.remaining[selectedPlan.id as 'corporate' | 'store'];
+                        return (
+                          <option key={ev.id} value={ev.id} disabled={left === 0}>
+                            {fmtEventDate(ev.starts_at)} {ev.title}
+                            {left === 0 ? '（満枠）' : `（残り${left}${selectedPlan.unit}）`}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {selectedEvent && (
+                      <p className="mt-2 text-sm leading-relaxed text-ink-2">
+                        会場：{selectedEvent.venue}。開催後のフォローは<Em>{fmtFollowEnd(selectedEvent.starts_at)}まで</Em>
+                        （公式LINEなどでご紹介します）。お支払いは1回だけで、自動で続くことはありません。
+                      </p>
+                    )}
+                  </Field>
+                )}
+
                 <Field
                   label={selectedPlan.id === 'fan' ? 'お名前（本名）' : '法人名・店舗名'}
                   htmlFor="applicantName"
@@ -546,8 +605,8 @@ export default function SponsorHubPage() {
                       <legend className="text-[15px] font-semibold">お支払い方法</legend>
                       <div className="mt-2 grid gap-3">
                         {[
-                          { v: 'card' as const, t: 'クレジットカード', d: '毎月自動でお支払い。すぐに特典が使えます。' },
-                          { v: 'invoice' as const, t: '請求書払い', d: '請求書をメールでお送りします。お支払いの確認後に特典が使えます。' },
+                          { v: 'card' as const, t: 'クレジットカード', d: 'このイベント1回分のお支払い。すぐに特典が使えます。' },
+                          { v: 'invoice' as const, t: '請求書払い', d: '1回分の請求書をメールでお送りします（14日以内にお支払い）。お支払いの確認後に特典が使えます。' },
                         ].map((o) => (
                           <label
                             key={o.v}
@@ -580,7 +639,7 @@ export default function SponsorHubPage() {
                     {errorMsg}
                   </Notice>
                 )}
-                <Button type="submit" block disabled={loading}>
+                <Button type="submit" block disabled={loading || (selectedPlan.per === 'event' && !eventId)}>
                   {loading
                     ? '手続きの画面へ移動しています…'
                     : paymentMethod === 'invoice' && isBusiness

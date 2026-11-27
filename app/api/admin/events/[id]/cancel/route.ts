@@ -5,6 +5,7 @@ import { HttpError } from '@/lib/sponsorCoupons';
 import { requireAdminEmail } from '@/lib/adminAuth';
 import { errorJson } from '@/lib/adminValidation';
 import { pushLine, retryKeyFromSeed } from '@/lib/lineMessaging';
+import { sendMail } from '@/lib/mailer';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -14,6 +15,7 @@ export const maxDuration = 60;
 // 2. 決済画面を開いただけの注文は、決済画面を閉じて取り消す
 // 3. 支払い済み・入場済みのチケットを、Stripeで全額返金する（入場済みも含む）
 // 4. 購入者にLINEで中止と返金を知らせる（送るかどうかは選べる。送らなかった分は、あとから再実行で送れる）
+// 5. 企業・お店の協賛金も全額返金する（未払いの決済画面・請求書は取り消す）。協賛者にはメールで知らせる
 // 途中で止まっても、もう一度押せば残りだけを続ける（返金・お知らせは二重にならない）
 const TIME_BUDGET_MS = 45_000;
 
@@ -143,8 +145,90 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
       }
     }
 
+    // 5. 協賛金の返金（同じ協賛には1回だけ：idempotencyKey）
+    const { data: sponsorships, error: spError } = await supabaseAdmin
+      .from('event_sponsorships')
+      .select('id, status, payment_method, amount_jpy, stripe_session_id, stripe_invoice_id, stripe_payment_intent_id, sponsors(display_name, applicant_name, email)')
+      .eq('event_id', id)
+      .in('status', ['pending', 'paid']);
+    if (spError) throw new HttpError(500, `協賛の取得に失敗しました（${spError.message}）`);
+    let sponsorshipsRefunded = 0;
+    let sponsorshipsRefundedAmount = 0;
+    for (const x of sponsorships ?? []) {
+      if (Date.now() - started > TIME_BUDGET_MS) {
+        remaining += 1;
+        continue;
+      }
+      try {
+        let pi: string | null = x.stripe_payment_intent_id;
+        if (x.status === 'pending') {
+          // 支払い途中：カードの決済画面を閉じる／請求書を無効にする。実はもう支払われていたら返金に回す
+          if (x.stripe_session_id) {
+            const ss = await stripe.checkout.sessions.retrieve(x.stripe_session_id);
+            if (ss.payment_status === 'paid') pi = typeof ss.payment_intent === 'string' ? ss.payment_intent : ss.payment_intent?.id ?? null;
+            else if (ss.status === 'open') await stripe.checkout.sessions.expire(ss.id);
+          } else if (x.stripe_invoice_id) {
+            const inv = (await stripe.invoices.retrieve(x.stripe_invoice_id)) as any;
+            if (inv.status === 'paid') pi = typeof inv.payment_intent === 'string' ? inv.payment_intent : inv.payment_intent?.id ?? null;
+            else if (inv.status === 'open') await stripe.invoices.voidInvoice(x.stripe_invoice_id);
+            else if (inv.status === 'draft') await stripe.invoices.del(x.stripe_invoice_id);
+          }
+          if (!pi) {
+            await supabaseAdmin.from('event_sponsorships').update({ status: 'canceled', updated_at: new Date().toISOString() }).eq('id', x.id).eq('status', 'pending');
+            continue;
+          }
+        }
+        if (!pi) throw new Error('支払いが見つかりません');
+        const refund = await stripe.refunds.create(
+          { payment_intent: pi, reason: 'requested_by_customer', metadata: { sponsorship_id: x.id, event_id: id, cause: 'event_cancelled' } },
+          { idempotencyKey: `event-cancel-sponsorship-refund-${x.id}` }
+        );
+        const { error } = await supabaseAdmin
+          .from('event_sponsorships')
+          .update({ status: 'refunded', refunded_at: new Date().toISOString(), stripe_refund_id: refund.id, updated_at: new Date().toISOString() })
+          .eq('id', x.id)
+          .in('status', ['pending', 'paid']);
+        if (error) throw new Error(error.message);
+        sponsorshipsRefunded += 1;
+        sponsorshipsRefundedAmount += x.amount_jpy ?? 0;
+
+        const sp = (Array.isArray(x.sponsors) ? x.sponsors[0] : x.sponsors) as { display_name: string; applicant_name: string; email: string } | null;
+        if (sp?.email) {
+          await sendMail({
+            to: sp.email,
+            subject: `【まちきっぷ パートナーズ】「${ev.title}」中止のお知らせと協賛金の返金`,
+            text: [
+              `${sp.applicant_name} 様`,
+              '',
+              `${fmt(ev.starts_at)} 開演の「${ev.title}」は中止になりました。`,
+              cancelReason ? `理由：${cancelReason}` : null,
+              '',
+              `ご協賛金 ¥${(x.amount_jpy ?? 0).toLocaleString('ja-JP')}（税込）は全額返金しました。`,
+              x.payment_method === 'invoice' ? 'お振込みいただいた方法によっては、返金の反映に日数がかかります。' : 'カードの明細に反映されるまで、5〜10営業日ほどかかります。',
+              '',
+              'ご協賛いただいたにもかかわらず、申し訳ありません。',
+              '外山企画',
+            ]
+              .filter((l) => l !== null)
+              .join('\n'),
+          }).catch((e) => console.error('[cancel] 協賛者への連絡に失敗', e));
+        }
+      } catch (err) {
+        failed.push(`sponsorship ${x.id}: ${err instanceof Error ? err.message : 'error'}`);
+      }
+    }
+
     if (failed.length > 0) console.error('[cancel] 返金・お知らせに失敗した注文', failed);
-    return NextResponse.json({ cancelled: true, refunded, refundedAmount, notified, failed: failed.length, remaining });
+    return NextResponse.json({
+      cancelled: true,
+      refunded,
+      refundedAmount,
+      notified,
+      sponsorshipsRefunded,
+      sponsorshipsRefundedAmount,
+      failed: failed.length,
+      remaining,
+    });
   } catch (err) {
     const { status, body } = errorJson(err);
     return NextResponse.json(body, { status });

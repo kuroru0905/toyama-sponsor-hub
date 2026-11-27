@@ -267,7 +267,7 @@ export default function AdminEventsPage() {
       setCancelling(null);
       setCancelReason('');
       const rest = r.failed > 0 || r.remaining > 0 ? `（${r.failed + r.remaining}件が残っています。もう一度「返金・お知らせを再実行」を押してください）` : '';
-      flash(`「${ev.title}」を中止にしました。返金 ${r.refunded}件 ${yen(r.refundedAmount)}${cancelNotify ? `・LINEでお知らせ ${r.notified}件` : '（LINEのお知らせは送っていません）'}${rest}`);
+      flash(`「${ev.title}」を中止にしました。返金 ${r.refunded}件 ${yen(r.refundedAmount)}${r.sponsorshipsRefunded ? `・協賛金の返金 ${r.sponsorshipsRefunded}件 ${yen(r.sponsorshipsRefundedAmount ?? 0)}` : ''}${cancelNotify ? `・LINEでお知らせ ${r.notified}件` : '（LINEのお知らせは送っていません）'}${rest}`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : '中止の処理に失敗しました');
@@ -690,6 +690,7 @@ export default function AdminEventsPage() {
                     </p>
                     <ul className="mt-2 list-disc pl-5 text-sm text-ink-2">
                       <li>LINEの画面に「公演中止」と出て、販売・入場・出演応募が止まります</li>
+                      <li>企業・お店の協賛金も全額返金し、協賛者にメールで知らせます（お支払い待ちの請求書・決済画面は取り消します）</li>
                       {cancelNotify && <li>購入者にLINEで中止と返金を知らせます（無料枠の月200通に数えます）</li>}
                       <li>Stripeの決済手数料は戻りません。返金がカードに反映されるまで5〜10営業日</li>
                     </ul>
