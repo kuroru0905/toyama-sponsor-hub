@@ -37,6 +37,7 @@ type SponsorEvent = {
   venue: string;
   starts_at: string;
   deadline: string;
+  caps: { corporate: number; store: number }; // イベントごとの上限（0＝その枠は募集しない）
   remaining: { corporate: number; store: number };
 };
 
@@ -62,7 +63,7 @@ const PLANS: Plan[] = [
     short: '企業',
     price: '30,000',
     per: 'event',
-    target: '1イベント6社まで',
+    target: '社数はイベントごと',
     unit: '社',
     lead: '地元企業の本気を、同世代の目線で若者のスマホと会場に届けます。採用や認知づくりに。',
     includes: '店舗ローカル枠・ファンサポーター枠の特典もすべて含みます',
@@ -79,7 +80,7 @@ const PLANS: Plan[] = [
     short: '店舗',
     price: '10,000',
     per: 'event',
-    target: '1イベント20店まで',
+    target: '店数はイベントごと',
     unit: '店',
     lead: 'ライブに入場したお客さんのLINEに、お店のクーポンが届きます。終演後の一軒目に。',
     includes: 'ファンサポーター枠の特典もすべて含みます',
@@ -228,6 +229,7 @@ export default function SponsorHubPage() {
     setErrorMsg('');
     // 企業・お店：残りのあるイベントが1つだけなら、最初から選んでおく
     const open = (sponsorEvents ?? []).filter((e) => plan.per === 'event' && e.remaining[plan.id as 'corporate' | 'store'] > 0);
+
     setEventId(open.length === 1 ? open[0].id : '');
   };
 
@@ -356,8 +358,10 @@ export default function SponsorHubPage() {
             <Shelf ariaLabel="料金プラン">
               {PLANS.map((plan) => {
                 const bizTier = plan.per === 'event' ? (plan.id as 'corporate' | 'store') : null;
-                const noEvents = bizTier !== null && sponsorEvents !== null && sponsorEvents.length === 0;
-                const full = bizTier !== null && !!sponsorEvents && sponsorEvents.length > 0 && sponsorEvents.every((e) => e.remaining[bizTier] === 0);
+                // この枠を募集しているイベント（上限が1以上）
+                const recruiting = bizTier !== null && sponsorEvents ? sponsorEvents.filter((e) => e.caps[bizTier] > 0) : [];
+                const noEvents = bizTier !== null && sponsorEvents !== null && recruiting.length === 0;
+                const full = bizTier !== null && recruiting.length > 0 && recruiting.every((e) => e.remaining[bizTier] === 0);
                 return (
                   <Tilt
                     as="article"
@@ -518,15 +522,18 @@ export default function SponsorHubPage() {
                       <option value="" disabled>
                         選んでください
                       </option>
-                      {(sponsorEvents ?? []).map((ev) => {
-                        const left = ev.remaining[selectedPlan.id as 'corporate' | 'store'];
-                        return (
-                          <option key={ev.id} value={ev.id} disabled={left === 0}>
-                            {fmtEventDate(ev.starts_at)} {ev.title}
-                            {left === 0 ? '（満枠）' : `（残り${left}${selectedPlan.unit}）`}
-                          </option>
-                        );
-                      })}
+                      {(sponsorEvents ?? [])
+                        .filter((ev) => ev.caps[selectedPlan.id as 'corporate' | 'store'] > 0)
+                        .map((ev) => {
+                          const t = selectedPlan.id as 'corporate' | 'store';
+                          const left = ev.remaining[t];
+                          return (
+                            <option key={ev.id} value={ev.id} disabled={left === 0}>
+                              {fmtEventDate(ev.starts_at)} {ev.title}
+                              {left === 0 ? `（満枠：${ev.caps[t]}${selectedPlan.unit}）` : `（残り${left}${selectedPlan.unit}／${ev.caps[t]}${selectedPlan.unit}まで）`}
+                            </option>
+                          );
+                        })}
                     </select>
                     {selectedEvent && (
                       <p className="mt-2 text-sm leading-relaxed text-ink-2">

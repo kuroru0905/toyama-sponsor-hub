@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { requireAdminEmail } from '@/lib/adminAuth';
 import { HttpError } from '@/lib/sponsorCoupons';
-import { TIER_CAPS } from '@/lib/tierCaps';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     await requireAdminEmail(req);
     const [evRes, spRes] = await Promise.all([
-      supabaseAdmin.from('live_events').select('id, title, venue, starts_at, is_published, cancelled_at').order('starts_at', { ascending: false }),
+      supabaseAdmin.from('live_events').select('id, title, venue, starts_at, is_published, cancelled_at, recruit_sponsors, sponsor_cap_corporate, sponsor_cap_store').order('starts_at', { ascending: false }),
       supabaseAdmin
         .from('event_sponsorships')
         .select('id, event_id, tier, amount_jpy, status, payment_method, paid_at, refunded_at, follow_end_date, created_at, sponsors(id, display_name, applicant_name, email)')
@@ -41,7 +40,6 @@ export async function GET(req: NextRequest) {
       });
     }
     return NextResponse.json({
-      caps: TIER_CAPS,
       events: (evRes.data ?? []).map((e) => ({ ...e, sponsorships: byEvent[e.id as string] ?? [] })),
     });
   } catch (err) {
