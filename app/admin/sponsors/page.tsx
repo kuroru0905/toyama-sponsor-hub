@@ -383,16 +383,17 @@ export default function AdminSponsorsPage() {
                           </span>
                         </div>
 
-                        {/* 上部の横スクロールに出る内容 */}
+                        {/* 上部の横スクロールに出る内容（企業・店舗枠のみ） */}
+                        {s.tier !== 'fan' && (
                         <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
                           <span className="text-ink-2">掲示：</span>
-                          {s.tier !== 'fan' && s.logo_url ? (
+                          {s.logo_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={s.logo_url} alt={`${s.display_name}のロゴ`} className="h-7 w-auto max-w-[140px] rounded border border-line bg-paper object-contain p-0.5" />
                           ) : (
                             <span className="font-semibold text-ink">{s.banner_name || s.display_name}</span>
                           )}
-                          {s.tier !== 'fan' && s.logo_url && (
+                          {s.logo_url && (
                             <BannerRemove
                               label="ロゴを外す"
                               confirmText="ロゴを消して名前の掲示にします"
@@ -415,6 +416,7 @@ export default function AdminSponsorsPage() {
                             />
                           )}
                         </div>
+                        )}
 
                         {(asset?.industry || asset?.address) && (
                           <div className="flex flex-wrap gap-3 text-sm text-brand pt-0.5">
